@@ -4,7 +4,7 @@
 
 เกม Narrative แบบ Pixel Art 16-bit สำหรับสองคนที่อยากเข้าใจกันมากขึ้น ไม่มีคะแนน ไม่มีใครผิด
 
-**สถานะ:** M3 — สร้างตัวละคร (ตัวเอง + คู่ในจินตนาการ), แบบสอบถามบุคลิกภาพ 36 ข้อ (ฉบับสั้น/เต็ม), แก้คำตอบ และต้นแบบงานภาพที่ `#/art-preview` ยังเล่นเนื้อเรื่องไม่ได้ (M4)
+**สถานะ:** M4 — เล่นบทที่ 1 ได้จบ: เลือกบท (S5), ตั้งค่าเรื่อง (S5a), ฉากและบทพูด (S6) พร้อมบันทึกอัตโนมัติและเล่นต่อ · บทที่ 2–5 แสดงเป็น "เร็ว ๆ นี้" (M5) · ดูฉากทั้งหมดได้ที่ `#/art-preview`
 
 ## เอกสาร
 
@@ -20,6 +20,7 @@ npm run dev        # http://localhost:5173
 npm test           # unit + component tests
 npm run test:e2e   # Playwright E2E + axe (ครั้งแรก: npx playwright install chromium webkit)
 npm run typecheck
+npm run content:lint # ตรวจไฟล์บท (docs/10 §4)
 npm run lint
 npm run build
 ```

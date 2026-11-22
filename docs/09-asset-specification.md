@@ -166,22 +166,21 @@ Self-host ใน `public/fonts/` · `font-display: swap` · ระบุ License
 ## 8. Naming & Folder Convention
 
 ```
-src/assets/
-├── pixel/                 # ข้อมูลพิกเซล (MVP) — .ts export palette index arrays
-│   ├── palette.ts
-│   ├── backgrounds/       # bg_*.ts
-│   ├── characters/        # body.ts, hair.ts, outfit.ts, accessory.ts, expressions.ts
-│   └── ui/
-├── registry.ts            # key → loader (svg/canvas/png)
+src/scene/
+├── palette.ts             # master palette + helpers (dither, PRNG)
+├── env.ts                 # SceneEnv (สิ่งที่ ENV ตั้ง) + cachedLayer/blitLayer (วาดครั้งเดียวแล้ว cache)
+├── effects.ts             # rain (ตามพื้นที่หน้าต่าง/ทั้งจอ), haze, flicker ≤ 2Hz, dim
+├── backgrounds.ts         # registry: key → draw, fallback colour, ariaLabel, priority
+├── draw/                  # 1 ไฟล์ต่อกลุ่มฉาก (title, apartment, corridor, elevator, exterior, lobby, livingRoom, rooftop) + character.ts
+├── SceneCanvas.tsx        # ฉากใน S6 (split, shake, fallback)
 public/
 ├── fonts/
-├── audio/
-└── icons/
 art-source/                # (Phase 2+) ไฟล์ต้นฉบับ Aseprite — ไม่ deploy
 ```
 
+- M4: Background P0 ครบ + `bg_building_exterior_rain` (P1) วาดแล้ว เพราะ `ch1_end` ใช้ · ดูทั้งหมดได้ที่ `#/art-preview`
 - ชื่อไฟล์ `snake_case` ตาม key ในตาราง
-- ทุก Asset ต้องมีรายการใน `registry.ts` พร้อม `ariaLabel` (สำหรับ Background) และ License (ถ้ามาจากภายนอก)
+- ทุก Background ต้องมีรายการใน `src/scene/backgrounds.ts` พร้อม `ariaLabel` (สำหรับ Background) และ License (ถ้ามาจากภายนอก)
 - Asset ภายนอกต้องบันทึกใน `CREDITS.md` พร้อม URL และ License
 
 ---

@@ -14,6 +14,9 @@ import { ProfileHubScreen } from './screens/ProfileHubScreen';
 import { QuestionnaireScreen } from './screens/QuestionnaireScreen';
 import { AnswersScreen } from './screens/AnswersScreen';
 import { ArtPreviewScreen } from './screens/ArtPreviewScreen';
+import { ChaptersScreen } from './screens/ChaptersScreen';
+import { ScenarioScreen } from './screens/ScenarioScreen';
+import { PlayScreen } from './screens/PlayScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { ErrorScreen } from './screens/ErrorScreen';
 
@@ -32,6 +35,9 @@ export const routes = [
   { path: '/profile/:playerId/self/answers', element: <AnswersScreen layer="self" />, errorElement },
   { path: '/profile/:playerId/perceived/:aboutId', element: <QuestionnaireScreen layer="perceived" />, errorElement },
   { path: '/profile/:playerId/perceived/:aboutId/answers', element: <AnswersScreen layer="perceived" />, errorElement },
+  { path: '/j/:journeyId/chapters', element: <ChaptersScreen />, errorElement },
+  { path: '/j/:journeyId/scenario', element: <ScenarioScreen />, errorElement },
+  { path: '/j/:journeyId/play/:chapterId', element: <PlayScreen />, errorElement },
   { path: '/art-preview', element: <ArtPreviewScreen />, errorElement },
   { path: '*', element: <NotFoundScreen /> },
 ];

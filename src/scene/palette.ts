@@ -40,7 +40,12 @@ export function px(ctx: CanvasRenderingContext2D, x: number, y: number, c: numbe
 }
 
 /** Vertical band gradient with a 2×2 ordered dither at each boundary. */
-export function ditherBands(ctx: CanvasRenderingContext2D, stops: { y: number; c: number }[], x0 = 0, x1 = W) {
+export function ditherBands(
+  ctx: CanvasRenderingContext2D,
+  stops: { y: number; c: number }[],
+  x0 = 0,
+  x1 = W,
+) {
   for (let i = 0; i < stops.length; i++) {
     const cur = stops[i]!;
     const next = stops[i + 1];
@@ -48,8 +53,8 @@ export function ditherBands(ctx: CanvasRenderingContext2D, stops: { y: number; c
     px(ctx, x0, cur.y, cur.c, x1 - x0, yEnd - cur.y);
     if (next) {
       for (let y = next.y - 4; y < next.y; y++) {
-        for (let x = x0 + ((y & 1) ? 0 : 1); x < x1; x += 2) {
-          if ((y + 4 - next.y) >= 2 || (x & 2)) px(ctx, x, y, next.c);
+        for (let x = x0 + (y & 1 ? 0 : 1); x < x1; x += 2) {
+          if (y + 4 - next.y >= 2 || x & 2) px(ctx, x, y, next.c);
         }
       }
     }

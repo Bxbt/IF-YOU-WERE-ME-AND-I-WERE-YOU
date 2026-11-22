@@ -12,7 +12,15 @@ interface Props {
 }
 
 /** Small fixed-size pixel canvas (sprites, portraits). Draws once when motion is reduced or static. */
-export function PixelCanvasCustom({ width, height, scale, draw, label, fps = 6, static: isStatic = false }: Props) {
+export function PixelCanvasCustom({
+  width,
+  height,
+  scale,
+  draw,
+  label,
+  fps = 6,
+  static: isStatic = false,
+}: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const reduced = useReducedMotion();
 

@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "content:lint": "vitest run tests/unit/contentLint.test.ts"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans-thai": "5.1.0",

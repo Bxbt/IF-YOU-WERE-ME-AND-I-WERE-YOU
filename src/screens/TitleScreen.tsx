@@ -9,11 +9,14 @@ import { drawStars, drawTitleBase, drawTitleForeground, makeStars } from '../sce
 import { useGame } from '../store/game';
 import { FEATURES } from '../lib/features';
 import { APP_VERSION } from '../persistence/exportImport';
+import { activeJourney } from '../store/actions';
+import { resumeTarget } from '../store/story';
 
 /** S1 — docs/06 §3 S1. Buttons whose screens are not built yet are disabled with the reason shown. */
 export function TitleScreen() {
   const navigate = useNavigate();
-  const hasActive = useGame((s) => Object.values(s.save.journeys).some((j) => j.status === 'active'));
+  const journey = useGame((s) => activeJourney(s.save));
+  const hasActive = !!journey;
   const hasPlayers = useGame((s) => Object.values(s.save.players).some((p) => p.kind === 'real'));
   const stars = useMemo(makeStars, []);
   const draw = useCallback(
@@ -25,7 +28,7 @@ export function TitleScreen() {
     [stars],
   );
 
-  const continueReason = !hasActive ? ui.title.continueNoSave : !FEATURES.chapters ? ui.title.continueNotReady : null;
+  const continueReason = !hasActive ? ui.title.continueNoSave : null;
   const createReason = FEATURES.characterCreation ? null : ui.title.createSelfNotReady;
 
   return (
@@ -54,7 +57,7 @@ export function TitleScreen() {
             {ui.title.start}
           </PixelButton>
           <DisabledAware reason={continueReason} id="continue-reason">
-            <PixelButton variant="ghost" block className="bg-navy/60" icon={<Play aria-hidden className="h-5 w-5" />} disabled={!!continueReason} aria-describedby={continueReason ? 'continue-reason' : undefined}>
+            <PixelButton variant="ghost" block className="bg-navy/60" icon={<Play aria-hidden className="h-5 w-5" />} disabled={!!continueReason} aria-describedby={continueReason ? 'continue-reason' : undefined} onClick={() => journey && navigate(resumeTarget(journey))}>
               {ui.title.continue}
             </PixelButton>
           </DisabledAware>

@@ -33,10 +33,20 @@ describe('S1 Title', () => {
     expect(btn).toHaveAccessibleDescription('ยังไม่มีการเดินทางที่บันทึกไว้');
   });
 
-  it('continue explains it is not ready yet when a journey exists but chapters are not built', () => {
-    useGame.setState({ save: sampleSave() });
-    renderAt('/');
-    expect(screen.getByRole('button', { name: /เล่นต่อ/ })).toHaveAccessibleDescription('เล่นต่อได้เมื่อระบบเนื้อเรื่องพร้อม');
+  it('continue resumes the chapter in progress (docs/05 §6)', async () => {
+    useGame.setState({ save: sampleSave() }); // ch1 in progress at ch1_s02
+    const router = renderAt('/');
+    await userEvent.click(screen.getByRole('button', { name: /เล่นต่อ/ }));
+    expect(router.state.location.pathname).toBe('/j/jr_journey001/play/ch1');
+  });
+
+  it('continue goes to chapter selection when no chapter is in progress', async () => {
+    const save = sampleSave();
+    save.journeys.jr_journey001!.chapterProgress = {};
+    useGame.setState({ save });
+    const router = renderAt('/');
+    await userEvent.click(screen.getByRole('button', { name: /เล่นต่อ/ }));
+    expect(router.state.location.pathname).toBe('/j/jr_journey001/chapters');
   });
 
   it('about and settings are reachable', async () => {

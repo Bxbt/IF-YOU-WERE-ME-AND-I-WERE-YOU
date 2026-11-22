@@ -3,6 +3,8 @@
  * Drawn with primitives on the 320×180 canvas; text stays in HTML.
  */
 import { H, W, mulberry32 } from '../palette';
+import { blitLayer, type SceneEnv } from '../env';
+import { drawDim, drawHaze, flickerOn } from '../effects';
 
 type Ctx = CanvasRenderingContext2D;
 const rect = (c: Ctx, x: number, y: number, w: number, h: number, col: string) => {
@@ -102,4 +104,27 @@ export function drawElevatorLight(c: Ctx, t: number, haze = 1) {
     c.fillStyle = `rgba(120,70,40,${0.05 * haze})`;
     c.fillRect(0, 0, W, H);
   }
+}
+
+/** bg_elevator_interior — same car with the ceiling light on; `light: flicker` blinks it (≤ 2 Hz). */
+export function drawElevatorInterior(c: Ctx, t: number, env: SceneEnv) {
+  blitLayer(c, 'bg_elevator_base', W, H, drawElevatorBase);
+  const on = env.light === 'flicker' ? flickerOn(t, 11) : env.light !== 'off';
+  if (on) {
+    rect(c, 90, 8, 140, 4, '#f3ebdd');
+    rect(c, 90, 12, 140, 1, '#fff4d6');
+    c.fillStyle = 'rgba(243,235,221,0.10)';
+    c.fillRect(34, 20, 252, 160);
+  } else {
+    drawDim(c, 0.45);
+  }
+  if (env.light === 'emergency') drawElevatorLight(c, t, env.haze);
+}
+
+/** bg_elevator_emergency — main light dead, orange emergency light breathing, optional haze. */
+export function drawElevatorEmergency(c: Ctx, t: number, env: SceneEnv) {
+  blitLayer(c, 'bg_elevator_base', W, H, drawElevatorBase);
+  drawDim(c, 0.35);
+  drawElevatorLight(c, t, env.haze);
+  drawHaze(c, env.haze);
 }

@@ -113,15 +113,16 @@
 
 | ความสามารถ | รายละเอียด |
 |---|---|
-| Interpreter | เดิน `SceneContent.lines` ตาม `lineIndex` ข้ามบรรทัดที่ `when` ไม่ผ่าน |
+| Interpreter | ขยายฉากเป็นลำดับขั้น (step): ข้ามบรรทัดที่ `when` ไม่ผ่าน · ต่อ `responseLines` ของตัวเลือกที่เลือกแล้วหลัง CHOICE · `lineIndex` = ตำแหน่งใน step list นี้ · ENV ไม่ใช่ step ที่หยุดรอ — สภาพฉาก ณ `lineIndex` = ผลรวม ENV ทั้งหมดก่อนหน้า (resume จึงได้ฉากถูกต้อง) · ตัวเลือกที่เลือก = รายการล่าสุดใน `choiceLog` ของ choice นั้น |
 | Tokens | แทน `{A} {B} {in} {out} {me} {other} {you} {in.end} {out.end}` และ fragment Template จาก Flag · token ที่ไม่รู้จัก → throw ใน dev, แสดงเป็นว่างใน prod + log |
 | Conditions | `flag eq`, `scenario.priorWarning`, `all`, `any` |
 | Controller | คำนวณว่าใครควบคุมบรรทัด CHOICE จาก `owner` + Scenario + โหมด + Part (Ch2 สลับ) → ส่ง `perspective` ให้ PerspectiveBanner |
 | ENV | ส่งคำสั่งไป SceneCanvas (background, rain level, light mode, haze, shake, split) |
 | Save | ทุก CHOICE/QUESTION → dispatch ไป store → autosave |
-| Fallback | Flag ว่างจากการข้าม → เลือก line ที่มี `when: { flag: X, eq: '__missing' }` หรือข้อความ fallback ทั่วไป |
+| Fallback | Flag ว่างจากการข้าม → เลือก line ที่มี `when: { flag: X, unset: true }` หรือข้อความ fallback ทั่วไป |
+| เล่นซ้ำ | "เริ่มบทใหม่" ล้าง `flags`, `choiceLog`, `skippedScenes` ของบทนั้น (ตัวเลือกเดิมถูกแทนที่ — [05](05-game-flow.md) §6) · "ดูอย่างเดียว" เล่นจาก state ในหน่วยความจำ ไม่เขียนลง Save |
 
-**Content Lint (unit test):** ทุก `next` ชี้ไป scene ที่มีอยู่ · ไม่มี scene ที่ไปไม่ถึง · ทุก Flag ที่ใช้ใน `when` มีผู้ตั้ง · ทุก tag อยู่ใน signals registry · ทุก option id ไม่ซ้ำ · ไม่มีคำต้องห้าม ([04](04-personality-system.md) §4.2) · ทุก Background key อยู่ใน asset registry
+**Content Lint (unit test, `npm run content:lint`):** ทุก `next` ชี้ไป scene ที่มีอยู่ · ไม่มี scene ที่ไปไม่ถึง · ทุก Flag ที่ใช้ใน `when` มีผู้ตั้ง · ทุก tag อยู่ใน signals registry · ทุก option id ไม่ซ้ำ · ไม่มีคำต้องห้าม ([04](04-personality-system.md) §4.2) · ทุก Background key อยู่ใน asset registry · ทุก token แทนค่าได้ครบในทุกชุด Flag/Scenario (ไม่มี `{` ค้าง) · choice id ไม่ซ้ำทั้งบท
 
 ---
 

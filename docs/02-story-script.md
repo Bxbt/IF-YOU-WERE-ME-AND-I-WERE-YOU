@@ -85,7 +85,7 @@ SYS  เปลี่ยนการตั้งค่านี้ได้ทุ
 
 ## Chapter 1 — The Incident
 
-**ID:** `ch1` | **ความยาว:** 8–10 นาที | **ผู้เล่นควบคุม:** บทบาทของตัวเอง (Solo: บทบาทที่ตั้งเป็นตัวเอง; อีกบทบาทแสดงเป็น cutaway ที่มีตัวเลือก พร้อม Imagined Banner)
+**ID:** `ch1` | **ชื่อไทย:** เหตุการณ์ | **ความยาว:** 8–10 นาที | **ผู้เล่นควบคุม:** บทบาทของตัวเอง (Solo: บทบาทที่ตั้งเป็นตัวเอง; อีกบทบาทแสดงเป็น cutaway ที่มีตัวเลือก พร้อม Imagined Banner)
 **Backgrounds:** `bg_apartment_evening`, `bg_corridor`, `bg_elevator_interior`, `bg_elevator_emergency`, `bg_apartment_kitchen`
 
 ### Opening Scene — `ch1_s01`
@@ -206,6 +206,11 @@ NARR  ตอนนี้ระยะห่างระหว่างสอง�
 
 ข้อความใต้การ์ด: *"ไม่จำเป็นต้องเลือก และไม่มีความรู้สึกไหนที่ผิด"*
 
+**ลำดับในไฟล์ Content:** `ch1_s01` → `ch1_s02` → `ch1_s03` → `ch1_s04` → `ch1_cards` (การ์ดความรู้สึก) → `ch1_reflect` (Reflection) → `ch1_end` → Transition
+บันทึกเป็น StoryAnswer `kind: 'emotion_card'`, `itemId: 'ec_ch1'` เฉพาะเมื่อแตะอย่างน้อย 1 ใบ · Option ids:
+insider `ec_in_shock` ตกใจ · `ec_in_fear` กลัว · `ec_in_helpless` ช่วยตัวเองไม่ได้ · `ec_in_cramped` อึดอัด · `ec_in_annoyed` รำคาญ · `ec_in_embarrassed` อาย · `ec_in_calm` ยังสงบอยู่ ·
+waiter `ec_out_wonder` สงสัย · `ec_out_worry` กังวล · `ec_out_worst` คิดไปถึงเรื่องแย่ที่สุด · `ec_out_frustrated` หงุดหงิด · `ec_out_helpless` ช่วยอะไรไม่ได้ · `ec_out_unsure` ยังไม่แน่ใจว่าเกิดอะไรขึ้น
+
 ### Reflection Questions — Ch1 (ส่วนตัวเสมอ)
 
 | ID | คำถาม | รูปแบบ |
@@ -215,6 +220,8 @@ NARR  ตอนนี้ระยะห่างระหว่างสอง�
 | `r1_3` | (ไม่บังคับ) ครั้งล่าสุดที่คุณต้องรอใครสักคน โดยไม่รู้ว่าเขาเป็นอย่างไร คุณทำอะไรกับความรู้สึกนั้น | ข้อความอิสระ + Meta |
 
 Meta options ทุกข้อ: ขึ้นอยู่กับสถานการณ์ · ไม่แน่ใจ · ไม่สะดวกตอบ · ข้าม ([03](03-question-bank.md) §0.2)
+
+Option ids: `r1_1` = `r1_1_shock`, `r1_1_fear`, `r1_1_helpless`, `r1_1_cramped`, `r1_1_annoyed`, `r1_1_embarrassed`, `r1_1_calm` (maxSelect 2) · `r1_2` = `r1_2_nothing`, `r1_2_something`, `r1_2_go_now`, `r1_2_want_news` (maxSelect 1) · `r1_3` ไม่มีตัวเลือก (ข้อความอิสระ + Meta)
 
 ### Ending Scene — `ch1_end`
 
@@ -237,7 +244,7 @@ NARR  ลองเดินในรองเท้าของกันแล�
 
 ## Chapter 2 — Walk in My Shoes
 
-**ID:** `ch2` | **ความยาว:** 12–15 นาที
+**ID:** `ch2` | **ชื่อไทย:** ลองเดินในรองเท้าของกันและกัน | **ความยาว:** 12–15 นาที
 **โครงสร้าง:** Part A (มุมมองคนในลิฟต์) → Part B (มุมมองคนที่รอ) → Part C (เส้นเวลาคู่)
 **ผู้ควบคุม:**
 - Play Together: **สลับบทบาท** — คนที่เป็น `waiter` ใน Ch1 เล่น Part A, คนที่เป็น `insider` เล่น Part B
@@ -467,7 +474,7 @@ NARR  แต่บางอย่างในใจ ยังไม่ได้�
 
 ## Chapter 3 — What I Couldn't Say
 
-**ID:** `ch3` | **ความยาว:** 10–12 นาที
+**ID:** `ch3` | **ชื่อไทย:** สิ่งที่พูดไม่ออก | **ความยาว:** 10–12 นาที
 **ผู้ควบคุม:** เจ้าของบทบาทตาม Ch1 (Together) · Solo และ Remote เล่นทั้งสองบทบาท (บทบาทคู่มี Imagined Banner)
 **Background:** `bg_lobby_floor6`, `bg_stairwell`
 
@@ -631,7 +638,7 @@ NARR  ถ้าเราลองสลับที่กันจริง ๆ 
 
 ## Chapter 4 — Switch the Roles
 
-**ID:** `ch4` | **ความยาว:** 10–15 นาที
+**ID:** `ch4` | **ชื่อไทย:** สลับบทบาท | **ความยาว:** 10–15 นาที
 **บริบท:** หลุดจากบทบาท `insider`/`waiter` — ตอนนี้คือ {A} และ {B} ตัวจริง ตอบในฐานะตัวเอง
 **Background:** `bg_living_room_morning` → `bg_living_room_night`
 
@@ -714,7 +721,7 @@ NARR  ยังมีอีกที่หนึ่งที่อยากพ�
 
 ## Chapter 5 — Our Safe Place
 
-**ID:** `ch5` | **ความยาว:** 8–10 นาที
+**ID:** `ch5` | **ชื่อไทย:** ที่ปลอดภัยของเรา | **ความยาว:** 8–10 นาที
 **Background:** `bg_rooftop_night` (ดาดฟ้ามีสวนเล็ก ๆ ไฟสาย ดาวเต็มฟ้า)
 
 ### Opening Scene — `ch5_s01`

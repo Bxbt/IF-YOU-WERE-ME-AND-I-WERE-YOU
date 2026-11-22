@@ -156,26 +156,45 @@ interface ChapterContent {
   id: ChapterId;
   titleEn: string; titleTh: string;
   estimatedMinutes: [number, number];
+  firstScene: string;
   scenes: SceneContent[];
-  reflection: QuestionContent[];        // r1_1 ...
+  reflection: QuestionContent[];        // r1_1 ... (เล่นที่บรรทัด REFLECTION)
+  emotionCards?: { insider: OptionContent[]; waiter: OptionContent[] };   // การ์ดความรู้สึก (บรรทัด EMOTION_CARDS)
+  transition: { lines: LineContent[]; nextChapter?: ChapterId };          // หลังจบฉากสุดท้าย + ปุ่ม [ไปบทถัดไป] [พักก่อน]
 }
 
 interface SceneContent {
   id: string;                           // "ch1_s01"
-  background: string;                   // asset key "bg_apartment_evening"
+  background: string;                   // asset key "bg_apartment_evening" (ENV เปลี่ยนได้ระหว่างฉาก)
   ariaLabel: string;
   controller: 'insider' | 'waiter' | 'A' | 'B' | 'both' | 'narrator';
   lines: LineContent[];
-  next: string | NextRule[];            // scene id หรือเงื่อนไข
+  next: string | NextRule[] | null;     // null = ฉากสุดท้ายของบท
 }
 
+interface NextRule { when?: Condition; to: string }   // กฎแรกที่ผ่านชนะ · ไม่มี when = ค่าเริ่มต้น
+
 type LineContent =
-  | { type: 'NARR' | 'SYS'; text: string; when?: Condition }
+  | { type: 'NARR'; text: string; when?: Condition }
+  | { type: 'SYS'; title?: string; text: string; when?: Condition }   // title = "โทรศัพท์ของ {in}", "จอลิฟต์"
   | { type: 'DLG' | 'MONO'; speaker: 'in'|'out'|'A'|'B'|string; expression?: Expression; text: string; when?: Condition }
-  | { type: 'ENV'; set: Record<string, string | number | boolean> }
+  | { type: 'ENV'; set: EnvSet; when?: Condition }
   | { type: 'CHOICE'; id: string; owner: 'insider'|'waiter'|'A'|'B'|'each'; options: ChoiceOption[] }
   | { type: 'QUESTION'; questionId: QuestionId; layer: Layer | 'both'; private: boolean }
+  | { type: 'EMOTION_CARDS' }           // การ์ดความรู้สึกของบท → StoryAnswer kind 'emotion_card', itemId 'ec_<chapter>'
+  | { type: 'REFLECTION' }              // ชุดคำถามท้ายบท → StoryAnswer kind 'reflection' · ข้ามทั้งชุดได้
   | { type: 'SAFETY_NOTE'; text: string; when?: Condition };
+
+// ENV เป็นชนิดที่กำหนดไว้ ไม่ใช่ Record อิสระ — key ที่ไม่รู้จักจึง compile ไม่ผ่าน
+interface EnvSet {
+  bg?: string; split?: [string, string] | null;
+  rain?: 'none' | 'light' | 'medium' | 'heavy';
+  light?: 'normal' | 'flicker' | 'emergency' | 'off';
+  haze?: 0 | 1 | 2; lamp?: 'warm' | 'off'; steam?: boolean;
+  door?: 'closed' | 'ajar' | 'open';
+  shake?: 'small';                      // ครั้งเดียวตอนเล่นผ่าน ไม่เล่นซ้ำตอน resume · ปิดเมื่อ reduced motion
+  sfx?: string; music?: string;         // MVP ไม่มีผล (เสียง Phase 2 — audit M-9) เก็บไว้ใน content ได้
+}
 
 interface ChoiceOption {
   id: string; text: string;
@@ -185,7 +204,8 @@ interface ChoiceOption {
   responseLines?: LineContent[];
 }
 
-type Condition = { flag: string; eq: string } | { scenario: 'priorWarning'; eq: boolean } | { all: Condition[] } | { any: Condition[] };
+type Condition = { flag: string; eq: string } | { flag: string; unset: true } | { scenario: 'priorWarning'; eq: boolean } | { all: Condition[] } | { any: Condition[] };
+// { flag, unset: true } = Flag ยังไม่มีค่า (ข้ามฉาก) → ใช้เลือกบรรทัด fallback (แทน eq: '__missing' ใน 10 §4)
 type Expression = 'neutral'|'happy'|'sad'|'worried'|'angry'|'scared'|'relieved'|'thinking';
 
 interface QuestionContent {
