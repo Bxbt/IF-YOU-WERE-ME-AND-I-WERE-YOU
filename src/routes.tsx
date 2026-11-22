@@ -19,6 +19,7 @@ import { PlayScreen } from './screens/PlayScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { ErrorScreen } from './screens/ErrorScreen';
 import { RouteGate } from './components/PlayerGate';
+import { MemoriesListScreen, MemoryFormScreen, MemoryViewScreen } from './screens/MemoriesScreen';
 
 const errorElement = <ErrorScreen />;
 
@@ -92,6 +93,14 @@ export const routes = [
     lazy: () => import('./screens/EndingScreen').then((m) => ({ Component: m.EndingScreen })),
     errorElement,
   },
+  ...(
+    [
+      ['/memories/:playerId', <MemoriesListScreen key="l" />],
+      ['/memories/:playerId/new', <MemoryFormScreen key="n" />],
+      ['/memories/:playerId/:memId', <MemoryViewScreen key="v" />],
+      ['/memories/:playerId/:memId/edit', <MemoryFormScreen key="e" />],
+    ] as const
+  ).map(([path, el]) => ({ path, element: <RouteGate>{el}</RouteGate>, errorElement })),
   {
     path: '/art-preview',
     lazy: () => import('./screens/ArtPreviewScreen').then((m) => ({ Component: m.ArtPreviewScreen })),

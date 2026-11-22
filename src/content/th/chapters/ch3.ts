@@ -11,7 +11,7 @@ const NO_PW = { scenario: 'priorWarning', eq: false } as const;
 const FIRST = (eq: string): Condition => ({ flag: 'out_first_words', eq });
 const NEED = (eq: string): Condition => ({ flag: 'in_need', eq });
 
-const EMO_SET = [
+export const EMO_SET = [
   { id: 'w3e_fear', text: 'กลัว' },
   { id: 'w3e_relief', text: 'โล่งใจ' },
   { id: 'w3e_angry', text: 'โกรธ' },
@@ -24,7 +24,7 @@ const EMO_SET = [
   { id: 'w3e_unclear', text: 'ไม่รู้สึกอะไรชัดเจน', exclusive: true },
 ];
 
-const NEED_SET = [
+export const NEED_SET = [
   { id: 'w3n_hug', text: 'อ้อมกอด' },
   { id: 'w3n_listen', text: 'ให้ฟัง' },
   { id: 'w3n_space', text: 'พื้นที่/เวลา' },

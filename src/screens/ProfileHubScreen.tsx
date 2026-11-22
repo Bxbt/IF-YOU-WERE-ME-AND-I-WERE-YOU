@@ -154,6 +154,9 @@ export function ProfileHubScreen() {
         return (
           <PlayerCard key={p.id} player={p}>
             <QuestionBlock title={ui.hub.selfTitle} ownerId={p.id} layer="self" />
+            <Link to={`/memories/${p.id}`} className="btn btn-ghost self-start text-sm no-underline">
+              {ui.memories.hubLink}
+            </Link>
             {partner && (
               <QuestionBlock
                 title={ui.hub.perceivedTitle(partner.nickname)}
