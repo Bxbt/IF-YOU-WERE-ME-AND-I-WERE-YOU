@@ -124,7 +124,18 @@ Portrait ใช้ layer เดียวกับ Sprite (สร้างใน�
 
 ## 5. Audio (A-09, Q-08)
 
-ค่าเริ่มต้นปิดเสียง · MVP สร้างด้วย WebAudio (noise สำหรับฝน, oscillator เบา ๆ) หรือไฟล์ CC0 ที่ตรวจ License แล้ว
+ค่าเริ่มต้นปิดเสียง · **ตัดสินแล้ว (Q-08):** สร้างเสียงทั้งหมดด้วย WebAudio ใน `src/audio/engine.ts` ไม่มีไฟล์เสียง ไม่มี License ต้องติดตาม · เปลี่ยนเป็นไฟล์ CC0 หรือเพลงต้นฉบับภายหลังได้โดยแก้ engine อย่างเดียว (key เดิม)
+
+| สิ่งที่ทำแล้ว | วิธีสร้าง |
+|---|---|
+| ฝน light/medium/heavy | white noise → highpass 900 Hz / lowpass 5 kHz, ระดับตาม `rain` |
+| บรรยากาศในห้อง (`ambient_home`) | brown-ish noise lowpass 280 Hz + drone triangle 110/165 Hz หายใจช้า |
+| เสียงหึ่งในลิฟต์ | sine 55/110 Hz lowpass — เมื่อฉากลิฟต์และไฟไม่ปกติ |
+| กลางคืน (`ambient_night`, หน้าแรก) | pad triangle + โน้ต pentatonic ช้า ๆ |
+| เพลงตอนจบ (`ending_theme`) | pad + arpeggio pentatonic ทุก 0.9 วินาที |
+| SFX: door_close, elevator_jolt, metal_creak, tools_above, door_pry, alarm_bell, phone_buzz, ui_reveal | oscillator/noise + envelope สั้น ๆ |
+
+ความปลอดภัยของเสียง: DynamicsCompressor + master ceiling 0.45 × volume · elevator_jolt เบากว่าเสียงอื่น · เสียงหยุดเมื่อแท็บไม่แสดง · เบราว์เซอร์ที่ไม่มี WebAudio เล่นเกมได้ปกติ (ตั้งค่าแจ้งว่าไม่มีเสียง)
 
 | Key | Format | ความยาว | Loop | Priority |
 |---|---|---|---|---|

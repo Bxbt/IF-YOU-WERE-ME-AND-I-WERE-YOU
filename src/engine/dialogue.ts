@@ -361,3 +361,25 @@ export function rewriteTokens(
   }
   return out;
 }
+
+// ---------- Sound cues (Phase 2 sound, docs/09 §5) ----------
+
+/** The last `music` ENV in effect at step `index` of this scene (undefined = infer from background). */
+export function musicAt(steps: Step[], index: number): string | undefined {
+  let music: string | undefined;
+  for (let k = 0; k < Math.min(index, steps.length); k++) {
+    const st = steps[k]!;
+    if (st.kind === 'env' && st.set.music !== undefined) music = st.set.music;
+  }
+  return music;
+}
+
+/** One-shot sound effects passed between two positions (played live only, like the shake). */
+export function sfxBetween(steps: Step[], from: number, to: number): string[] {
+  const out: string[] = [];
+  for (let k = Math.max(0, from); k < Math.min(to, steps.length); k++) {
+    const st = steps[k]!;
+    if (st.kind === 'env' && st.set.sfx) out.push(st.set.sfx);
+  }
+  return out;
+}

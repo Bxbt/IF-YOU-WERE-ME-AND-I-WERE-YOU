@@ -4,6 +4,7 @@ import { ArrowLeft, Pause, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { ui } from '../content/th/ui';
 import { FEATURES } from '../lib/features';
 import { useGame } from '../store/game';
+import { toggleSound } from '../audio/useSound';
 
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
   return (
@@ -39,12 +40,7 @@ export function SoundToggle() {
       aria-label={enabled ? 'ปิดเสียง' : 'เปิดเสียง'}
       aria-pressed={enabled}
       className="btn btn-ghost min-w-[44px] px-2"
-      onClick={() =>
-        useGame.getState().update((s) => ({
-          ...s,
-          settings: { ...s.settings, sound: { ...s.settings.sound, enabled: !enabled } },
-        }))
-      }
+      onClick={() => toggleSound(!enabled)}
     >
       {enabled ? <Volume2 aria-hidden className="h-5 w-5" /> : <VolumeX aria-hidden className="h-5 w-5" />}
     </button>

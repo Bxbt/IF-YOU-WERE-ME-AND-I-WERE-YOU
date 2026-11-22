@@ -3,6 +3,9 @@ import { ui } from '../content/th/ui';
 import { ScreenHeader } from '../components/Misc';
 import { DataSection } from '../components/DataSection';
 import { useGame } from '../store/game';
+import { FEATURES } from '../lib/features';
+import { isSoundSupported } from '../audio/engine';
+import { toggleSound } from '../audio/useSound';
 import type { Settings } from '../persistence/schema';
 import { APP_VERSION } from '../persistence/exportImport';
 import { SCHEMA_VERSION } from '../persistence/schema';
@@ -74,6 +77,46 @@ export function SettingsScreen() {
           onChange={(v) => setSetting('reducedMotion', v)}
         />
       </section>
+
+      {FEATURES.sound && (
+        <section className="panel flex flex-col gap-4" aria-labelledby="sound-h">
+          <h2 id="sound-h" className="m-0 text-xl font-semibold">
+            {ui.settings.sound}
+          </h2>
+          {!isSoundSupported() ? (
+            <p className="m-0 text-sm text-lavender">{ui.settings.soundUnsupported}</p>
+          ) : (
+            <>
+              <Segmented
+                legend={ui.settings.soundToggle}
+                value={settings.sound.enabled ? 'on' : 'off'}
+                options={ui.settings.soundOptions}
+                onChange={(v) => toggleSound(v === 'on')}
+              />
+              <label className="flex flex-col gap-2">
+                <span className="font-medium">{ui.settings.volume}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={Math.round(settings.sound.volume * 100)}
+                  disabled={!settings.sound.enabled}
+                  aria-valuetext={`${Math.round(settings.sound.volume * 100)}%`}
+                  onChange={(e) =>
+                    useGame.getState().update((s) => ({
+                      ...s,
+                      settings: { ...s.settings, sound: { ...s.settings.sound, volume: Number(e.target.value) / 100 } },
+                    }))
+                  }
+                  className="h-11 w-full max-w-sm accent-[rgb(var(--c-orange))] disabled:opacity-45"
+                />
+              </label>
+              <p className="m-0 text-[13px] text-lavender">{ui.settings.soundNote}</p>
+            </>
+          )}
+        </section>
+      )}
 
       <DataSection />
 

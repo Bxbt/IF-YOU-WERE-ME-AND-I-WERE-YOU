@@ -72,6 +72,15 @@ export const ui = {
       { value: 'instant', label: 'ทันที' },
     ],
     reducedMotion: 'ลดการเคลื่อนไหว',
+    sound: 'เสียง',
+    soundToggle: 'เสียงในเกม',
+    soundOptions: [
+      { value: 'off', label: 'ปิด' },
+      { value: 'on', label: 'เปิด' },
+    ],
+    volume: 'ความดัง',
+    soundNote: 'เสียงสร้างขึ้นในเครื่อง ไม่มีไฟล์เสียงหรือการเชื่อมต่อใด ๆ ทุกสิ่งที่ได้ยินมีบอกเป็นข้อความบนจอด้วย',
+    soundUnsupported: 'เบราว์เซอร์นี้เล่นเสียงของเกมไม่ได้ เล่นต่อได้ตามปกติโดยไม่มีเสียง',
     reducedMotionOptions: [
       { value: 'system', label: 'ตามเครื่อง' },
       { value: 'on', label: 'เปิด' },

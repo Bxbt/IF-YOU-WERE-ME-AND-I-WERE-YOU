@@ -28,6 +28,8 @@ import {
 import { Handoff } from '../components/Handoff';
 import { PlayerGate } from '../components/PlayerGate';
 import { RevealPanel } from '../components/Reveal';
+import { useAmbient } from '../audio/useSound';
+import { ambientFor, sound } from '../audio/engine';
 import { useSession } from '../store/session';
 import { MIRRORS } from '../content/th/questions';
 import { SceneCanvas } from '../scene/SceneCanvas';
@@ -78,6 +80,8 @@ import {
   resumePosition,
   sceneById,
   shakeBetween,
+  sfxBetween,
+  musicAt,
   skipScene,
   speakerName,
   startOfChapter,
@@ -310,6 +314,9 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     const endSteps = expandScene(lastScene, state);
     return envAt(lastScene, endSteps, endSteps.length);
   }, [scene, pos, steps, lastScene, state]);
+  // Sound follows the scene (docs/09 §5); silent unless the player turned sound on.
+  const music = scene && pos ? musicAt(steps, pos.lineIndex) : undefined;
+  useAmbient(ambientFor(env.bg, env.rain, env.light, music));
 
   // ----- movement -----
   const moveTo = useCallback(
@@ -319,6 +326,8 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         const toSteps = expandScene(sceneById(content, move.pos.sceneId)!, st);
         if (shakeBetween(toSteps, sameScene ? from.lineIndex : 0, move.pos.lineIndex))
           setShakeKey((k) => k + 1);
+        for (const sfx of sfxBetween(toSteps, sameScene ? from.lineIndex : 0, move.pos.lineIndex))
+          sound.playSfx(sfx);
       }
       if (view) {
         setViewRun({ pos: move.kind === 'at' ? move.pos : null, state: st });

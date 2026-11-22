@@ -60,7 +60,7 @@ test('TC-A11Y-03 (shell): keyboard reaches and activates the start button', asyn
 
 test('TC-A11Y-04: reduced motion setting is applied to the document', async ({ page }) => {
   await page.goto('/#/settings');
-  await page.getByRole('button', { name: 'เปิด' }).click();
+  await page.getByRole('group', { name: 'ลดการเคลื่อนไหว' }).getByRole('button', { name: 'เปิด' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-reduced-motion', 'true');
 });
 

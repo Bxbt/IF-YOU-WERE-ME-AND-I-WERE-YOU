@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import { Toaster } from './components/toast';
 import { useReducedMotion } from './lib/motion';
+import { useSoundSettings } from './audio/useSound';
 import { installPersistenceListeners, useGame } from './store/game';
 import { router } from './routes';
 import { RecoveryScreen } from './screens/RecoveryScreen';
@@ -14,6 +15,7 @@ export function App() {
   const recovery = useGame((s) => s.recovery);
   const fontScale = useGame((s) => s.save.settings.fontScale);
   const reduced = useReducedMotion();
+  useSoundSettings();
 
   useEffect(() => {
     useGame.getState().init();

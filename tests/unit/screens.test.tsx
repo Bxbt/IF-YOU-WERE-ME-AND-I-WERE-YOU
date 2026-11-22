@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { routes } from '../../src/routes';
@@ -85,7 +85,7 @@ describe('S10 Settings', () => {
     renderAt('/settings');
     await userEvent.click(screen.getByRole('button', { name: 'ใหญ่มาก' }));
     await userEvent.click(screen.getByRole('button', { name: 'ทันที' }));
-    await userEvent.click(screen.getByRole('button', { name: 'เปิด' }));
+    await userEvent.click(within(screen.getByRole('group', { name: 'ลดการเคลื่อนไหว' })).getByRole('button', { name: 'เปิด' }));
     const s = useGame.getState().save.settings;
     expect(s).toMatchObject({ fontScale: 1.3, textSpeed: 'instant', reducedMotion: 'on' });
     expect(screen.getByRole('button', { name: 'ใหญ่มาก' })).toHaveAttribute('aria-pressed', 'true');

@@ -54,7 +54,7 @@ export interface EnvSet {
   steam?: boolean;
   door?: 'closed' | 'ajar' | 'open';
   shake?: 'small';
-  /** No effect in the MVP (sound is Phase 2 — audit M-9). */
+  /** Synthesised sound (src/audio/engine.ts) — played only when the player turned sound on. */
   sfx?: string;
   music?: string;
 }

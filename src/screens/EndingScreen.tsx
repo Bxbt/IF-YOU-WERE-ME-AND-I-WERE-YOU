@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BarChart3, FileText, Home, SkipForward } from 'lucide-react';
 import { ui } from '../content/th/ui';
+import { useAmbient } from '../audio/useSound';
 import type { ChapterContent } from '../content/types';
 import { CHAPTER_BY_ID } from '../content/th/chapters';
 import { EmptyState } from '../components/Misc';
@@ -16,7 +17,10 @@ import { useReducedMotion } from '../lib/motion';
  * S15 — Ending (docs/06 S15, docs/02 ch5_end): tap/Enter for the next line, "ข้าม" top right,
  * then the three post-game buttons. English stays as written with a small Thai translation (A-13).
  */
+const ENDING_AMBIENT = { music: 'ending', rain: 'none', hum: false } as const;
+
 export function EndingScreen() {
+  useAmbient(ENDING_AMBIENT);
   const { journeyId = '' } = useParams();
   const navigate = useNavigate();
   const journey = useGame((s) => s.save.journeys[journeyId]);

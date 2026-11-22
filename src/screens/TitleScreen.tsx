@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Info, Play, Settings as SettingsIcon, Sparkles, UserPlus } from 'lucide-react';
 import { ui } from '../content/th/ui';
+import { useAmbient } from '../audio/useSound';
 import { PixelButton } from '../components/PixelButton';
 import { SoundToggle } from '../components/Misc';
 import { PixelCanvas } from '../scene/PixelCanvas';
@@ -13,8 +14,11 @@ import { currentJourney } from '../store/actions';
 import { resumeTarget } from '../store/story';
 
 /** S1 — docs/06 §3 S1. Buttons whose screens are not built yet are disabled with the reason shown. */
+const TITLE_AMBIENT = { music: 'night', rain: 'none', hum: false } as const;
+
 export function TitleScreen() {
   const navigate = useNavigate();
+  useAmbient(TITLE_AMBIENT);
   const journey = useGame((s) => currentJourney(s.save));
   const hasActive = !!journey;
   const hasPlayers = useGame((s) => Object.values(s.save.players).some((p) => p.kind === 'real'));

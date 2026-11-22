@@ -150,8 +150,8 @@ describe('labels', () => {
     expect(screen.getByRole('img', { name: 'ตำแหน่ง 2 จาก 5' })).toBeInTheDocument();
   });
 
-  it('sound toggle is not rendered while sound is not shipped (audit M-9)', () => {
-    const { container } = render(<SoundToggle />);
-    expect(container).toBeEmptyDOMElement();
+  it('sound toggle starts off (sound is off by default — docs/09 §5)', () => {
+    render(<SoundToggle />);
+    expect(screen.getByRole('button', { name: 'เปิดเสียง' })).toHaveAttribute('aria-pressed', 'false');
   });
 });

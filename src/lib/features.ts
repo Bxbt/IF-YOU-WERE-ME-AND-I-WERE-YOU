@@ -8,7 +8,7 @@ export const FEATURES = {
   chapters: true, // S5/S5a/S6 — shipped in M4 (Ch1; Ch2–Ch5 content arrives in M5, shown as coming soon)
   together: false, // Phase 2
   remote: false, // Phase 3
-  sound: false, // Phase 2 (audit M-9)
+  sound: true, // synthesised with WebAudio (Q-08 option 1); off until the player turns it on
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;
