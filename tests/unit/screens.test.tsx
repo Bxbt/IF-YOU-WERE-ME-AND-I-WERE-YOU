@@ -60,7 +60,7 @@ describe('S2 Mode Selection', () => {
   it('remote opens the lobby (3A); solo and together open character creation', async () => {
     const router = renderAt('/mode');
     await userEvent.click(screen.getByRole('button', { name: /เล่นระยะไกล/ }));
-    expect(router.state.location.pathname).toBe('/remote');
+    expect(router.state.location.pathname).toBe('/live');
     await router.navigate('/mode');
     await userEvent.click(screen.getByRole('button', { name: /เล่นด้วยกัน/ }));
     expect(router.state.location.search).toBe('?mode=together');

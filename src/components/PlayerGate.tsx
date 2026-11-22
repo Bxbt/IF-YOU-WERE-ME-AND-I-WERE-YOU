@@ -5,6 +5,8 @@ import { useGame } from '../store/game';
 import { useSession } from '../store/session';
 import { forgetPin, recordPinAttempt } from '../store/pinActions';
 import { purgeBackup } from '../persistence/persist';
+import { livePartnerIds } from '../live/merge';
+import { ui } from '../content/th/ui';
 
 /**
  * Shows S13 before a player's private pages when that player has a PIN and is not the one who
@@ -21,6 +23,13 @@ export function PlayerGate({
 }) {
   const player = useGame((s) => s.save.players[playerId]);
   const unlocked = useSession((s) => s.unlocked);
+  const away = useGame((s) => livePartnerIds(s.save).has(playerId));
+  if (away)
+    return (
+      <p role="alert" className="panel m-4 text-center" data-testid="live-away">
+        {ui.live.onPartnerDevice(player?.nickname ?? '')}
+      </p>
+    );
   if (!player?.pin || unlocked === playerId) return <>{children}</>;
   return (
     <PinGate

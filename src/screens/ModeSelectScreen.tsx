@@ -26,7 +26,7 @@ export function ModeSelectScreen() {
   ];
 
   function choose(key: ModeKey) {
-    if (key === 'remote') return navigate('/remote');
+    if (key === 'remote') return navigate('/live');
     if (full) return setShowFull(true);
     // TC-RES-09: an unfinished journey is archived only after the player agrees.
     if (hasActive) setConfirm(key);

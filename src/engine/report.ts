@@ -210,7 +210,7 @@ export function buildReport(
 
   // Together: only differences both players agreed to open (M10). Solo: the partner must play first.
   const differences: ReportSection =
-    j.mode === 'together'
+    j.mode === 'together' || j.mode === 'remote_online'
       ? {
           id: 'differences',
           title: t.differences,

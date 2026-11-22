@@ -138,12 +138,12 @@ describe('sealed exchange flow', () => {
 });
 
 describe('S17 Remote Lobby', () => {
-  it('shows the 3A limits word for word; online is not set up and cannot be used', async () => {
+  it('shows the 3A limits word for word and links to live play (S19)', async () => {
     useGame.setState({ ready: true, save: createEmptySave(), health: 'ok', recovery: null, lastSavedAt: null });
     const router = createMemoryRouter(routes, { initialEntries: ['/remote'] });
     render(<RouterProvider router={router} />);
     for (const l of ui.remote.limits) expect(screen.getByText(l)).toBeInTheDocument();
-    expect(screen.getByText(ui.remote.onlineOff)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: ui.remote.onlineGo })).toHaveAttribute('href', '/live');
     await userEvent.click(screen.getByRole('button', { name: ui.remote.create }));
     expect(router.state.location.search).toBe('?mode=remote');
   });

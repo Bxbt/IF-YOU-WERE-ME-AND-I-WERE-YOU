@@ -153,7 +153,7 @@
 | Q-02 | เหตุการณ์ลิฟต์อิงเหตุการณ์จริงหรือไม่ ถ้าใช่ มีรายละเอียดใดที่ "ไม่ควร" ใส่ หรือ "ควร" ใส่ | ระบุ | ใช้เรื่องสมมติตาม A-02 | ไม่บล็อก (บทแก้ได้) |
 | Q-03 | เกมนี้สำหรับใช้ส่วนตัวสองคน หรือจะเผยแพร่สาธารณะ | ส่วนตัว / สาธารณะ | — | **บล็อก Phase 3** (กระทบ PDPA, ToS, Privacy Policy) |
 | Q-04 | Memory Scenes อยู่ Phase ไหน | MVP / Phase 2 / ตัดออก | Phase 2 | ไม่บล็อก |
-| Q-05 | การเล่นระยะไกลใช้แบบใด | 3A Sealed Exchange อย่างเดียว / 3B Supabase / 3B Firebase / ทั้ง 3A+3B | 3A ก่อน แล้ว 3B Supabase | บล็อก Phase 3 |
+| Q-05 | การเล่นระยะไกลใช้แบบใด | **ตัดสินแล้ว (2026-11-23):** เจ้าของต้องการเล่นพร้อมกันแบบสด รออีกฝ่ายกดส่ง และซิงก์ทั้งเรื่อง → **Phase 3C Live** บนเซิร์ฟเวอร์ของเจ้าของ (Docker/Portainer หลัง Cloudflare — VibeStack ต้องใช้ VPN อีกฝ่ายเข้าไม่ได้) (เซิร์ฟเวอร์ relay เข้ารหัสปลายทาง [10](10-technical-specification.md) §10.3) · 3A ยังใช้ได้ · 3B Supabase พักไว้ | — | — |
 | Q-06 | อนุมัติฟอนต์ตาม A-08 หรือมีฟอนต์ที่ต้องการ | — | A-08 | ไม่บล็อก |
 | Q-07 | ข้อความตอนจบใช้ชุดใด | ชุด 1 / ชุด 2 / ทั้งสอง | ทั้งสอง | ไม่บล็อก |
 | Q-08 | ต้องการเพลง/เสียงไหม จะจัดหาเองหรือให้ใช้ CC0/สังเคราะห์ | **ตัดสินแล้ว (2026-11-23):** สังเคราะห์ด้วย WebAudio ([09](09-asset-specification.md) §5) เปลี่ยนเป็นไฟล์ภายหลังได้ | — | — |
@@ -175,4 +175,5 @@
 | MVP (Phase 1) | Play Alone ครบ 5 บท, Character creation, Personality setup (Self + Imagined partner), Mirror แบบคนเดียว, Comparison, Report, Export/Import JSON (`full`), localStorage, Template content, ไม่มี LLM, ไม่มี Backend, ไม่มีเสียง/Observed | [10](10-technical-specification.md) §8 |
 | Phase 2 | Play Together บนเครื่องเดียว, Handoff screen, PIN (ทางเลือก), Private answers, Mutual reveal, Memory Scenes | [10](10-technical-specification.md) §9 |
 | Phase 3A | Remote แบบ Sealed Exchange (ไม่มี Backend) | [10](10-technical-specification.md) §10 |
-| Phase 3B | Remote ด้วย Supabase: Invitation code, Sync, Access control, Revoke/Delete | [10](10-technical-specification.md) §10 |
+| Phase 3B | Remote ด้วย Supabase: Invitation code, Sync, Access control, Revoke/Delete (พักไว้ — แทนด้วย 3C) | [10](10-technical-specification.md) §10 |
+| Phase 3C | Remote Live: เล่นเหมือน Play Together แต่อยู่คนละเครื่อง ซิงก์สดผ่าน relay บนเซิร์ฟเวอร์ของเจ้าของ (Portainer + Cloudflare) (เซิร์ฟเวอร์เห็นแต่ข้อมูลเข้ารหัส) | [10](10-technical-specification.md) §10.3 |

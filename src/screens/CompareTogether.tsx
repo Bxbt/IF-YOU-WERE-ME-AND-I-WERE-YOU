@@ -77,6 +77,7 @@ export function CompareTogether({ journey }: { journey: GameSession }) {
               mode="group"
               names={{ [a]: name(a), [b]: name(b) }}
               questionFor={(k) => MIRRORS.find((m) => m.id === k)}
+              onlyPlayerId={live.remote?.localPlayerId}
               onDone={() => setOpening(false)}
             />
           ) : (

@@ -25,7 +25,7 @@ export function CompareScreen() {
   const [dim, setDim] = useState<string | null>(null);
   const comparison = useMemo(() => (journey ? compareSolo(save, journey) : null), [save, journey]);
 
-  if (journey?.mode === 'together') return <CompareTogether journey={journey} />;
+  if (journey?.mode === 'together' || journey?.mode === 'remote_online') return <CompareTogether journey={journey} />;
   if (!journey || !comparison) {
     return (
       <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">

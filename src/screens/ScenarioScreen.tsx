@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Dices } from 'lucide-react';
 import { ui } from '../content/th/ui';
@@ -28,7 +28,8 @@ export function ScenarioScreen() {
     prev
       ? prev.randomized
         ? 'random'
-        : prev.insiderPlayerId === journey?.playerIds[0]
+        : prev.insiderPlayerId ===
+            (journey?.mode === 'remote_online' ? journey.remote?.localPlayerId : journey?.playerIds[0])
           ? 'me'
           : 'other'
       : null,
@@ -36,6 +37,14 @@ export function ScenarioScreen() {
   const [rolled, setRolled] = useState<string | null>(() => (prev?.randomized ? prev.insiderPlayerId : null));
   const [warned, setWarned] = useState<boolean>(prev?.priorWarning ?? true);
   const [confirmReset, setConfirmReset] = useState(false);
+  // Live (3C): the partner may set the scenario first — then follow them into the story.
+  const [hadScenario] = useState(!!prev);
+  const committed = useRef(false);
+  const nextParam = params.get('next');
+  useEffect(() => {
+    if (journey?.mode === 'remote_online' && !hadScenario && !committed.current && journey.scenario)
+      navigate(safeNext(nextParam, `/j/${journey.id}/chapters`), { replace: true });
+  }, [journey?.mode, journey?.scenario, journey?.id, hadScenario, nextParam, navigate]);
 
   if (!journey) {
     return (
@@ -54,7 +63,11 @@ export function ScenarioScreen() {
     );
   }
 
-  const [meId, otherId] = journey.playerIds;
+  // Live (3C): "ฉันเอง" is the player on this device, whichever slot they joined in.
+  const localId = journey.mode === 'remote_online' ? journey.remote?.localPlayerId : undefined;
+  const [meId, otherId] = localId
+    ? [localId, journey.playerIds.find((x) => x !== localId)!]
+    : journey.playerIds;
   const other = players[otherId]?.nickname ?? '';
   const chaptersHref = `/j/${journey.id}/chapters`;
   const next = safeNext(params.get('next'), chaptersHref);
@@ -73,6 +86,7 @@ export function ScenarioScreen() {
 
   function commit() {
     if (!insiderId) return;
+    committed.current = true;
     const jid = journey!.id;
     apply((s) =>
       setScenario(s, jid, { insiderPlayerId: insiderId, priorWarning: warned, randomized: who === 'random' }),

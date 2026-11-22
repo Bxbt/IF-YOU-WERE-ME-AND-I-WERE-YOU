@@ -47,10 +47,12 @@ export interface RevealPanelProps {
   questionFor: (key: string) => QuestionContent | undefined;
   /** Ch4 only: ask "per question / end of chapter" before the first reveal. */
   askMode?: boolean;
+  /** Live (3C): only this device's player decides here; the partner's choice is shown as status. */
+  onlyPlayerId?: string;
   onDone: () => void;
 }
 
-export function RevealPanel({ journey, ch, keys, mode, names, questionFor, askMode, onDone }: RevealPanelProps) {
+export function RevealPanel({ journey, ch, keys, mode, names, questionFor, askMode, onlyPlayerId, onDone }: RevealPanelProps) {
   const items = useGame((s) => s.save.journeys[journey.id]?.mirrorItems ?? {});
   const players = useGame((s) => s.save.players);
   const [a, b] = journey.playerIds;
@@ -121,6 +123,17 @@ export function RevealPanel({ journey, ch, keys, mode, names, questionFor, askMo
           {[a, b].map((pid) => {
             const other = pid === a ? b : a;
             const consented = open.length > 0 && open.every((x) => x.entries[pid]?.consent || !x.entries[pid]);
+            if (onlyPlayerId && pid !== onlyPlayerId)
+              return (
+                <p key={pid} className="m-0 flex items-center gap-2 text-sm" data-testid={`consent-status-${pid}`}>
+                  {consented ? (
+                    <CheckCircle2 aria-hidden className="h-4 w-4 text-orange" />
+                  ) : (
+                    <Circle aria-hidden className="h-4 w-4 text-lavender" />
+                  )}
+                  {consented ? ui.live.partnerConsented(names[pid] ?? '') : ui.live.waitConsent(names[pid] ?? '')}
+                </p>
+              );
             return (
               <div key={pid} className="flex flex-col gap-2 border-t border-lavender/20 pt-3 first:border-0 first:pt-0">
                 <p className="m-0 flex items-center gap-2 text-sm" data-testid={`consent-status-${pid}`}>

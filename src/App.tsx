@@ -9,6 +9,7 @@ import { router } from './routes';
 import { RecoveryScreen } from './screens/RecoveryScreen';
 import { StorageBanner } from './components/StorageBanner';
 import { SupportCard } from './components/SupportCard';
+import { followSave } from './live/sync';
 
 export function App() {
   const ready = useGame((s) => s.ready);
@@ -21,6 +22,12 @@ export function App() {
     useGame.getState().init();
     return installPersistenceListeners();
   }, []);
+
+  // Phase 3C Live: keep the sync engine on the active live journey (docs/10 §10.3).
+  const save = useGame((s) => s.save);
+  useEffect(() => {
+    if (ready && !recovery) followSave(save);
+  }, [ready, recovery, save]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--font-scale', String(fontScale));

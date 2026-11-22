@@ -214,6 +214,22 @@ Safari iOS 16+, Chrome Android 110+, Chrome/Edge/Firefox/Safari desktop 2 เว
 
 **ห้าม:** แสดง UI ว่า "เชื่อมต่อแล้ว/ซิงก์แล้ว" ถ้าไม่ได้รับการยืนยันจาก Server จริง
 
+### 10.3 Phase 3C — Live (Docker บน Portainer หลัง Cloudflare)
+
+| งาน | รายละเอียด |
+|---|---|
+| Deploy | `docker-compose.yml` เป็น Stack ใน Portainer: `app` (`Dockerfile`: Node 22 เสิร์ฟ `dist/` + `/api/live` ที่พอร์ต 8080, instance เดียว) + `db` (PostgreSQL 16, volume) + `tunnel` (cloudflared, ใช้ `CLOUDFLARE_TUNNEL_TOKEN`) · HTTPS มาจาก Cloudflare · ไม่มี `DATABASE_URL` → เก็บในหน่วยความจำ (dev/test เท่านั้น) · SSE ส่ง ping ทุก 25 วินาที (Cloudflare ตัด connection ที่เงียบเกิน 100 วินาที) |
+| Server | `server/index.mjs` — Node `http` ล้วน + `pg` · ไม่มี framework |
+| API | `GET /api/live/health` · `POST /api/live/rooms/:room/slots/:n` (claim ช่อง → คืน write token ครั้งเดียว) · `PUT /api/live/rooms/:room/slots/:n` (Bearer token, body `{iv, data}` ≤ 512 KB) · `GET /api/live/rooms/:room` (ทั้งสองช่อง + `rev`) · `GET /api/live/rooms/:room/events?slot=n` (SSE: `rev`, `presence`) · `DELETE /api/live/rooms/:room/slots/:n` |
+| Data | ตาราง `live_slots(room, slot, token_hash, iv, data, rev, updated_at)` · ลบห้องที่ `updated_at` เก่ากว่า 30 วัน ทุกชั่วโมง |
+| Limits | `room` = base64url 22 ตัว · 2 ช่องต่อห้อง · body ≤ 512 KB · 120 requests/นาที/IP |
+| Client | `src/live/` — `crypto.ts` (AES-GCM-256), `api.ts`, `merge.ts` (pure), `sync.ts` (subscribe store → push ช่องตัวเอง debounce 400 ms · SSE → pull → merge) |
+| Merge | เจ้าของชนะ: ผู้เล่น/โปรไฟล์/storyAnswers/entries ของ mirrorItems/observed/nextConversation ของคนไหน ใช้ฉบับจากเครื่องคนนั้น · `chapterProgress` ใช้ `syncSeq` มากกว่า (เท่ากัน → ใช้ของช่อง 0) · `pendingPrivateSteps` = intersection · `skippedScenes`/`choiceLog` = union · Reveal: คำนวณ state ใหม่ — ถือว่ายินยอมเฉพาะเมื่อ `consentAt` ไม่เก่ากว่าการแก้คำตอบล่าสุดของทั้งสองฝ่าย |
+| Mode | `GameSession.mode = 'remote_online'` · `remote = { kind: 'online', sessionId: room, liveSlot, liveKey, liveToken, localPlayerId }` (อยู่ในเครื่องเท่านั้น ไม่ส่ง) |
+| Feature flag | S2 เรียก `/api/live/health` · ไม่ตอบ → "เล่นสด" ปิดใช้งานพร้อมเหตุผล |
+
+**ห้าม:** แสดง "ส่งแล้ว" จนกว่าเซิร์ฟเวอร์ตอบ 200 · ส่งข้อมูลไม่เข้ารหัส · ใส่กุญแจใน query string/path
+
 ---
 
 ## 11. Build, Deploy, CI

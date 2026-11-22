@@ -26,6 +26,8 @@ import {
   Timeline,
 } from '../components/StorySteps';
 import { Handoff } from '../components/Handoff';
+import { linkOf } from '../live/merge';
+import { LiveStatusLine } from './LiveLobbyScreen';
 import { PlayerGate } from '../components/PlayerGate';
 import { RevealPanel } from '../components/Reveal';
 import { useAmbient } from '../audio/useSound';
@@ -252,7 +254,12 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   const step: Step | undefined = pos ? steps[pos.lineIndex] : undefined;
 
   // ----- Play Together (docs/05 §4): private steps are answered one player at a time -----
-  const together = journey.mode === 'together';
+  // Live (docs/05 §5.3): same rules, but each player is on their own device — no handoff, private
+  // steps are answered at the same time, and this device only ever answers for its own player.
+  const liveLink = linkOf(journey);
+  const live = !!liveLink;
+  const localId = liveLink?.localPlayerId;
+  const together = journey.mode === 'together' || live;
   const stepKey = pos ? `${pos.sceneId}:${pos.lineIndex}` : '';
   const isPrivate =
     !!step && ['cards', 'reflection', 'interpretation', 'mirror', 'statements'].includes(step.kind);
@@ -261,7 +268,9 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     () => (together && isPrivate ? (pendingEntry?.playerIds ?? [...journey.playerIds]) : []),
     [together, isPrivate, pendingEntry, journey.playerIds],
   );
-  const answeringId = together && isPrivate ? (remaining[0] ?? selfId) : selfId;
+  const answeringId = live ? localId! : together && isPrivate ? (remaining[0] ?? selfId) : selfId;
+  /** Live: this player has sent their part; the partner has not yet. */
+  const waitingPartner = live && isPrivate && !view && remaining.length > 0 && !remaining.includes(localId!);
   const answeringRole = together ? roleOf(journey, answeringId) : mySelfRole;
   const answeringSpeaker = answeringRole === 'insider' ? 'in' : 'out';
   const partnerOfAnswering = journey.playerIds.find((x) => x !== answeringId) ?? journey.playerIds[1];
@@ -390,6 +399,12 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
    */
   const finishPrivate = useCallback(() => {
     if (!together || view) return next();
+    if (live) {
+      // Keep an empty list: both devices advance when they see it (effect below).
+      const rest = remaining.filter((x) => x !== answeringId);
+      apply((s) => setPendingPrivate(s, journey.id, ch, stepKey, rest, true));
+      return;
+    }
     const rest = remaining.filter((x) => x !== answeringId);
     apply((s) => setPendingPrivate(dropDrafts(s, answeringId), journey.id, ch, stepKey, rest));
     if (rest.length === 0) {
@@ -409,7 +424,39 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       }
       next();
     } else setPrivatePhase('handoff');
-  }, [together, view, next, remaining, answeringId, journey.id, ch, stepKey, step, progress.revealMode, content.statements]);
+  }, [together, live, view, next, remaining, answeringId, journey.id, ch, stepKey, step, progress.revealMode, content.statements]);
+
+  // ----- Live: advance when everyone has sent, and offer the reveal on both devices -----
+  const everyoneSent = live && !view && isPrivate && pendingEntry?.playerIds.length === 0;
+  useEffect(() => {
+    if (everyoneSent) next();
+  }, [everyoneSent, stepKey, next]);
+
+  const doneItems = live ? (progress.pendingPrivateSteps ?? []).filter((x) => x.playerIds.length === 0).map((x) => x.itemId) : [];
+  const doneKey = doneItems.join('|');
+  const seenDone = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!live || view) return;
+    if (seenDone.current === null) {
+      seenDone.current = new Set(doneItems); // what was finished before this visit is not offered again
+      return;
+    }
+    for (const id of doneItems) {
+      if (seenDone.current.has(id)) continue;
+      seenDone.current.add(id);
+      const [sid, li] = id.split(':');
+      const sc = sid ? sceneById(content, sid) : undefined;
+      const st = sc ? expandScene(sc, state)[Number(li)] : undefined;
+      if (st?.kind === 'mirror') {
+        const qid = st.questionId;
+        if (ch !== 'ch4' || progress.revealMode !== 'end_of_chapter') setReveal({ keys: [qid], mode: 'single' });
+        else if (qid === MIRRORS[MIRRORS.length - 1]!.id) setReveal({ keys: MIRRORS.map((m) => m.id), mode: 'group' });
+      } else if (st?.kind === 'statements') {
+        setReveal({ keys: (content.statements ?? []).map((x) => x.id), mode: 'statements' });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live, view, doneKey]);
 
   const choose = useCallback(
     (optionId: string) => {
@@ -589,13 +636,14 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   // Open handoff before scenes marked handoffBefore (Ch2 parts) — not secret, so no PIN (docs/02 Ch2).
   const sceneHandoffTo =
     together &&
+    !live &&
     !view &&
     scene?.handoffBefore &&
     !handedOff.includes(scene.id) &&
     scene.controller !== 'narrator'
       ? controllerFor(journey, ch, scene.controller)
       : null;
-  const privateHandoff = together && !view && isPrivate && privatePhase === 'handoff' && !reveal;
+  const privateHandoff = together && !live && !view && isPrivate && privatePhase === 'handoff' && !reveal;
 
   let body: React.ReactNode = null;
   if (ended) {
@@ -869,6 +917,15 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         }
       />
     );
+  } else if (step?.kind === 'choice' && live && !view && controllerFor(journey, ch, step.line.owner) !== localId) {
+    body = (
+      <div className="flex flex-col gap-3">
+        {renderLine(lineBefore(steps, pos!.lineIndex), true)}
+        <p role="status" className="panel m-0 text-center" data-testid="live-wait-choice">
+          {ui.live.waitChoice(nick(controllerFor(journey, ch, step.line.owner)))}
+        </p>
+      </div>
+    );
   } else if (step?.kind === 'choice') {
     body = (
       <div className="flex flex-col gap-3">
@@ -953,6 +1010,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
             text={together ? bannerText : undefined}
           />
         )}
+        {live && <LiveStatusLine partnerName={nick(journey.playerIds.find((x) => x !== localId) ?? '')} />}
         <SafetyNotes notes={notes} onClose={(t) => setClosedNotes((c) => [...c, t])} />
         {/* While handing over, the next player's form is not even rendered (TC-PRIV-01). */}
         {privateHandoff ? null : reveal && together && !view ? (
@@ -967,8 +1025,16 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
               MIRRORS.find((m) => m.id === k) ?? content.mirrorQuestions?.find((m) => m.id === k)
             }
             askMode={ch === 'ch4' && reveal.mode === 'single' && progress.revealMode === undefined}
+            onlyPlayerId={localId}
             onDone={() => setReveal(null)}
           />
+        ) : waitingPartner ? (
+          <div className="panel flex flex-col items-center gap-2 text-center" data-testid="live-wait-answer">
+            <p role="status" className="m-0 font-semibold">
+              {ui.live.waitAnswer(remaining.map(nick).join(', '))}
+            </p>
+            <p className="m-0 text-sm text-lavender">{ui.live.waitAnswerHint}</p>
+          </div>
         ) : together && isPrivate && !view ? (
           <PlayerGate playerId={answeringId} onCancel={() => setPrivatePhase('handoff')}>
             {body}

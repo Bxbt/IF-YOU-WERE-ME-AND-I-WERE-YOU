@@ -10,7 +10,16 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure' },
-  webServer: { command: 'npm run build && npx vite preview --port 4173 --strictPort', port: 4173, reuseExistingServer: !process.env.CI },
+  webServer: [
+    { command: 'npm run build && npx vite preview --port 4173 --strictPort', port: 4173, reuseExistingServer: !process.env.CI },
+    // Phase 3C relay serving the same dist/ (in-memory store) for the two-device live test.
+    {
+      command: 'node server/index.mjs',
+      url: 'http://localhost:4174/api/live/health',
+      env: { PORT: '4174' },
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
   projects: [
     { name: 'mobile-webkit', use: { ...devices['iPhone 13'] } },
     { name: 'mobile-chromium', use: { ...devices['Pixel 5'] } },

@@ -26,3 +26,14 @@ npm run content:lint # ตรวจไฟล์บท (docs/10 §4)
 npm run lint
 npm run build
 ```
+
+## Live play server (Phase 3C)
+
+Remote live play needs the small relay in `server/` (docs/10 §10.3). Deploy as a Portainer stack:
+
+1. Portainer → Stacks → Add stack → Repository (this repo) or paste `docker-compose.yml`.
+2. Environment variables: `POSTGRES_PASSWORD` (long random string) and `CLOUDFLARE_TUNNEL_TOKEN`
+   (Cloudflare Zero Trust → Networks → Tunnels → create → public hostname → service `http://app:8080`).
+3. Deploy, then open the public hostname. "เล่นระยะไกล" works only when opened from that address.
+
+Local: `npm run build && node server/index.mjs` (in-memory store, port 8080).

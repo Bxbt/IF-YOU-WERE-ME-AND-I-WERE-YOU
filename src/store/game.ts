@@ -34,6 +34,13 @@ interface GameState {
 const DEBOUNCE_MS = 300;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
+/** Phase 3C Live (docs/10 §10.3): lets the sync layer stamp local changes before they are stored. */
+type CommitHook = (prev: SaveRoot, next: SaveRoot) => SaveRoot;
+let commitHook: CommitHook | null = null;
+export function setCommitHook(hook: CommitHook | null) {
+  commitHook = hook;
+}
+
 export const useGame = create<GameState>()((set, get) => ({
   ready: false,
   save: createEmptySave(),
@@ -61,7 +68,9 @@ export const useGame = create<GameState>()((set, get) => ({
   },
 
   update: (fn) => {
-    set({ save: fn(get().save) });
+    const prev = get().save;
+    const next = fn(prev);
+    set({ save: commitHook && next !== prev ? commitHook(prev, next) : next });
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => get().flush(), DEBOUNCE_MS);
   },

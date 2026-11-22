@@ -92,8 +92,10 @@ export function startChapter(
   lineIndex: number,
 ): SaveRoot {
   return withProgress(save, jid, ch, (p, t) => {
-    const { completedAt: _c, ...base } = dropPosition(p);
+    // A fresh run asks every private step again: waiting lists from the last run are dropped.
+    const { completedAt: _c, pendingPrivateSteps: _pp, ...base } = dropPosition(p);
     void _c;
+    void _pp;
     return {
       ...base,
       status: 'in_progress',
@@ -476,7 +478,7 @@ export function recordReportExport(
  * Solo: always the player.
  */
 export function controllerFor(j: GameSession, ch: ChapterId, role: RoleId): string {
-  if (j.mode !== 'together') return j.playerIds[0];
+  if (j.mode !== 'together' && j.mode !== 'remote_online') return j.playerIds[0];
   const r: RoleId = ch === 'ch2' ? (role === 'insider' ? 'waiter' : 'insider') : role;
   return playerForRole(j, r);
 }
@@ -492,10 +494,12 @@ export function setPendingPrivate(
   ch: ChapterId,
   itemId: string,
   playerIds: string[],
+  /** Live (3C): keep an empty list so the other device can see that everyone has answered. */
+  keepEmpty = false,
 ): SaveRoot {
   return withProgress(save, jid, ch, (p) => {
     const rest = (p.pendingPrivateSteps ?? []).filter((x) => x.itemId !== itemId);
-    const pendingPrivateSteps = playerIds.length ? [...rest, { itemId, playerIds }] : rest;
+    const pendingPrivateSteps = playerIds.length || keepEmpty ? [...rest, { itemId, playerIds }] : rest;
     return { ...p, pendingPrivateSteps };
   });
 }

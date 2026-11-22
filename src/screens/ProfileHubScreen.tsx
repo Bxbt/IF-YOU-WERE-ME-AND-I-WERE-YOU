@@ -9,6 +9,7 @@ import { useGame } from '../store/game';
 import { PinSetup } from '../components/PinSetup';
 import { ObservedSection } from '../components/ObservedSection';
 import { recordPinAttempt, removePin, setPin } from '../store/pinActions';
+import { livePartnerIds } from '../live/merge';
 import { currentJourney, getAnswers, profileKey } from '../store/actions';
 import { FULL_SET, progress } from '../engine/personality';
 import type { Player } from '../persistence/schema';
@@ -87,13 +88,15 @@ export function ProfileHubScreen() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const journey = currentJourney(save);
-  const allReal = Object.values(save.players).filter((p) => p.kind === 'real');
+  // Live (3C): the partner's private pages stay on the partner's device (docs/08 §6.3).
+  const away = livePartnerIds(save);
+  const allReal = Object.values(save.players).filter((p) => p.kind === 'real' && !away.has(p.id));
   // docs/06 S3 Profile Hub: the active journey's players; everyone else goes in a folded section.
   const real = journey
-    ? journey.playerIds.map((id) => save.players[id]).filter((p): p is Player => p?.kind === 'real')
+    ? journey.playerIds.map((id) => save.players[id]).filter((p): p is Player => p?.kind === 'real' && !away.has(p.id))
     : allReal;
   const shown = new Set(journey ? journey.playerIds : allReal.map((p) => p.id));
-  const others = Object.values(save.players).filter((p) => !shown.has(p.id));
+  const others = Object.values(save.players).filter((p) => !shown.has(p.id) && !away.has(p.id));
   const partnerOf = (id: string) =>
     journey?.playerIds.includes(id) ? save.players[journey.playerIds.find((x) => x !== id)!] : undefined;
   const imagined = journey
@@ -168,7 +171,7 @@ export function ProfileHubScreen() {
                 tag
               />
             )}
-            {journey?.mode === 'together' && (
+            {(journey?.mode === 'together' || journey?.mode === 'remote_online') && (
               <details className="border-t border-lavender/20 pt-3">
                 <summary className="min-h-[44px] cursor-pointer py-2 font-semibold">
                   {ui.hub.pinTitle}

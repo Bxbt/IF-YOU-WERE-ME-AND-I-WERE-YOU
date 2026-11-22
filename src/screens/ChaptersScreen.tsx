@@ -14,6 +14,7 @@ import {
 import { ui } from '../content/th/ui';
 import { ScreenHeader, EmptyState } from '../components/Misc';
 import { PixelButton } from '../components/PixelButton';
+import { LiveStatusLine } from './LiveLobbyScreen';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useGame } from '../store/game';
 import { apply, emptyProgress, skipChapter } from '../store/story';
@@ -70,7 +71,7 @@ export function ChaptersScreen() {
           {ui.chapters.compare}
         </Link>
         <Link
-          to={`/j/${journey.id}/report/${journey.playerIds[0]}`}
+          to={`/j/${journey.id}/report/${(journey.mode === 'remote_online' && journey.remote?.localPlayerId) || journey.playerIds[0]}`}
           className="btn btn-ghost px-3 text-sm no-underline"
         >
           <FileText aria-hidden className="h-4 w-4" />
@@ -86,6 +87,11 @@ export function ChaptersScreen() {
         </Link>
       </nav>
 
+      {journey.mode === 'remote_online' && journey.remote?.localPlayerId && (
+        <LiveStatusLine
+          partnerName={players[journey.playerIds.find((x) => x !== journey.remote?.localPlayerId) ?? '']?.nickname ?? ''}
+        />
+      )}
       <section className="panel flex flex-wrap items-center gap-3" aria-labelledby="scenario-h">
         <div className="flex flex-1 flex-col">
           <h2 id="scenario-h" className="m-0 text-base font-semibold">

@@ -7,6 +7,8 @@ export const KEYS = {
   save: 'iywm:save',
   backup: 'iywm:save:backup',
   probe: 'iywm:probe',
+  /** Phase 3C: a live room created on this device that nobody has joined yet. */
+  liveRoom: 'iywm:live-room',
 } as const;
 
 export type WriteResult = { ok: true } | { ok: false; reason: 'quota' | 'unavailable'; error: unknown };

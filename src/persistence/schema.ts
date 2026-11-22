@@ -143,6 +143,8 @@ export const ChapterProgress = z.object({
   startedAt: isoDate.optional(),
   completedAt: isoDate.optional(),
   playCount: z.number().int().min(0),
+  /** Phase 3C: bumped on every local position change; the higher one wins a merge (docs/10 §10.3). */
+  syncSeq: z.number().int().min(0).optional(),
 });
 
 export const StoryAnswer = z.object({
@@ -207,6 +209,11 @@ export const RemoteLink = z.object({
   role: z.enum(['owner', 'member']).optional(),
   inviteExpiresAt: isoDate.optional(),
   pendingUploads: z.array(z.string()).optional(),
+  // Phase 3C Live (docs/10 §10.3) — this device's link to the room; never sent to the partner.
+  liveSlot: z.union([z.literal(0), z.literal(1)]).optional(),
+  liveKey: z.string().optional(),
+  liveToken: z.string().optional(),
+  localPlayerId: playerId.optional(),
 });
 
 export const GameSession = z.object({

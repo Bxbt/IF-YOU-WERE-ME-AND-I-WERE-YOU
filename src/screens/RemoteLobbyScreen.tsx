@@ -1,6 +1,6 @@
 /**
- * S17 Remote Lobby — Phase 3A Sealed Exchange only (docs/06 S17, docs/08 §6.1). Phase 3B (online)
- * needs a server that is not set up, so it is shown as "ยังไม่ได้ตั้งค่า" and disabled — never faked.
+ * S17 Remote Lobby — Phase 3A Sealed Exchange (docs/06 S17, docs/08 §6.1). Live play (3C) has its
+ * own lobby, S19 `/live`.
  */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -85,9 +85,12 @@ function CreateTab() {
           {t.create}
         </PixelButton>
       </div>
-      <div className="panel flex flex-col gap-1 opacity-60" aria-disabled="true">
+      <div className="panel flex flex-col gap-2">
         <h2 className="m-0 text-lg font-semibold">{t.onlineTitle}</h2>
-        <p className="m-0 text-sm text-lavender">{t.onlineOff}</p>
+        <p className="m-0 text-sm">{ui.live.intro}</p>
+        <Link to="/live" className="btn btn-ghost self-start no-underline">
+          {t.onlineGo}
+        </Link>
       </div>
       <ConfirmDialog
         open={confirm}

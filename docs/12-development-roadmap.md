@@ -66,7 +66,9 @@
 | **M13 Supabase Foundation (3B)** | Project · SQL migrations · RLS · RPC · Anonymous auth · Supabase local ใน CI | TC-RMT-01–07, 09 | 5–6 วัน |
 | **M14 Remote Client (3B)** | RemoteAdapter · S17 · Realtime (consents/members/events) · Offline queue · Revoke/Delete/Leave · Expiry job | TC-RMT-08, 10, 11 · TC-DEL-06 | 5–6 วัน |
 
-**รวม Phase 3 ≈ 14–17 วัน**
+| **M15 Live (3C)** | relay server + Dockerfile · `src/live/` · S19 · PlayScreen แบบสองเครื่อง (รอตา/รอส่ง/ยินยอมบนเครื่องตัวเอง) | TC-LIVE-01–08 · Manual test 2 เครื่องบนเซิร์ฟเวอร์จริง | 4–5 วัน |
+
+**รวม Phase 3 ≈ 14–17 วัน** (M13/M14 พักไว้ตาม Q-05)
 
 ---
 

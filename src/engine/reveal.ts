@@ -93,7 +93,7 @@ export function isEntrySkipped(kind: SharedAnswer['kind'], e: SharedEntry | unde
   return false;
 }
 
-const mirrorRevision = (e: SharedEntry | undefined): number =>
+export const mirrorRevision = (e: SharedEntry | undefined): number =>
   e ? Math.max(0, ...mirrorAnswers(e).map((a) => a.revision)) : 0;
 
 function withoutConsent(e: SharedEntry): SharedEntry {
@@ -179,7 +179,7 @@ export function requiredConsenters(item: SharedAnswer, playerIds: readonly Playe
 }
 
 /** State from submissions only (never `revealed` — that needs consent). */
-function deriveState(item: SharedAnswer, playerIds: readonly PlayerId[]): RevealState {
+export function deriveState(item: SharedAnswer, playerIds: readonly PlayerId[]): RevealState {
   const submitted = playerIds.filter((p) => isSubmitted(item.entries[p]));
   if (submitted.length === 0) return 'open';
   if (submitted.length < playerIds.length) return 'partial';

@@ -21,6 +21,7 @@ import { ErrorScreen } from './screens/ErrorScreen';
 import { RouteGate } from './components/PlayerGate';
 import { JourneysScreen } from './screens/JourneysScreen';
 import { RemoteLobbyScreen } from './screens/RemoteLobbyScreen';
+import { LiveLobbyScreen } from './screens/LiveLobbyScreen';
 import { MemoriesListScreen, MemoryFormScreen, MemoryViewScreen } from './screens/MemoriesScreen';
 
 const errorElement = <ErrorScreen />;
@@ -29,6 +30,7 @@ export const routes = [
   { path: '/', element: <TitleScreen />, errorElement },
   { path: '/journeys', element: <JourneysScreen />, errorElement },
   { path: '/remote', element: <RemoteLobbyScreen />, errorElement },
+  { path: '/live', element: <LiveLobbyScreen />, errorElement },
   { path: '/intro', element: <IntroScreen />, errorElement },
   { path: '/mode', element: <ModeSelectScreen />, errorElement },
   { path: '/settings', element: <SettingsScreen />, errorElement },

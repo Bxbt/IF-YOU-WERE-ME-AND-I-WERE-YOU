@@ -146,6 +146,14 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-RMT-09 | P3B | I | owner ลบเซสชัน | ทุกตารางที่เกี่ยวข้องไม่มีแถวเหลือ |
 | TC-RMT-10 | P3B | E | ไม่มี env Supabase | ตัวเลือกออนไลน์ disabled พร้อมข้อความ ไม่มีการ fake |
 | TC-RMT-11 | P3B | U | URL ทุกจุด | ไม่มีคำตอบ/ชื่อใน path หรือ query (โค้ดอยู่ใน fragment เท่านั้น) |
+| TC-LIVE-01 | P3C | U | merge: ช่องของ A แก้คำตอบของ B | ไม่มีผล — คำตอบของ B มาจากเครื่อง B เท่านั้น |
+| TC-LIVE-02 | P3C | U | merge: ทั้งคู่ส่งขั้นส่วนตัวพร้อมกัน | `pendingPrivateSteps` ของขั้นนั้นเหลือ `[]` ทั้งสองเครื่อง |
+| TC-LIVE-03 | P3C | U | merge: ตำแหน่งเรื่อง `syncSeq` ต่างกัน | ใช้อันที่มากกว่า · choiceLog รวมกัน |
+| TC-LIVE-04 | P3C | U | merge: B แก้คำตอบหลัง A ยินยอม | กลับเป็น `awaiting_consent` จนกว่า A ยินยอมใหม่ |
+| TC-LIVE-05 | P3C | I | server: เขียนช่องโดยไม่มี/ผิดโทเค็น · ช่องที่ 3 · body เกิน | 401 / 404 / 413 |
+| TC-LIVE-06 | P3C | I | server: ข้อมูลที่เก็บ | มีแต่ ciphertext — ไม่มีชื่อเล่นในฐานข้อมูล/หน่วยความจำ |
+| TC-LIVE-07 | P3C | E | 2 browser context: สร้างห้อง → เข้าลิงก์ → เล่น Ch1 ถึงตัวเลือกแรก | ทั้งสองเห็นฉากเดียวกัน · เครื่องที่ไม่ใช่ตาเห็น "รอ … เลือก" · เลือกแล้วอีกเครื่องเดินตาม |
+| TC-LIVE-08 | P3C | E | ไม่มีเซิร์ฟเวอร์ | "เล่นสด" disabled พร้อมเหตุผล |
 
 ## 10. Responsive Layouts
 
