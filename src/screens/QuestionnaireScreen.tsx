@@ -95,10 +95,13 @@ function Runner({ ownerId, layer, aboutId, aboutName, set, single, focusQ, onExi
   const dKey = draftKey(ownerId, layer, aboutId, qid);
   const [draft, setDraft] = useState<AnswerDraft>(() => toDraft(answers[qid], drafts[dKey]?.text));
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const loadedQid = useRef(qid);
 
-  // Load the saved answer whenever the question changes.
+  // Load the saved answer when the question changes. Skipped on mount: useState already did it,
+  // and re-running it there can wipe a selection the player made before effects flushed.
   useEffect(() => {
-    if (done) return;
+    if (done || loadedQid.current === qid) return;
+    loadedQid.current = qid;
     const s = useGame.getState().save;
     setDraft(toDraft(getAnswers(s, key)[qid], s.drafts[draftKey(ownerId, layer, aboutId, qid)]?.text));
     headingRef.current?.focus();

@@ -11,7 +11,8 @@ export function RecoveryScreen() {
   if (!recovery) return null;
 
   const isNewer = recovery.kind === 'newer';
-  const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
+  // Avoid a regex character class here: Tailwind's scanner turns it into an invalid CSS class.
+  const stamp = new Date().toISOString().slice(0, 16).split(/\D/).join('');
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-4 py-8">
