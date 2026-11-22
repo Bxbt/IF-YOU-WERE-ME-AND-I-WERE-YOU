@@ -81,6 +81,7 @@ import {
   sceneById,
   shakeBetween,
   sfxBetween,
+  resolveQuestion,
   musicAt,
   skipScene,
   speakerName,
@@ -641,7 +642,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     ) : (
       <Reflection
         key={`${pos?.sceneId}`}
-        questions={content.reflection}
+        questions={content.reflection.map((q) => resolveQuestion(q, answerCtx, answeringSpeaker))}
         initial={initial}
         startAt={firstOpen < 0 ? 0 : firstOpen}
         onAnswer={(qid, d) =>

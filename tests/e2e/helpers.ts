@@ -153,6 +153,9 @@ export async function playThrough(
     await checks?.(kind);
   };
   for (let i = 0; i < 800; i++) {
+    // Every screen of every play-through: no unresolved content token may reach the player.
+    const shown = await page.locator('main').innerText().catch(() => '');
+    expect(shown, 'unresolved token on screen').not.toMatch(/\{[a-zA-Z_.]+\}/);
     if (await until()) return;
     const choices = page.getByRole('group', { name: 'เลือกสิ่งที่จะทำ' });
     if (await choices.isVisible()) {

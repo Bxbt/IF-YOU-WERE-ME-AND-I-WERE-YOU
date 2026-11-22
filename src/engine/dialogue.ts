@@ -383,3 +383,20 @@ export function sfxBetween(steps: Step[], from: number, to: number): string[] {
   }
   return out;
 }
+
+/**
+ * A question with every player-visible text resolved ({other}, {me}, {you}…). Reflection, mirror
+ * and statement texts must go through this before rendering — raw "{other}" must never reach the screen.
+ */
+export function resolveQuestion<Q extends { self: string; perceived?: string; options: { text: string }[] }>(
+  q: Q,
+  ctx: TokenContext,
+  speaker?: string,
+): Q {
+  return {
+    ...q,
+    self: resolveTokens(q.self, ctx, speaker),
+    ...(q.perceived !== undefined ? { perceived: resolveTokens(q.perceived, ctx, speaker) } : {}),
+    options: q.options.map((o) => ({ ...o, text: resolveTokens(o.text, ctx, speaker) })),
+  };
+}

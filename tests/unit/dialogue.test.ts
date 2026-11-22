@@ -262,3 +262,21 @@ describe('story state in the save', () => {
     expect(SaveRoot.safeParse(s).success).toBe(true);
   });
 });
+
+describe('resolveQuestion', () => {
+  it('replaces tokens in the question, perceived text and options', async () => {
+    const { resolveQuestion } = await import('../../src/engine/dialogue');
+    const ctx = {
+      names: { A: 'ดาว', B: 'เมฆ', in: 'ดาว', out: 'เมฆ', me: 'ดาว', other: 'เมฆ' },
+      endings: { in: '', out: '' },
+      address: { in: 'เธอ', out: 'เธอ' },
+    };
+    const q = resolveQuestion(
+      { id: 'x', self: 'อยากให้ {other} รู้', perceived: '{other} คิด', options: [{ id: 'a', text: 'ชวน {other}' }] },
+      ctx,
+    );
+    expect(q.self).toBe('อยากให้ เมฆ รู้');
+    expect(q.perceived).toBe('เมฆ คิด');
+    expect(q.options[0]!.text).toBe('ชวน เมฆ');
+  });
+});

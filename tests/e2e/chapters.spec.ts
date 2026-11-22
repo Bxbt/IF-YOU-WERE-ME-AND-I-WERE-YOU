@@ -230,3 +230,34 @@ test('Ch5 statements: starters fill the field, private by default, saved', async
   expect(saved.kind).toBe('statement');
   expect(saved.entries.pl_playerA01.shareIntent).toBe(false);
 });
+
+test('Ch4/Ch5 reflection questions show the partner name, never a raw {other}', async ({ page }) => {
+  await seedSave(
+    page,
+    seed({
+      scenario: 'me',
+      progress: {
+        ch4: {
+          chapterId: 'ch4',
+          status: 'in_progress',
+          currentSceneId: 'ch4_reflect',
+          lineIndex: 0,
+          flags: {},
+          choiceLog: [],
+          skippedScenes: [],
+          playCount: 1,
+          startedAt: '2026-11-22T10:00:00.000Z',
+        },
+      },
+    }),
+  );
+  await page.goto(`/#/j/${J}/play/ch4`);
+  const q2 = page.getByText(/มีเรื่องไหนที่คุณอยากให้ .+ รู้เกี่ยวกับตัวคุณ/);
+  await playThrough(page, async () => (await q2.count()) > 0 || (await page.getByText('ข้อ 1 จาก 3').isVisible()));
+  if (!(await q2.isVisible())) {
+    await tap(page.getByRole('button', { name: 'ไม่มี', exact: true }));
+    await tap(page.getByRole('button', { name: 'ถัดไป', exact: true }));
+  }
+  await expect(q2).toContainText('เมฆ');
+  expect(await page.locator('main').innerText()).not.toContain('{other}');
+});
