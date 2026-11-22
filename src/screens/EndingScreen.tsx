@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BarChart3, FileText, Home, SkipForward } from 'lucide-react';
@@ -8,8 +8,6 @@ import type { ChapterContent } from '../content/types';
 import { CHAPTER_BY_ID } from '../content/th/chapters';
 import { EmptyState } from '../components/Misc';
 import { PixelButton } from '../components/PixelButton';
-import { SceneCanvas } from '../scene/SceneCanvas';
-import { DEFAULT_ENV } from '../scene/env';
 import { useGame } from '../store/game';
 import { useReducedMotion } from '../lib/motion';
 
@@ -28,7 +26,6 @@ export function EndingScreen() {
   const [index, setIndex] = useState(0);
   const reduced = useReducedMotion();
   const nextRef = useRef<HTMLButtonElement>(null);
-  const env = useMemo(() => ({ ...DEFAULT_ENV, bg: 'bg_rooftop_night' }), []);
 
   useEffect(() => {
     let alive = true;
@@ -63,7 +60,16 @@ export function EndingScreen() {
   const line = lines[index];
   return (
     <main className="relative flex min-h-[100dvh] flex-col" data-testid="ending">
-      <SceneCanvas env={env} label={ui.ending.sceneLabel} className="w-full" maxHeightRatio={0.5} />
+      {/* Owner's ending art (docs/09 §7). Only 1024 px wide, so its width is capped to stay sharp. */}
+      <div className="flex justify-center bg-[#0e1120]">
+        <img
+          src="./brand/ending.jpg"
+          alt={ui.ending.sceneLabel}
+          width={1024}
+          height={572}
+          className="h-auto max-h-[50vh] w-full max-w-5xl object-cover"
+        />
+      </div>
       {!done && (
         <button
           type="button"

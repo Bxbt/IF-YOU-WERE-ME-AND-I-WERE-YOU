@@ -171,6 +171,7 @@ Self-host ใน `public/fonts/` · `font-display: swap` · ระบุ License
 | og-image | 1200×628 | JPEG `public/brand/og.jpg` ✅ (ภาพหน้าปก ไม่มีข้อมูลผู้เล่น) | P2 |
 | cover | 1734×907 | JPEG `public/brand/cover.jpg` — พื้นหลัง S1 บนจอกว้าง (อัตราส่วน ≥ 4:3) | P1 |
 | cover-portrait | 941×1672 | JPEG `public/brand/cover-portrait.jpg` — พื้นหลัง S1 บนจอแนวตั้ง (ส่วนบน 30% ว่างไว้ให้ชื่อเกม ตัวละครอยู่ 35% ล่าง) · ฉาก canvas `bg_title` ไม่ได้ใช้ที่ S1 แล้ว | P1 |
+| ending | 1024×572 | JPEG `public/brand/ending.jpg` — ภาพฉาก S15 (สองคนนั่งบนม้านั่งบนดาดฟ้า ดาวชมพูกับดาวฟ้าเชื่อมกัน) แทนฉาก canvas `bg_rooftop_night` ในหน้าจบ · แสดงกว้างไม่เกิน max-w-5xl เพื่อไม่ให้เบลอ | P1 |
 | logo | 512×512 | PNG `public/brand/logo-512.png` — S11 และ README | P1 |
 
 ภาพทั้งชุด (โลโก้ ไอคอน หน้าปก) จัดทำโดยเจ้าของโปรเจกต์ (2026-11-23) เป็นไฟล์ PNG/JPEG ไม่ได้วาดด้วยโค้ด — ใช้นอกฉากเกม ฉากและตัวละครในเกมยังวาดด้วย canvas ตาม §1.2
