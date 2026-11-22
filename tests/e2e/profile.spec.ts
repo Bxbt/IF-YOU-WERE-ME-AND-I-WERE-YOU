@@ -62,7 +62,7 @@ test('art preview renders without overflow', async ({ page }) => {
   await page.goto('/#/art-preview');
   await expect(page.getByRole('img', { name: /มีคนยืนอยู่ตรงกลาง/ })).toBeVisible();
   // Every P0 background (+ the Ch1 ending exterior) is in the gallery for owner review.
-  await expect(page.locator('[data-testid^="gallery-"]')).toHaveCount(12);
+  await expect(page.locator('[data-testid^="gallery-"]')).toHaveCount(14);
   await noOverflow(page);
   await noSeriousA11y(page);
 });

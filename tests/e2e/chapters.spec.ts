@@ -261,3 +261,12 @@ test('Ch4/Ch5 reflection questions show the partner name, never a raw {other}', 
   await expect(q2).toContainText('เมฆ');
   expect(await page.locator('main').innerText()).not.toContain('{other}');
 });
+
+test('Ch4 dialogue cards show the speaking player’s portrait (A/B speakers)', async ({ page }) => {
+  await seedSave(page, seed({ scenario: 'me' }));
+  await page.goto(`/#/j/${J}/play/ch4?start=1`);
+  const line = page.getByText(/เมื่อวาน… ถ้าเป็น/).first();
+  await playThrough(page, () => line.isVisible());
+  const card = line.locator('xpath=ancestor::div[contains(@class,"panel")][1]');
+  await expect(card.locator('canvas')).toHaveCount(1);
+});

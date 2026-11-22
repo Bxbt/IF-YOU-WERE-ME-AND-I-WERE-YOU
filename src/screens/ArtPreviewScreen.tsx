@@ -8,6 +8,7 @@ import { ui } from '../content/th/ui';
 import { SceneCanvas } from '../scene/SceneCanvas';
 import { BACKGROUNDS } from '../scene/backgrounds';
 import { DEFAULT_ENV, type SceneEnv } from '../scene/env';
+import type { CastMember, CastRole } from '../scene/cast';
 
 /** Each background with the environment it is mostly seen in (docs/02 ENV lines). */
 const GALLERY: { key: string; env: Partial<SceneEnv> }[] = [
@@ -19,6 +20,8 @@ const GALLERY: { key: string; env: Partial<SceneEnv> }[] = [
   { key: 'bg_building_exterior_rain', env: { rain: 'heavy' } },
   { key: 'bg_lobby_floor6', env: { door: 'closed' } },
   { key: 'bg_lobby_floor6', env: { door: 'ajar' } },
+  { key: 'bg_lobby_floor6', env: { door: 'open' } },
+  { key: 'bg_elevator_emergency', env: { light: 'emergency', haze: 1 } },
   { key: 'bg_living_room_morning', env: {} },
   { key: 'bg_living_room_night', env: { lamp: 'warm' } },
   { key: 'bg_rooftop_night', env: {} },
@@ -26,6 +29,13 @@ const GALLERY: { key: string; env: Partial<SceneEnv> }[] = [
 ];
 
 const EXPRESSIONS: Expression[] = ['neutral', 'happy', 'sad', 'worried', 'relieved'];
+
+/** Sample cast so the staging of every scene can be checked (two presets, like two players). */
+const previewCast = (role: CastRole): CastMember => ({
+  role,
+  appearance: role === 'in' || role === 'A' ? PRESETS.p1 : PRESETS.p3,
+  expression: 'neutral',
+});
 
 /**
  * Art prototype for owner review (docs/09 §1.2, audit H-5): one scene + characters.
@@ -57,7 +67,7 @@ export function ArtPreviewScreen() {
             const env = { ...DEFAULT_ENV, ...g.env, bg: g.key };
             return (
               <figure key={i} className="m-0 flex flex-col gap-1" data-testid={`gallery-${g.key}`}>
-                <SceneCanvas env={env} label={BACKGROUNDS[g.key]?.ariaLabel ?? g.key} />
+                <SceneCanvas env={env} label={BACKGROUNDS[g.key]?.ariaLabel ?? g.key} castFor={previewCast} />
                 <figcaption className="text-[13px] text-lavender">
                   {g.key}
                   {g.env.door ? ` · door=${g.env.door}` : ''}

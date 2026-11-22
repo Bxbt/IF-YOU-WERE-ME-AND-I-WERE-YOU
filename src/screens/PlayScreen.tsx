@@ -33,6 +33,8 @@ import { ambientFor, sound } from '../audio/engine';
 import { useSession } from '../store/session';
 import { MIRRORS } from '../content/th/questions';
 import { SceneCanvas } from '../scene/SceneCanvas';
+import type { CastMember, CastRole } from '../scene/cast';
+import { EXPRESSION_FALLBACK, type Expression } from '../scene/draw/character';
 import { PortraitView } from '../scene/CharacterCanvas';
 import { useGame } from '../store/game';
 import { saveDraft } from '../store/actions';
@@ -315,6 +317,32 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     const endSteps = expandScene(lastScene, state);
     return envAt(lastScene, endSteps, endSteps.length);
   }, [scene, pos, steps, lastScene, state]);
+  // People on stage: each role drawn with its player's own appearance; the face follows the last
+  // thing that person said in this scene (docs/09 §3).
+  const castFor = useCallback(
+    (role: CastRole): CastMember | undefined => {
+      const pid =
+        role === 'in'
+          ? playerForRole(journey, 'insider')
+          : role === 'out'
+            ? playerForRole(journey, 'waiter')
+            : role === 'A'
+              ? journey.playerIds[0]
+              : journey.playerIds[1];
+      const p = save.players[pid];
+      if (!p) return undefined;
+      let expression: Expression = 'neutral';
+      const upto = pos ? pos.lineIndex : steps.length;
+      for (let k = 0; k < Math.min(upto + 1, steps.length); k++) {
+        const st = steps[k]!;
+        if (st.kind === 'line' && st.line.type === 'DLG' && st.line.speaker === role && st.line.expression)
+          expression = (EXPRESSION_FALLBACK[st.line.expression] ?? st.line.expression) as Expression;
+      }
+      return { role, appearance: p.appearance, expression };
+    },
+    [journey, save.players, pos, steps],
+  );
+
   // Sound follows the scene (docs/09 §5); silent unless the player turned sound on.
   const music = scene && pos ? musicAt(steps, pos.lineIndex) : undefined;
   useAmbient(ambientFor(env.bg, env.rain, env.light, music));
@@ -464,12 +492,18 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   }, [pos?.sceneId, pos?.lineIndex, step?.kind, paused, historyOpen]);
 
   // ----- rendering helpers -----
+  // Portrait for every player who speaks: roles in Ch1–Ch3 (in/out), the players themselves in
+  // Ch4–Ch5 (A/B). Other speakers (guard, technician) have no portrait.
   const playerOf = (speaker: string) =>
     speaker === 'in'
       ? save.players[playerForRole(journey, 'insider')]
       : speaker === 'out'
         ? save.players[playerForRole(journey, 'waiter')]
-        : undefined;
+        : speaker === 'A'
+          ? save.players[journey.playerIds[0]]
+          : speaker === 'B'
+            ? save.players[journey.playerIds[1]]
+            : undefined;
 
   function renderLine(s: Step | undefined, waitingChoice: boolean) {
     if (s?.kind !== 'line') return null;
@@ -895,6 +929,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
           shakeKey={shakeKey}
           className="w-full"
           maxHeightRatio={sceneHeightRatio}
+          castFor={castFor}
         />
       </div>
 

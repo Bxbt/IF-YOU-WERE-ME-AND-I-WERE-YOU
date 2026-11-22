@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { PixelCanvas } from './PixelCanvas';
 import { BACKGROUNDS } from './backgrounds';
 import type { SceneEnv } from './env';
+import { drawCast, rolesFor, type CastMember, type CastRole } from './cast';
 import { useReducedMotion } from '../lib/motion';
 
 /** Draws one background; a missing or failing background falls back to its palette colour (docs/06 S6). */
@@ -23,16 +24,26 @@ function OneScene({
   label,
   className = '',
   maxHeightRatio,
+  castFor,
 }: {
   bgKey: string;
   env: SceneEnv;
   label: string;
   className?: string;
   maxHeightRatio?: number;
+  castFor?: (role: CastRole) => CastMember | undefined;
 }) {
   const draw = useCallback(
-    (c: CanvasRenderingContext2D, t: number) => drawBackground(c, bgKey, t, env),
-    [bgKey, env],
+    (c: CanvasRenderingContext2D, t: number) => {
+      drawBackground(c, bgKey, t, env);
+      if (castFor) {
+        const cast = rolesFor(bgKey, env)
+          .map((r) => castFor(r))
+          .filter((m): m is CastMember => !!m);
+        drawCast(c, bgKey, env, cast, t);
+      }
+    },
+    [bgKey, env, castFor],
   );
   return <PixelCanvas draw={draw} label={label} className={className} maxHeightRatio={maxHeightRatio} />;
 }
@@ -46,13 +57,15 @@ interface SceneCanvasProps {
   className?: string;
   /** Fraction of the viewport height the scene may use (split scenes share it when stacked). */
   maxHeightRatio?: number;
+  /** Who plays each role (appearance + expression); omit for an empty scene. */
+  castFor?: (role: CastRole) => CastMember | undefined;
 }
 
 /**
  * S6 scene layer (docs/06 §1.5, S6): 320×180 logical canvas, integer-scaled.
  * Split screen: side by side on lg, stacked on sm.
  */
-export function SceneCanvas({ env, label, shakeKey = 0, className = '', maxHeightRatio }: SceneCanvasProps) {
+export function SceneCanvas({ env, label, shakeKey = 0, className = '', maxHeightRatio, castFor }: SceneCanvasProps) {
   const reduced = useReducedMotion();
   // Split scenes stack on small screens (docs/06 S6), so each half gets half the height budget.
   const stacked = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -75,14 +88,14 @@ export function SceneCanvas({ env, label, shakeKey = 0, className = '', maxHeigh
       {env.split ? (
         <div role="img" aria-label={label} className="grid grid-cols-1 gap-1 lg:grid-cols-2">
           <div aria-hidden>
-            <OneScene bgKey={env.split[0]} env={env} label="" maxHeightRatio={splitRatio} />
+            <OneScene bgKey={env.split[0]} env={env} label="" maxHeightRatio={splitRatio} castFor={castFor} />
           </div>
           <div aria-hidden>
-            <OneScene bgKey={env.split[1]} env={env} label="" maxHeightRatio={splitRatio} />
+            <OneScene bgKey={env.split[1]} env={env} label="" maxHeightRatio={splitRatio} castFor={castFor} />
           </div>
         </div>
       ) : (
-        <OneScene bgKey={env.bg} env={env} label={label} maxHeightRatio={maxHeightRatio} />
+        <OneScene bgKey={env.bg} env={env} label={label} maxHeightRatio={maxHeightRatio} castFor={castFor} />
       )}
     </div>
   );
