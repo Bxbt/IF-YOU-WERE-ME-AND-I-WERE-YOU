@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Globe2, User, Users } from 'lucide-react';
 import { ui } from '../content/th/ui';
-import { ScreenHeader } from '../components/Misc';
+import { BrandArt, ScreenHeader } from '../components/Misc';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { FEATURES } from '../lib/features';
 import { useGame } from '../store/game';
@@ -18,11 +18,11 @@ export function ModeSelectScreen() {
   const [confirm, setConfirm] = useState<ModeKey | null>(null);
   const [showFull, setShowFull] = useState(false);
 
-  // Owner art (docs/09 §7); remote keeps its icon until its art arrives.
+  // Owner art (docs/09 §7); the icon stays as a fallback type only.
   const cards: { key: ModeKey; Icon: typeof User; img?: string; enabled: boolean; reason: string }[] = [
     { key: 'solo', Icon: User, img: './brand/mode-solo.png', enabled: FEATURES.characterCreation, reason: ui.mode.soloNotReady },
     { key: 'together', Icon: Users, img: './brand/mode-together.png', enabled: FEATURES.together, reason: ui.comingSoon },
-    { key: 'remote', Icon: Globe2, enabled: FEATURES.remote, reason: ui.comingSoon },
+    { key: 'remote', Icon: Globe2, img: './brand/mode-remote.png', enabled: FEATURES.remote, reason: ui.comingSoon },
   ];
 
   function choose(key: ModeKey) {
@@ -50,15 +50,7 @@ export function ModeSelectScreen() {
                 className="panel flex h-full w-full flex-col items-start gap-2 text-left disabled:opacity-60"
               >
                 {img ? (
-                  // Decorative; navy box matches the opaque together art's background (#171C2F).
-                  <img
-                    src={img}
-                    alt=""
-                    aria-hidden
-                    width={128}
-                    height={128}
-                    className="h-28 w-28 self-center rounded-btn bg-[#171C2F] lg:h-32 lg:w-32"
-                  />
+                  <BrandArt src={img} size="h-28 w-28 self-center lg:h-32 lg:w-32" />
                 ) : (
                   <Icon aria-hidden className="h-7 w-7 text-orange" />
                 )}

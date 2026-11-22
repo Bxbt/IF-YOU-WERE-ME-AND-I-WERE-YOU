@@ -171,7 +171,8 @@ Self-host ใน `public/fonts/` · `font-display: swap` · ระบุ License
 | og-image | 1200×628 | JPEG `public/brand/og.jpg` ✅ (ภาพหน้าปก ไม่มีข้อมูลผู้เล่น) | P2 |
 | cover | 1734×907 | JPEG `public/brand/cover.jpg` — พื้นหลัง S1 บนจอกว้าง (อัตราส่วน ≥ 4:3) | P1 |
 | cover-portrait | 941×1672 | JPEG `public/brand/cover-portrait.jpg` — พื้นหลัง S1 บนจอแนวตั้ง (ส่วนบน 30% ว่างไว้ให้ชื่อเกม ตัวละครอยู่ 35% ล่าง) · ฉาก canvas `bg_title` ไม่ได้ใช้ที่ S1 แล้ว | P1 |
-| mode cards | 512×512 | PNG `public/brand/mode-solo.png` (โปร่งใส) และ `mode-together.png` (พื้น navy #171C2F ทึบ) — S2 การ์ดโหมด แสดงในกล่อง navy มุมโค้ง · ตกแต่ง (`alt=""`) · การ์ดระยะไกลยังใช้ไอคอนจนกว่าภาพจะมา | P1 |
+| mode cards | 512×512 | PNG โปร่งใส `public/brand/mode-solo.png`, `mode-together.png`, `mode-remote.png` (together/remote เป็น v2 ตัวละครตรงกับปก · solo ใช้ภาพแรกตามที่เจ้าของเลือก) — S2 การ์ดโหมด · วางบนกล่อง navy #171C2F เสมอ (เส้นเข้มบางส่วนโปร่งใส) · ตกแต่ง (`alt=""`) | P1 |
+| waiting | 512×512 | PNG โปร่งใส `public/brand/waiting.png` — สองคนนั่งหันหลังให้กัน: S17 ขณะรอไฟล์ปิดผนึกของคู่ (Phase Waiting, docs/06 S7) และ EmptyState ของ S8 (ยังไม่มีข้อให้เทียบ) · กล่อง navy · ตกแต่ง | P1 |
 | handoff | 512×512 | PNG โปร่งใส `public/brand/handoff.png` — S12 Handoff (สองมือส่งโทรศัพท์ แขนเสื้อชมพูซ้าย ฟ้าขวา) แทนไอคอน Lucide · ตกแต่ง (`alt=""`) ไม่มีกรอบ ไม่มีแอนิเมชัน | P1 |
 | ending | 1024×572 | JPEG `public/brand/ending.jpg` — ภาพฉาก S15 (สองคนนั่งบนม้านั่งบนดาดฟ้า ดาวชมพูกับดาวฟ้าเชื่อมกัน) แทนฉาก canvas `bg_rooftop_night` ในหน้าจบ · แสดงกว้างไม่เกิน max-w-5xl เพื่อไม่ให้เบลอ | P1 |
 | logo | 512×512 | PNG `public/brand/logo-512.png` — S11 และ README | P1 |

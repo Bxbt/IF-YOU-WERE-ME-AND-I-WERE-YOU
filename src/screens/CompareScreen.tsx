@@ -50,6 +50,7 @@ export function CompareScreen() {
       <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8">
         <ScreenHeader title={c.heading} backTo={back} />
         <EmptyState
+          art="waiting"
           title={c.emptyTitle}
           body={c.emptyBody(other)}
           action={

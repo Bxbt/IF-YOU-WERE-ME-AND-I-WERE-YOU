@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Copy, Download, KeyRound, Upload } from 'lucide-react';
 import { ui } from '../content/th/ui';
-import { ScreenHeader } from '../components/Misc';
+import { BrandArt, ScreenHeader } from '../components/Misc';
 import { PixelButton } from '../components/PixelButton';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { PlayerGate } from '../components/PlayerGate';
@@ -262,7 +262,16 @@ function RemoteJourneyPanel({ journey }: { journey: GameSession }) {
           <div className="flex flex-col gap-2">
             <p className="m-0 font-semibold">{t.step4}</p>
             <FilePick label={t.importSealed} onText={onSealed} />
-            {journey.remote?.partnerSealed && <p className="m-0 text-sm">{t.imported}</p>}
+            {journey.remote?.partnerSealed ? (
+              <p className="m-0 text-sm">{t.imported}</p>
+            ) : (
+              key && (
+                <div className="flex items-center gap-3" data-testid="remote-waiting">
+                  <BrandArt src="./brand/waiting.png" size="h-20 w-20" />
+                  <p className="m-0 text-sm text-lavender">{t.waiting(partnerName)}</p>
+                </div>
+              )
+            )}
           </div>
           <div className="flex flex-col gap-2">
             <p className="m-0 font-semibold">{t.step5}</p>

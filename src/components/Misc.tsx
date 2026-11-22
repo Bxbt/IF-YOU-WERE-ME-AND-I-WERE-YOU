@@ -6,10 +6,26 @@ import { FEATURES } from '../lib/features';
 import { useGame } from '../store/game';
 import { toggleSound } from '../audio/useSound';
 
-export function EmptyState({ title, body, action }: { title: string; body?: string; action?: ReactNode }) {
+/** Owner art (docs/09 §7). Decorative; always on the navy box — dark lines are partly transparent. */
+export function BrandArt({ src, size = 'h-28 w-28' }: { src: string; size?: string }) {
+  return <img src={src} alt="" aria-hidden width={128} height={128} className={`${size} rounded-btn bg-[#171C2F]`} />;
+}
+
+export function EmptyState({
+  title,
+  body,
+  action,
+  art,
+}: {
+  title: string;
+  body?: string;
+  action?: ReactNode;
+  /** 'waiting': two people back to back (docs/06 S7 Phase Waiting). */
+  art?: 'waiting';
+}) {
   return (
     <div className="panel flex flex-col items-center gap-3 text-center">
-      <Sparkles aria-hidden className="h-8 w-8 text-lavender" />
+      {art ? <BrandArt src={`./brand/${art}.png`} /> : <Sparkles aria-hidden className="h-8 w-8 text-lavender" />}
       <p className="m-0 font-semibold">{title}</p>
       {body && <p className="m-0 text-sm text-lavender">{body}</p>}
       {action}

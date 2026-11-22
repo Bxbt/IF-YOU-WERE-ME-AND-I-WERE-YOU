@@ -91,6 +91,7 @@ export function CompareTogether({ journey }: { journey: GameSession }) {
 
       {!cmp.comparable ? (
         <EmptyState
+          art="waiting"
           title={c.emptyTogether}
           body={c.emptyTogetherBody}
           action={
