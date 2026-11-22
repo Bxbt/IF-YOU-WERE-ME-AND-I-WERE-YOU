@@ -220,7 +220,8 @@ function Runner({ ownerId, layer, aboutId, aboutName, set, single, focusQ, onExi
         <FreeTextField draft={draft} onChange={onChange} />
       </section>
 
-      <nav className="flex flex-wrap items-center justify-between gap-3">
+      {/* Sticky so "next" is always reachable without scrolling on small screens. */}
+      <nav aria-label="การนำทางคำถาม" className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t border-lavender/20 bg-navy/95 px-4 py-3">
         {single ? (
           saved ? (
             <PixelButton
