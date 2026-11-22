@@ -9,6 +9,13 @@ export function AboutScreen() {
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8">
       <ScreenHeader title={a.heading} preferHistory />
+      <img
+        src="./brand/logo-512.png"
+        alt={a.logoAlt}
+        width={160}
+        height={160}
+        className="mx-auto h-40 w-40"
+      />
       <p className="m-0">{a.what}</p>
 
       <section className="panel" aria-labelledby="not-h">

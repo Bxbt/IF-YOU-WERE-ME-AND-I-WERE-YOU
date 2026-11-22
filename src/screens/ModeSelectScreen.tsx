@@ -6,6 +6,7 @@ import { ScreenHeader } from '../components/Misc';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { FEATURES } from '../lib/features';
 import { useGame } from '../store/game';
+import { MAX_JOURNEYS } from '../store/journeys';
 
 type ModeKey = 'solo' | 'together' | 'remote';
 
@@ -13,7 +14,9 @@ type ModeKey = 'solo' | 'together' | 'remote';
 export function ModeSelectScreen() {
   const navigate = useNavigate();
   const hasActive = useGame((s) => Object.values(s.save.journeys).some((j) => j.status === 'active'));
+  const full = useGame((s) => Object.keys(s.save.journeys).length >= MAX_JOURNEYS);
   const [confirm, setConfirm] = useState<ModeKey | null>(null);
+  const [showFull, setShowFull] = useState(false);
 
   const cards: { key: ModeKey; Icon: typeof User; enabled: boolean; reason: string }[] = [
     { key: 'solo', Icon: User, enabled: FEATURES.characterCreation, reason: ui.mode.soloNotReady },
@@ -23,6 +26,7 @@ export function ModeSelectScreen() {
 
   function choose(key: ModeKey) {
     if (key === 'remote') return;
+    if (full) return setShowFull(true);
     // TC-RES-09: an unfinished journey is archived only after the player agrees.
     if (hasActive) setConfirm(key);
     else navigate(`/players/new?mode=${key}`);
@@ -68,6 +72,14 @@ export function ModeSelectScreen() {
         confirmLabel={ui.player.activeExistsConfirm}
         onCancel={() => setConfirm(null)}
         onConfirm={() => navigate(`/players/new?mode=${confirm ?? 'solo'}`)}
+      />
+      <ConfirmDialog
+        open={showFull}
+        title={ui.journeys.full}
+        body={ui.journeys.fullBody}
+        confirmLabel={ui.journeys.manage}
+        onCancel={() => setShowFull(false)}
+        onConfirm={() => navigate('/journeys')}
       />
     </main>
   );

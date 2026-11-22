@@ -165,10 +165,14 @@ Self-host ใน `public/fonts/` · `font-display: swap` · ระบุ License
 
 | Key | ขนาด | Format | Priority |
 |---|---|---|---|
-| favicon | 32×32, 16×16 | PNG/ICO + SVG | P0 |
-| apple-touch-icon | 180×180 | PNG | P1 |
-| PWA icons | 192, 512 (maskable) | PNG | P2 |
-| og-image | 1200×630 | PNG (ภาพ Title ไม่มีข้อมูลผู้เล่น) | P2 |
+| favicon | 32×32, 16×16 | PNG (`public/brand/favicon-*.png`) ✅ | P0 |
+| apple-touch-icon | 180×180 | PNG ✅ | P1 |
+| PWA icons | 192, 512 | PNG ✅ (มีไฟล์แล้ว · manifest ยังไม่ทำ — PWA อยู่ใน Backlog) | P2 |
+| og-image | 1200×628 | JPEG `public/brand/og.jpg` ✅ (ภาพหน้าปก ไม่มีข้อมูลผู้เล่น) | P2 |
+| cover | 1734×907 | JPEG `public/brand/cover.jpg` — พื้นหลัง S1 บนจอกว้าง (อัตราส่วน ≥ 4:3) · จอแนวตั้งใช้ฉาก canvas `bg_title` เดิมเพื่อให้เห็นตัวละครทั้งสอง | P1 |
+| logo | 512×512 | PNG `public/brand/logo-512.png` — S11 และ README | P1 |
+
+ภาพทั้งชุด (โลโก้ ไอคอน หน้าปก) จัดทำโดยเจ้าของโปรเจกต์ (2026-11-23) เป็นไฟล์ PNG/JPEG ไม่ได้วาดด้วยโค้ด — ใช้นอกฉากเกม ฉากและตัวละครในเกมยังวาดด้วย canvas ตาม §1.2
 
 ไอคอน: ดาวสองดวงเชื่อมด้วยเส้นทางเรืองแสง pixel บนพื้น navy
 

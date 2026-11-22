@@ -21,6 +21,7 @@ export function TitleScreen() {
   useAmbient(TITLE_AMBIENT);
   const journey = useGame((s) => currentJourney(s.save));
   const hasActive = !!journey;
+  const journeyCount = useGame((s) => Object.keys(s.save.journeys).length);
   const hasPlayers = useGame((s) => Object.values(s.save.players).some((p) => p.kind === 'real'));
   const stars = useMemo(makeStars, []);
   const draw = useCallback(
@@ -37,11 +38,17 @@ export function TitleScreen() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
+      {/* Portrait: the animated canvas scene (both figures stay in view). Wide screens: the cover painting. */}
       <PixelCanvas
         draw={draw}
         label={ui.title.sceneLabel}
         fit="cover"
-        className="absolute inset-0 h-full w-full"
+        className="absolute inset-0 h-full w-full [@media(min-aspect-ratio:4/3)]:hidden"
+      />
+      <img
+        src="./brand/cover.jpg"
+        alt={ui.title.coverLabel}
+        className="absolute inset-0 hidden h-full w-full object-cover object-bottom [@media(min-aspect-ratio:4/3)]:block"
       />
       <div
         aria-hidden
@@ -116,6 +123,11 @@ export function TitleScreen() {
           >
             {ui.title.about}
           </PixelButton>
+          {journeyCount > 0 && (
+            <Link to="/journeys" className="text-center text-sm text-lavender underline">
+              {ui.journeys.titleLink}
+            </Link>
+          )}
         </nav>
 
         <div aria-hidden className="h-[22vh] lg:h-[12vh]" />

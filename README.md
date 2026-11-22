@@ -1,5 +1,7 @@
 # IF YOU WERE ME, AND I WERE YOU
 
+![IF YOU WERE ME, AND I WERE YOU](public/brand/og.jpg)
+
 *Two hearts. Two perspectives. One story.*
 
 เกม Narrative แบบ Pixel Art 16-bit สำหรับสองคนที่อยากเข้าใจกันมากขึ้น ไม่มีคะแนน ไม่มีใครผิด

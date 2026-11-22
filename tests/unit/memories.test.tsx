@@ -38,7 +38,9 @@ beforeEach(() => useSession.getState().lock());
 
 describe('memory store', () => {
   it('TC-MEM-01: saves exactly what was written, schema-valid; only the owner can edit', () => {
-    let { save, id } = saveMemory(base(), A, input());
+    const first = saveMemory(base(), A, input());
+    const id = first.id;
+    let save = first.save;
     expect(save.memories[id]).toMatchObject({ ownerId: A, title: 'วันที่ฝนตก', whatHappened: 'เราเถียงกันเรื่องเล็ก ๆ' });
     expect(SaveRoot.safeParse(save).success).toBe(true);
     save = saveMemory(save, B, input('แก้โดยคนอื่น'), id).save;
@@ -46,7 +48,9 @@ describe('memory store', () => {
   });
 
   it('TC-MEM-02: private by default; the partner sees it only after the owner shares', () => {
-    let { save, id } = saveMemory(base(), A, input());
+    const first = saveMemory(base(), A, input());
+    const id = first.id;
+    let save = first.save;
     expect(memoriesVisibleTo(save, B, [A])).toEqual([]);
     save = setMemoryShared(save, A, id, true);
     expect(memoriesVisibleTo(save, B, [A]).map((x) => x.id)).toEqual([id]);

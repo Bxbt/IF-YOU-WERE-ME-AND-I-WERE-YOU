@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Download, Trash2, Upload } from 'lucide-react';
 import { useGame } from '../store/game';
+import { MAX_JOURNEYS } from '../store/journeys';
 import { ui } from '../content/th/ui';
 import { PinGate } from './PinGate';
 import { forgetPin, recordPinAttempt } from '../store/pinActions';
@@ -8,6 +9,7 @@ import { byteSize, downloadText } from '../lib/download';
 import {
   IMPORT_ERROR_TEXT,
   buildFullExport,
+  mergeSaves,
   exportFileName,
   parseImport,
   type ImportResult,
@@ -75,6 +77,19 @@ export function DataSection() {
     const res = useGame.getState().replaceAll(pending.data);
     setPending(null);
     setMessage(res.ok ? ui.data.importDone : ui.data.importFailed);
+  }
+
+  /** Phase 2: keep what is on this device and add the file's data as copies (docs/07 §11.2). */
+  function onMergeImport() {
+    if (!pending) return;
+    const merged = mergeSaves(useGame.getState().save, pending.data, MAX_JOURNEYS);
+    setPending(null);
+    if (!merged.ok) {
+      setMessage(merged.error === 'too_many_journeys' ? ui.data.mergeTooMany : ui.data.importFailed);
+      return;
+    }
+    const res = useGame.getState().replaceAll(merged.data);
+    setMessage(res.ok ? ui.data.mergeDone(merged.renamed) : ui.data.importFailed);
   }
 
   function onDeleteAll() {
@@ -151,7 +166,11 @@ export function DataSection() {
               </p>
             )}
             <p className="m-0 text-sm text-orange">{ui.data.importReplaceWarn}</p>
+            <p className="m-0 text-sm text-lavender">{ui.data.mergeNote}</p>
             <div className="flex flex-wrap gap-3">
+              <button type="button" className="btn btn-primary" onClick={onMergeImport}>
+                {ui.data.mergeConfirm}
+              </button>
               <button type="button" className="btn btn-danger" onClick={onConfirmImport}>
                 {ui.data.importConfirm}
               </button>

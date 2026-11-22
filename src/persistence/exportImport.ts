@@ -199,3 +199,72 @@ export function stripUnknownOptions(data: SaveRootT): { data: SaveRootT; removed
   ) as SaveRootT['journeys'];
   return { data: { ...data, profiles, journeys }, removed };
 }
+
+// ---------- Merge import (Phase 2, docs/07 §11.2 steps 6 + 9) ----------
+
+export type MergeResult =
+  | { ok: true; data: SaveRootT; renamed: number }
+  | { ok: false; error: 'too_many_journeys' | 'invalid_data' };
+
+const randomSuffix = () => Math.random().toString(36).slice(2, 10).padEnd(8, '0');
+
+/**
+ * Adds the imported data to what is already on this device. Clashing ids are kept as copies under
+ * new ids (never overwriting); the result has at most one active journey and at most `maxJourneys`.
+ * A file is not trusted with "revealed": in journeys with more than one real player every reveal
+ * from the file goes back to awaiting consent (H-3, docs/07 §11.2 step 9).
+ */
+export function mergeSaves(current: SaveRootT, incoming: SaveRootT, maxJourneys = 5): MergeResult {
+  const total = Object.keys(current.journeys).length + Object.keys(incoming.journeys).length;
+  if (total > maxJourneys) return { ok: false, error: 'too_many_journeys' };
+
+  // 1) New ids for clashes, applied to the whole incoming JSON (ids are long random strings).
+  const map = new Map<string, string>();
+  for (const id of Object.keys(incoming.players)) if (current.players[id]) map.set(id, `pl_${randomSuffix()}m`);
+  for (const id of Object.keys(incoming.journeys)) if (current.journeys[id]) map.set(id, `jr_${randomSuffix()}m`);
+  for (const id of Object.keys(incoming.memories)) if (current.memories[id]) map.set(id, `mem_${randomSuffix()}m`);
+  let text = JSON.stringify(incoming);
+  for (const [from, to] of map) text = text.split(from).join(to);
+  const inc = JSON.parse(text) as SaveRootT;
+
+  // 2) One active journey: keep the device's active one.
+  const hasActive = Object.values(current.journeys).some((j) => j.status === 'active');
+  for (const j of Object.values(inc.journeys)) {
+    if (hasActive && j.status === 'active') j.status = 'archived';
+    const real = j.playerIds.filter((p) => inc.players[p]?.kind === 'real');
+    if (real.length > 1) {
+      for (const item of Object.values(j.mirrorItems)) {
+        if (item.state === 'revealed') {
+          item.state = 'awaiting_consent';
+          delete item.revealedAt;
+          delete item.revealedRevision;
+        }
+        for (const e of Object.values(item.entries)) {
+          e.consent = false;
+          delete e.consentAt;
+        }
+      }
+    }
+  }
+  // Only one active among the incoming ones too.
+  let seenActive = hasActive;
+  for (const j of Object.values(inc.journeys)) {
+    if (j.status === 'active') {
+      if (seenActive) j.status = 'archived';
+      seenActive = true;
+    }
+  }
+
+  const merged: SaveRootT = {
+    ...current,
+    players: { ...current.players, ...inc.players },
+    profiles: { ...current.profiles, ...inc.profiles },
+    journeys: { ...current.journeys, ...inc.journeys },
+    reports: { ...current.reports, ...inc.reports },
+    memories: { ...current.memories, ...inc.memories },
+    drafts: { ...current.drafts },
+  };
+  const check = SaveRoot.safeParse(merged);
+  if (!check.success) return { ok: false, error: 'invalid_data' };
+  return { ok: true, data: check.data, renamed: map.size };
+}
