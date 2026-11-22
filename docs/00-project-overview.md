@@ -126,7 +126,7 @@
 | A-06 | Memory Scenes อยู่ใน Phase 2 ไม่อยู่ใน MVP | ต่ำ | Q-04 |
 | A-07 | ใช้ Vite + Zustand + Hash Router + Vitest + Playwright | กลาง | — |
 | A-08 | ฟอนต์: หัวเรื่องอังกฤษใช้ pixel font (Silkscreen, OFL) เนื้อหาไทยใช้ "IBM Plex Sans Thai" (OFL) แบบ self-host | ต่ำ | Q-06 |
-| A-09 | เสียงปิดเป็นค่าเริ่มต้น ใช้เสียงบรรยากาศ CC0 หรือสร้างด้วย WebAudio | ต่ำ | Q-08 |
+| A-09 | ~~เสียงปิดเป็นค่าเริ่มต้น~~ → **เปิดเป็นค่าเริ่มต้น** (เจ้าของตัดสิน 2026-11-23) เสียงสังเคราะห์ด้วย WebAudio · เบราว์เซอร์ยังเงียบจนผู้เล่นแตะหรือกดคีย์ครั้งแรก | ต่ำ | Q-08 |
 | A-10 | Phase 3 แนะนำ Supabase (Postgres + Row Level Security) มากกว่า Firebase | กลาง | Q-05 |
 | A-11 | มี Phase 3A "Sealed Exchange" (ไม่มี Backend) ก่อน Phase 3B (Supabase) | กลาง | Q-05 |
 | A-12 | เบอร์สายด่วนในหน้า Safety (1323, 1300, 191) ต้องตรวจสอบความถูกต้องก่อนปล่อย | ต่ำ | Q-11 |

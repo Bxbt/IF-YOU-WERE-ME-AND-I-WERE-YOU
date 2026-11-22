@@ -411,7 +411,7 @@ interface Settings {
   fontScale: 1 | 1.15 | 1.3;
   textSpeed: 'slow' | 'normal' | 'fast' | 'instant';
   reducedMotion: 'system' | 'on' | 'off';
-  sound: { enabled: boolean; volume: number };   // 0–1, ค่าเริ่มต้น enabled=false
+  sound: { enabled: boolean; volume: number };   // 0–1, ค่าเริ่มต้น enabled=true (เจ้าของตัดสิน 2026-11-23)
   lastJourneyId?: JourneyId;
 }
 

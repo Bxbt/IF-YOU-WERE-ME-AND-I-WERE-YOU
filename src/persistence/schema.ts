@@ -317,7 +317,9 @@ export const DEFAULT_SETTINGS: Settings = {
   fontScale: 1,
   textSpeed: 'normal',
   reducedMotion: 'system',
-  sound: { enabled: false, volume: 0.6 },
+  // On by default (owner decision 2026-11-23). Browsers still keep audio silent until the
+  // player's first tap or key press, so nothing plays the instant the page opens.
+  sound: { enabled: true, volume: 0.6 },
 };
 
 export function createEmptySave(): SaveRoot {

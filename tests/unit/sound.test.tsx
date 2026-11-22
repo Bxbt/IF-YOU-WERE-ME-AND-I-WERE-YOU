@@ -55,15 +55,18 @@ describe('engine without WebAudio (jsdom)', () => {
 });
 
 describe('controls', () => {
-  it('sound is off by default; the toggle turns it on and saves it', async () => {
+  it('sound is on by default for a new save; the toggle turns it off and back on, and saves it', async () => {
+    expect(createEmptySave().settings.sound.enabled).toBe(true);
     const spy = vi.spyOn(sound, 'setEnabled');
     render(<SoundToggle />);
-    const btn = screen.getByRole('button', { name: 'เปิดเสียง' });
-    expect(btn).toHaveAttribute('aria-pressed', 'false');
-    await userEvent.click(btn);
-    expect(spy).toHaveBeenCalledWith(true);
+    const off = screen.getByRole('button', { name: 'ปิดเสียง' });
+    expect(off).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(off);
+    expect(spy).toHaveBeenCalledWith(false);
+    expect(useGame.getState().save.settings.sound.enabled).toBe(false);
+    await userEvent.click(screen.getByRole('button', { name: 'เปิดเสียง' }));
+    expect(spy).toHaveBeenLastCalledWith(true);
     expect(useGame.getState().save.settings.sound.enabled).toBe(true);
-    expect(screen.getByRole('button', { name: 'ปิดเสียง' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('settings explain when the browser cannot play sound', () => {
@@ -79,10 +82,10 @@ describe('controls', () => {
     const router = createMemoryRouter(routes, { initialEntries: ['/settings'] });
     render(<RouterProvider router={router} />);
     const slider = screen.getByRole('slider', { name: 'ความดัง' });
+    expect(slider).toBeEnabled(); // on by default
+    await userEvent.click(screen.getByRole('group', { name: 'เสียงในเกม' }).querySelector('button:first-child')!);
+    expect(useGame.getState().save.settings.sound.enabled).toBe(false);
     expect(slider).toBeDisabled();
-    await userEvent.click(screen.getByRole('group', { name: 'เสียงในเกม' }).querySelector('button:last-child')!);
-    expect(useGame.getState().save.settings.sound.enabled).toBe(true);
-    expect(slider).toBeEnabled();
     vi.unstubAllGlobals();
   });
 });

@@ -166,7 +166,7 @@ Safari iOS 16+, Chrome Android 110+, Chrome/Edge/Firefox/Safari desktop 2 เว
 | Comparison (Solo rules) + Report + Export TXT/JSON/PNG + Import JSON (`scope=full` เท่านั้น) | Observed patterns (Phase 2 — audit M-7) |
 | localStorage + Zod + ตรวจ schemaVersion (รายการ migration ว่าง) + S18 | Backend, Remote, Analytics |
 | Pixel assets แบบวาดด้วยโค้ดบน canvas (P0 ตาม [09](09-asset-specification.md)) | Local encryption |
-| — | ~~เสียง~~ → ทำแล้ว (2026-11-23) ด้วย WebAudio, `FEATURES.sound = true` ค่าเริ่มต้นปิด ([09](09-asset-specification.md) §5) |
+| — | ~~เสียง~~ → ทำแล้ว (2026-11-23) ด้วย WebAudio, `FEATURES.sound = true` ค่าเริ่มต้นเปิด (2026-11-23) ([09](09-asset-specification.md) §5) |
 | Reduced motion, font scale, text speed, keyboard, a11y ตาม [06](06-ui-ux-specification.md) §4 | — |
 
 **MVP Definition of Done:** ผ่าน Test cases ที่ทำเครื่องหมาย `MVP` ใน [11](11-testing-and-acceptance-criteria.md) ทั้งหมด

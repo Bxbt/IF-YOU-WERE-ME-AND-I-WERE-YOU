@@ -150,8 +150,8 @@ describe('labels', () => {
     expect(screen.getByRole('img', { name: 'ตำแหน่ง 2 จาก 5' })).toBeInTheDocument();
   });
 
-  it('sound toggle starts off (sound is off by default — docs/09 §5)', () => {
+  it('sound toggle starts on (on by default — owner decision 2026-11-23)', () => {
     render(<SoundToggle />);
-    expect(screen.getByRole('button', { name: 'เปิดเสียง' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'ปิดเสียง' })).toHaveAttribute('aria-pressed', 'true');
   });
 });
