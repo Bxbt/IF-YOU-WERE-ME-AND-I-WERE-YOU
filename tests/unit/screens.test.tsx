@@ -100,3 +100,23 @@ describe('S11 About', () => {
     expect(screen.getAllByRole('link', { name: /^\d{3,4} ·/ })).toHaveLength(4);
   });
 });
+
+describe('S11 About — back returns to where the player came from', () => {
+  it('from the Q33 safety note, back goes to the same question, not Home', async () => {
+    const save = sampleSave();
+    delete save.players.pl_playerA01!.pin; // no PIN gate in this test
+    useGame.setState({ save });
+    const router = renderAt('/profile/pl_playerA01/self?set=full&q=Q33');
+    await userEvent.click(screen.getByRole('link', { name: 'เกี่ยวกับเกมนี้' }));
+    expect(router.state.location.pathname).toBe('/about');
+    await userEvent.click(screen.getByRole('button', { name: 'กลับ' }));
+    expect(router.state.location.pathname).toBe('/profile/pl_playerA01/self');
+    expect(router.state.location.search).toBe('?set=full&q=Q33');
+  });
+
+  it('opened directly (no history), back falls back to Home', async () => {
+    const router = renderAt('/about');
+    await userEvent.click(screen.getByRole('link', { name: 'กลับ' }));
+    expect(router.state.location.pathname).toBe('/');
+  });
+});

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Pause, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { ui } from '../content/th/ui';
 import { FEATURES } from '../lib/features';
@@ -51,14 +51,37 @@ export function SoundToggle() {
   );
 }
 
-export function ScreenHeader({ title, backTo = '/' }: { title: string; backTo?: string }) {
+/**
+ * `preferHistory`: for screens opened from many places (e.g. About from a question's safety note),
+ * "back" returns to where the player came from; `backTo` is only the fallback when the screen was
+ * opened directly (no in-app history).
+ */
+export function ScreenHeader({
+  title,
+  backTo = '/',
+  preferHistory = false,
+}: {
+  title: string;
+  backTo?: string;
+  preferHistory?: boolean;
+}) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const canGoBack = preferHistory && location.key !== 'default';
   return (
     <header className="flex flex-col gap-4">
       <div>
-        <Link to={backTo} className="btn btn-ghost no-underline">
-          <ArrowLeft aria-hidden className="h-5 w-5" />
-          {ui.back}
-        </Link>
+        {canGoBack ? (
+          <button type="button" className="btn btn-ghost" onClick={() => navigate(-1)}>
+            <ArrowLeft aria-hidden className="h-5 w-5" />
+            {ui.back}
+          </button>
+        ) : (
+          <Link to={backTo} className="btn btn-ghost no-underline">
+            <ArrowLeft aria-hidden className="h-5 w-5" />
+            {ui.back}
+          </Link>
+        )}
       </div>
       {title && <h1 className="m-0 text-2xl font-semibold">{title}</h1>}
     </header>
