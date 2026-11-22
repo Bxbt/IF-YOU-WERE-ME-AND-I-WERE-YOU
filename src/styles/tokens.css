@@ -1,0 +1,13 @@
+/* Design tokens — docs/06 §1.1 (single night theme). */
+:root {
+  --c-navy: #171c2f;
+  --c-indigo: #292b45;
+  --c-lavender: #a49bcb;
+  --c-cream: #f3ebdd;
+  --c-pink: #d9a3a7;
+  --c-orange: #e9b77b;
+  --c-blue: #8eacc8;
+  --c-danger: #e08a7e;
+  --font-scale: 1;
+  color-scheme: dark;
+}

@@ -1,0 +1,39 @@
+@import './tokens.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { font-size: calc(17px * var(--font-scale)); }
+@media (min-width: 1024px) { html { font-size: calc(19px * var(--font-scale)); } }
+
+body {
+  margin: 0;
+  background: var(--c-navy);
+  color: var(--c-cream);
+  font-family: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 3px solid var(--c-orange); outline-offset: 2px; }
+
+@layer components {
+  .panel {
+    @apply rounded-panel bg-indigo p-4 md:p-6;
+    border: 2px solid color-mix(in srgb, var(--c-lavender) 40%, transparent);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-btn px-5 py-2 font-medium transition-transform;
+    border: 2px solid color-mix(in srgb, var(--c-lavender) 40%, transparent);
+  }
+  .btn:active:not([aria-disabled='true']):not(:disabled) { transform: translateY(1px); }
+  .btn:disabled, .btn[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary { @apply bg-orange text-navy; }
+  .btn-ghost { @apply bg-transparent text-cream; }
+  .btn-danger { @apply bg-danger text-navy; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

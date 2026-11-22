@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - name: PII scan (TC-SAFE-07)
+        env:
+          PII_DENYLIST: ${{ secrets.PII_DENYLIST }}
+        run: |
+          if [ -z "$PII_DENYLIST" ]; then echo "PII_DENYLIST secret not set — skipping"; exit 0; fi
+          printf '%s\n' "$PII_DENYLIST" > /tmp/pii.txt
+          if grep -rnF -f /tmp/pii.txt --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist . ; then
+            echo "Found denylisted personal data"; exit 1
+          fi
