@@ -28,7 +28,8 @@ export function AnswersScreen({ layer }: { layer: 'self' | 'perceived' }) {
   const pending = usePendingDeletes((s) => s.items);
   if (!owner || (layer === 'perceived' && !about)) return <Navigate to="/profile" replace />;
 
-  const who = layer === 'self' ? `${owner.nickname} · ${ui.quiz.aboutYou}` : ui.quiz.aboutOther(about!.nickname);
+  const who =
+    layer === 'self' ? `${owner.nickname} · ${ui.quiz.aboutYou}` : ui.quiz.aboutOther(about!.nickname);
   const base = layer === 'self' ? `/profile/${playerId}/self` : `/profile/${playerId}/perceived/${aboutId}`;
 
   return (
@@ -37,16 +38,23 @@ export function AnswersScreen({ layer }: { layer: 'self' | 'perceived' }) {
       {layer === 'perceived' && <AssumptionTag />}
       {DIMENSIONS.map((d) => (
         <section key={d.id} className="panel flex flex-col gap-3" aria-labelledby={`dim-${d.id}`}>
-          <h2 id={`dim-${d.id}`} className="m-0 text-lg font-semibold">{d.name}</h2>
+          <h2 id={`dim-${d.id}`} className="m-0 text-lg font-semibold">
+            {d.name}
+          </h2>
           <ul className="m-0 flex list-none flex-col gap-3 p-0">
             {QUESTIONS.filter((q) => q.dimension === d.id).map((q) => {
               const isPending = !!pending[pendingKey(playerId, layer, aboutId, q.id)];
               const a = isPending ? undefined : answers[q.id];
               return (
-                <li key={q.id} className="flex items-start justify-between gap-3 border-t border-lavender/20 pt-3 first:border-0 first:pt-0">
+                <li
+                  key={q.id}
+                  className="flex items-start justify-between gap-3 border-t border-lavender/20 pt-3 first:border-0 first:pt-0"
+                >
                   <div className="flex flex-col gap-1">
                     <span className="text-sm">{questionText(q, layer, about?.nickname)}</span>
-                    <span className={`text-sm ${a ? 'text-cream' : 'text-lavender'}`}>{describe(a, q.id)}</span>
+                    <span className={`text-sm ${a ? 'text-cream' : 'text-lavender'}`}>
+                      {describe(a, q.id)}
+                    </span>
                   </div>
                   <Link
                     to={`${base}?set=full&q=${q.id}&single=1`}

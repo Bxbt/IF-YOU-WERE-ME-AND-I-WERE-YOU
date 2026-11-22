@@ -1,7 +1,11 @@
 /** Triggers a client-side file download. Returns false if the browser blocked it. */
 export function downloadText(fileName: string, text: string, mime = 'application/json'): boolean {
+  return downloadBlob(fileName, new Blob([text], { type: `${mime};charset=utf-8` }));
+}
+
+export function downloadBlob(fileName: string, blob: Blob): boolean {
   try {
-    const url = URL.createObjectURL(new Blob([text], { type: `${mime};charset=utf-8` }));
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;

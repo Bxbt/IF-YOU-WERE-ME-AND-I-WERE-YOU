@@ -18,7 +18,7 @@ describe('export / import (docs/07 §11)', () => {
     const expected = sampleSave();
     delete expected.players.pl_playerA01!.pin;
     expect(res.data).toEqual(expected);
-    expect(res.summary).toEqual({ players: 2, journeys: 1 });
+    expect(res.summary).toEqual({ players: 2, journeys: 1, removedOptions: 0 });
   });
 
   it('TC-EXP-02: checksum mismatch is rejected as possibly corrupted', async () => {

@@ -52,18 +52,41 @@ export function SettingsScreen() {
       <ScreenHeader title={ui.settings.heading} backTo={back} />
 
       <section className="panel flex flex-col gap-6" aria-labelledby="display-h">
-        <h2 id="display-h" className="m-0 text-xl font-semibold">{ui.settings.display}</h2>
-        <Segmented legend={ui.settings.fontScale} value={settings.fontScale} options={ui.settings.fontScaleOptions} onChange={(v) => setSetting('fontScale', v)} />
-        <Segmented legend={ui.settings.textSpeed} value={settings.textSpeed} options={ui.settings.textSpeedOptions} onChange={(v) => setSetting('textSpeed', v)} />
-        <Segmented legend={ui.settings.reducedMotion} value={settings.reducedMotion} options={ui.settings.reducedMotionOptions} onChange={(v) => setSetting('reducedMotion', v)} />
+        <h2 id="display-h" className="m-0 text-xl font-semibold">
+          {ui.settings.display}
+        </h2>
+        <Segmented
+          legend={ui.settings.fontScale}
+          value={settings.fontScale}
+          options={ui.settings.fontScaleOptions}
+          onChange={(v) => setSetting('fontScale', v)}
+        />
+        <Segmented
+          legend={ui.settings.textSpeed}
+          value={settings.textSpeed}
+          options={ui.settings.textSpeedOptions}
+          onChange={(v) => setSetting('textSpeed', v)}
+        />
+        <Segmented
+          legend={ui.settings.reducedMotion}
+          value={settings.reducedMotion}
+          options={ui.settings.reducedMotionOptions}
+          onChange={(v) => setSetting('reducedMotion', v)}
+        />
       </section>
 
       <DataSection />
 
       <section className="panel flex flex-col gap-2 text-sm text-lavender" aria-labelledby="about-h">
-        <h2 id="about-h" className="m-0 text-xl font-semibold text-cream">{ui.settings.about}</h2>
-        <p className="m-0">{ui.version(APP_VERSION)} · {ui.settings.schema(SCHEMA_VERSION)}</p>
-        <Link to="/about" className="text-lavender underline">{ui.title.about}</Link>
+        <h2 id="about-h" className="m-0 text-xl font-semibold text-cream">
+          {ui.settings.about}
+        </h2>
+        <p className="m-0">
+          {ui.version(APP_VERSION)} · {ui.settings.schema(SCHEMA_VERSION)}
+        </p>
+        <Link to="/about" className="text-lavender underline">
+          {ui.title.about}
+        </Link>
       </section>
     </main>
   );

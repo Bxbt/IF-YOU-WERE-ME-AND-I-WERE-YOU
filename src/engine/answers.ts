@@ -12,7 +12,12 @@ export interface AnswerDraft {
 
 export const emptyDraft = (): AnswerDraft => ({ selected: [], meta: null, freeText: '' });
 
-export function toggleOption(draft: AnswerDraft, option: OptionContent, options: OptionContent[], maxSelect: number): AnswerDraft {
+export function toggleOption(
+  draft: AnswerDraft,
+  option: OptionContent,
+  options: OptionContent[],
+  maxSelect: number,
+): AnswerDraft {
   const isSelected = draft.selected.includes(option.id);
   if (isSelected) return { ...draft, selected: draft.selected.filter((id) => id !== option.id) };
 

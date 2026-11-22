@@ -18,7 +18,6 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useGame } from '../store/game';
 import { apply, emptyProgress, skipChapter } from '../store/story';
 import { CHAPTERS, type ChapterMeta } from '../content/th/chapters';
-import { FEATURES } from '../lib/features';
 import type { GameSession } from '../persistence/schema';
 
 /** Route into a chapter, passing through S5a when the chapter needs a scenario (docs/05 G8). */
@@ -66,24 +65,17 @@ export function ChaptersScreen() {
           <UserRound aria-hidden className="h-4 w-4" />
           {ui.chapters.profile}
         </Link>
-        <PixelButton
-          variant="ghost"
-          className="px-3 text-sm"
-          disabled={!FEATURES.insight}
-          aria-describedby="insight-reason"
-          icon={<BarChart3 aria-hidden className="h-4 w-4" />}
-        >
+        <Link to={`/j/${journey.id}/compare`} className="btn btn-ghost px-3 text-sm no-underline">
+          <BarChart3 aria-hidden className="h-4 w-4" />
           {ui.chapters.compare}
-        </PixelButton>
-        <PixelButton
-          variant="ghost"
-          className="px-3 text-sm"
-          disabled={!FEATURES.insight}
-          aria-describedby="insight-reason"
-          icon={<FileText aria-hidden className="h-4 w-4" />}
+        </Link>
+        <Link
+          to={`/j/${journey.id}/report/${journey.playerIds[0]}`}
+          className="btn btn-ghost px-3 text-sm no-underline"
         >
+          <FileText aria-hidden className="h-4 w-4" />
           {ui.chapters.report}
-        </PixelButton>
+        </Link>
         <Link
           to="/settings"
           state={{ from: `/j/${journey.id}/chapters` }}
@@ -93,11 +85,6 @@ export function ChaptersScreen() {
           <SettingsIcon aria-hidden className="h-5 w-5" />
         </Link>
       </nav>
-      {!FEATURES.insight && (
-        <p id="insight-reason" className="-mt-4 m-0 text-[13px] text-lavender">
-          {ui.chapters.insightNotReady}
-        </p>
-      )}
 
       <section className="panel flex flex-wrap items-center gap-3" aria-labelledby="scenario-h">
         <div className="flex flex-1 flex-col">

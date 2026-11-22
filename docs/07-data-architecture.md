@@ -393,7 +393,7 @@ interface ReflectionReport {
 interface ReportItem {
   id: string;
   text: string;
-  source: 'self' | 'perceived' | 'partner_revealed' | 'observed_confirmed' | 'statement';
+  source: 'self' | 'perceived' | 'partner_revealed' | 'observed_confirmed' | 'statement' | 'conversation';   // conversation = คำถามใน Our Next Conversation
   dimension?: DimensionId;
   questionId?: QuestionId;
 }

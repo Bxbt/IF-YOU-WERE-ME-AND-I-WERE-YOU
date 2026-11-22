@@ -2,6 +2,7 @@
  * Export / Import (docs/07 §11). MVP supports scope=full only.
  * The checksum detects accidental corruption only — it is NOT tamper protection (audit H-3).
  */
+import { MIRRORS, QUESTIONS } from '../content/th/questions';
 import { SaveRoot, SCHEMA_VERSION, type SaveRoot as SaveRootT } from './schema';
 import { compareToCurrent, migrate } from './migrations';
 
@@ -61,10 +62,10 @@ export async function buildFullExport(save: SaveRootT, now = new Date()): Promis
 }
 
 /** File name never contains player names (docs/07 §11.1, TC-EXP-09). */
-export function exportFileName(scope: string, now = new Date()): string {
+export function exportFileName(scope: string, now = new Date(), ext = 'json'): string {
   const p = (n: number) => String(n).padStart(2, '0');
   const stamp = `${now.getFullYear()}${p(now.getMonth() + 1)}${p(now.getDate())}-${p(now.getHours())}${p(now.getMinutes())}`;
-  return `iywm-${scope}-${stamp}.json`;
+  return `iywm-${scope}-${stamp}.${ext}`;
 }
 
 export type ImportError =
@@ -79,7 +80,7 @@ export type ImportError =
   | 'crypto_unavailable';
 
 export type ImportResult =
-  | { ok: true; data: SaveRootT; summary: { players: number; journeys: number } }
+  | { ok: true; data: SaveRootT; summary: { players: number; journeys: number; removedOptions: number } }
   | { ok: false; error: ImportError; detail?: string };
 
 export const IMPORT_ERROR_TEXT: Record<ImportError, string> = {
@@ -135,9 +136,66 @@ export async function parseImport(text: string): Promise<ImportResult> {
     const first = parsed.error.issues[0];
     return { ok: false, error: 'invalid_data', detail: first ? first.path.join('.') : undefined };
   }
+  const { data: clean, removed } = stripUnknownOptions(parsed.data);
   return {
     ok: true,
-    data: parsed.data,
-    summary: { players: Object.keys(parsed.data.players).length, journeys: Object.keys(parsed.data.journeys).length },
+    data: clean,
+    summary: {
+      players: Object.keys(clean.players).length,
+      journeys: Object.keys(clean.journeys).length,
+      removedOptions: removed,
+    },
   };
+}
+
+const KNOWN_OPTIONS: Record<string, Set<string>> = Object.fromEntries(
+  [...QUESTIONS, ...MIRRORS].map((q) => [q.id, new Set(q.options.map((o) => o.id))]),
+);
+
+/**
+ * TC-EXP-06: option ids this version does not know (e.g. from an edited file or newer content) are
+ * dropped from Q01–Q36 / M01–M07 answers, and the count is shown in the import preview.
+ */
+export function stripUnknownOptions(data: SaveRootT): { data: SaveRootT; removed: number } {
+  let removed = 0;
+  const clean = <A extends { questionId: string; selected: string[] }>(a: A): A => {
+    const known = KNOWN_OPTIONS[a.questionId];
+    if (!known) return a;
+    const selected = a.selected.filter((id) => known.has(id));
+    removed += a.selected.length - selected.length;
+    return selected.length === a.selected.length ? a : { ...a, selected };
+  };
+  const profiles = Object.fromEntries(
+    Object.entries(data.profiles).map(([k, p]) => [
+      k,
+      { ...p, answers: Object.fromEntries(Object.entries(p.answers).map(([q, a]) => [q, clean(a)])) },
+    ]),
+  ) as SaveRootT['profiles'];
+  const journeys = Object.fromEntries(
+    Object.entries(data.journeys).map(([k, j]) => [
+      k,
+      {
+        ...j,
+        mirrorItems: Object.fromEntries(
+          Object.entries(j.mirrorItems).map(([m, item]) => [
+            m,
+            {
+              ...item,
+              entries: Object.fromEntries(
+                Object.entries(item.entries).map(([pid, e]) => [
+                  pid,
+                  {
+                    ...e,
+                    ...(e.self ? { self: clean(e.self) } : {}),
+                    ...(e.perceived ? { perceived: clean(e.perceived) } : {}),
+                  },
+                ]),
+              ),
+            },
+          ]),
+        ),
+      },
+    ]),
+  ) as SaveRootT['journeys'];
+  return { data: { ...data, profiles, journeys }, removed };
 }

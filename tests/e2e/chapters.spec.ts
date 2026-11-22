@@ -60,8 +60,8 @@ test('TC-PLAY-01: Title → new journey → Ch1–Ch5 with the first option ever
   ).toBeVisible();
   await noSeriousA11y(page);
   await page.getByRole('button', { name: 'ข้าม' }).click();
-  await expect(page.getByRole('button', { name: 'ดูสิ่งที่เราเข้าใจ' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'ดูรายงานของฉัน' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'ดูสิ่งที่เราเข้าใจ' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'ดูรายงานของฉัน' })).toBeEnabled();
   await noOverflow(page);
   await noSeriousA11y(page);
 
@@ -96,6 +96,15 @@ test('TC-PLAY-10: ending shows both English sets with Thai translations; home wo
   }
   expect(seen.join('|')).toContain('WE ARE NOT THE SAME.');
   expect(seen.join('|')).toContain('เราไม่เหมือนกัน และนั่นก็ไม่เป็นไร');
+  // All three post-game buttons work (TC-PLAY-10).
+  await page.getByRole('button', { name: 'ดูสิ่งที่เราเข้าใจ' }).click();
+  await expect(page).toHaveURL(new RegExp(`/j/${J}/compare$`));
+  await page.goBack();
+  await page.getByRole('button', { name: 'ข้าม' }).click();
+  await page.getByRole('button', { name: 'ดูรายงานของฉัน' }).click();
+  await expect(page).toHaveURL(new RegExp(`/j/${J}/report/`));
+  await page.goBack();
+  await page.getByRole('button', { name: 'ข้าม' }).click();
   await page.getByRole('button', { name: 'กลับหน้าแรก' }).click();
   await expect(page).toHaveURL(/#\/$/);
 });

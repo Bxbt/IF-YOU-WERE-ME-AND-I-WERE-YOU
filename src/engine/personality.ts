@@ -5,7 +5,9 @@ import type { PersonalityAnswer } from '../persistence/schema';
 import type { QuestionContent } from '../content/types';
 import { DIMENSIONS, QUESTIONS } from '../content/th/questions';
 
-export const QUESTION_BY_ID: Record<string, QuestionContent> = Object.fromEntries(QUESTIONS.map((q) => [q.id, q]));
+export const QUESTION_BY_ID: Record<string, QuestionContent> = Object.fromEntries(
+  QUESTIONS.map((q) => [q.id, q]),
+);
 export const QUICK_SET = QUESTIONS.filter((q) => q.quick).map((q) => q.id);
 export const FULL_SET = QUESTIONS.map((q) => q.id);
 export type QuestionSet = 'quick' | 'full';
@@ -59,7 +61,11 @@ export interface DimensionSummary {
 }
 
 /** docs/04 §4.1 — prefer_not answers are never summarised; skipped ones count as empty. */
-export function summarize(answers: Record<string, PersonalityAnswer>, layer: 'self' | 'perceived', otherName = ''): DimensionSummary[] {
+export function summarize(
+  answers: Record<string, PersonalityAnswer>,
+  layer: 'self' | 'perceived',
+  otherName = '',
+): DimensionSummary[] {
   return DIMENSIONS.map((d) => {
     const qs = QUESTIONS.filter((q) => q.dimension === d.id);
     const statements: Statement[] = [];
@@ -72,9 +78,16 @@ export function summarize(answers: Record<string, PersonalityAnswer>, layer: 'se
         continue;
       }
       if (a.meta !== null) continue;
-      const labels = a.selected.map((id) => q.options.find((o) => o.id === id)?.text).filter((t): t is string => !!t);
+      const labels = a.selected
+        .map((id) => q.options.find((o) => o.id === id)?.text)
+        .filter((t): t is string => !!t);
       if (labels.length === 0 && !a.freeText) continue;
-      statements.push({ questionId: q.id, question: questionText(q, layer, otherName), options: labels, freeText: a.freeText });
+      statements.push({
+        questionId: q.id,
+        question: questionText(q, layer, otherName),
+        options: labels,
+        freeText: a.freeText,
+      });
     }
     return {
       dimension: d.id,

@@ -10,7 +10,6 @@ import { PixelButton } from '../components/PixelButton';
 import { SceneCanvas } from '../scene/SceneCanvas';
 import { DEFAULT_ENV } from '../scene/env';
 import { useGame } from '../store/game';
-import { FEATURES } from '../lib/features';
 import { useReducedMotion } from '../lib/motion';
 
 /**
@@ -110,25 +109,18 @@ export function EndingScreen() {
             </p>
             <PixelButton
               block
-              disabled={!FEATURES.insight}
-              aria-describedby={FEATURES.insight ? undefined : 'insight-reason'}
               icon={<BarChart3 aria-hidden className="h-5 w-5" />}
+              onClick={() => navigate(`/j/${journey.id}/compare`)}
             >
               {ui.ending.compare}
             </PixelButton>
             <PixelButton
               block
-              disabled={!FEATURES.insight}
-              aria-describedby={FEATURES.insight ? undefined : 'insight-reason'}
               icon={<FileText aria-hidden className="h-5 w-5" />}
+              onClick={() => navigate(`/j/${journey.id}/report/${journey.playerIds[0]}`)}
             >
               {ui.ending.report}
             </PixelButton>
-            {!FEATURES.insight && (
-              <p id="insight-reason" className="m-0 text-[13px] text-lavender">
-                {ui.ending.insightNotReady}
-              </p>
-            )}
             <PixelButton
               block
               variant="ghost"

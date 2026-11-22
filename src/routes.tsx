@@ -18,6 +18,8 @@ import { ChaptersScreen } from './screens/ChaptersScreen';
 import { ScenarioScreen } from './screens/ScenarioScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { EndingScreen } from './screens/EndingScreen';
+import { CompareScreen } from './screens/CompareScreen';
+import { ReportScreen } from './screens/ReportScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { ErrorScreen } from './screens/ErrorScreen';
 
@@ -39,6 +41,8 @@ export const routes = [
   { path: '/j/:journeyId/chapters', element: <ChaptersScreen />, errorElement },
   { path: '/j/:journeyId/scenario', element: <ScenarioScreen />, errorElement },
   { path: '/j/:journeyId/play/:chapterId', element: <PlayScreen />, errorElement },
+  { path: '/j/:journeyId/compare', element: <CompareScreen />, errorElement },
+  { path: '/j/:journeyId/report/:playerId', element: <ReportScreen />, errorElement },
   { path: '/j/:journeyId/ending', element: <EndingScreen />, errorElement },
   { path: '/art-preview', element: <ArtPreviewScreen />, errorElement },
   { path: '*', element: <NotFoundScreen /> },

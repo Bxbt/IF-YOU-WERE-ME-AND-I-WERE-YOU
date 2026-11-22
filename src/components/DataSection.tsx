@@ -109,6 +109,11 @@ export function DataSection() {
         {pending && (
           <div className="flex flex-col gap-3 rounded-btn border-2 border-orange p-3">
             <p className="m-0">{ui.data.importPreview(pending.summary.players, pending.summary.journeys)}</p>
+            {pending.summary.removedOptions > 0 && (
+              <p className="m-0 text-sm text-orange">
+                {ui.data.importRemoved(pending.summary.removedOptions)}
+              </p>
+            )}
             <p className="m-0 text-sm text-orange">{ui.data.importReplaceWarn}</p>
             <div className="flex flex-wrap gap-3">
               <button type="button" className="btn btn-danger" onClick={onConfirmImport}>

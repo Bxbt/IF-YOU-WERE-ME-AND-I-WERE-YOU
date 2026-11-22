@@ -16,9 +16,13 @@ export function RecoveryScreen() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-6 px-4 py-8">
-      <h1 className="m-0 text-2xl font-semibold">{isNewer ? ui.recovery.newerHeading : ui.recovery.heading}</h1>
+      <h1 className="m-0 text-2xl font-semibold">
+        {isNewer ? ui.recovery.newerHeading : ui.recovery.heading}
+      </h1>
       <p className="m-0">{isNewer ? ui.recovery.newerBody : ui.recovery.body}</p>
-      {recovery.reason && <p className="panel m-0 text-sm text-lavender">{ui.recovery.reason(recovery.reason)}</p>}
+      {recovery.reason && (
+        <p className="panel m-0 text-sm text-lavender">{ui.recovery.reason(recovery.reason)}</p>
+      )}
 
       <button
         type="button"
@@ -38,7 +42,11 @@ export function RecoveryScreen() {
         <div className="panel flex flex-col gap-3 border-danger">
           <p className="m-0 text-sm text-orange">{ui.recovery.startFreshWarn}</p>
           <div className="flex flex-wrap gap-3">
-            <button type="button" className="btn btn-danger" onClick={() => useGame.getState().startFreshFromRecovery()}>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={() => useGame.getState().startFreshFromRecovery()}
+            >
               {ui.recovery.startFreshConfirm}
             </button>
             <button type="button" className="btn btn-ghost" onClick={() => setConfirming(false)}>

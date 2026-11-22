@@ -49,7 +49,10 @@ export function ModeSelectScreen() {
                 <span className="text-sm">{text.body}</span>
                 <span className="text-[13px] text-lavender">{text.needs}</span>
                 {!enabled && (
-                  <span id={reasonId} className="mt-1 rounded-full border border-lavender/50 px-2 text-[13px] text-lavender">
+                  <span
+                    id={reasonId}
+                    className="mt-1 rounded-full border border-lavender/50 px-2 text-[13px] text-lavender"
+                  >
                     {reason}
                   </span>
                 )}

@@ -5,7 +5,14 @@ import { ui } from '../content/th/ui';
 import { useGame } from '../store/game';
 import { draftKey, getAnswers, profileKey, saveAnswer, saveDraft } from '../store/actions';
 import { scheduleDelete, undoDelete } from '../store/pendingDeletes';
-import { QUESTION_BY_ID, dimensionName, progress, questionText, setIds, type QuestionSet } from '../engine/personality';
+import {
+  QUESTION_BY_ID,
+  dimensionName,
+  progress,
+  questionText,
+  setIds,
+  type QuestionSet,
+} from '../engine/personality';
 import { canProceed, emptyDraft, toggleOption, type AnswerDraft } from '../engine/answers';
 import { ChoiceList, FreeTextField, MetaOptions } from '../components/Answering';
 import { AssumptionTag } from '../components/Labels';
@@ -60,9 +67,15 @@ function ChooseSet() {
     <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-4 px-4 py-8">
       <h1 className="m-0 text-2xl font-semibold">{ui.quiz.chooseHeading}</h1>
       <p className="m-0 text-lavender">{ui.quiz.chooseBody}</p>
-      <Link to="?set=quick" className="btn btn-primary no-underline">{ui.hub.quick}</Link>
-      <Link to="?set=full" className="btn btn-ghost no-underline">{ui.hub.full}</Link>
-      <Link to="/profile" className="text-sm text-lavender underline">{ui.back}</Link>
+      <Link to="?set=quick" className="btn btn-primary no-underline">
+        {ui.hub.quick}
+      </Link>
+      <Link to="?set=full" className="btn btn-ghost no-underline">
+        {ui.hub.full}
+      </Link>
+      <Link to="/profile" className="text-sm text-lavender underline">
+        {ui.back}
+      </Link>
     </main>
   );
 }
@@ -170,8 +183,14 @@ function Runner({ ownerId, layer, aboutId, aboutName, set, single, focusQ, onExi
     return (
       <main className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-4 px-4 py-8">
         <h1 className="m-0 text-2xl font-semibold">{ui.quiz.summaryHeading}</h1>
-        <p role="status" className="m-0">{ui.quiz.summary(p.answered, p.skipped)}</p>
-        {firstSkipped >= 0 && <PixelButton variant="ghost" onClick={() => setIndex(firstSkipped)}>{ui.quiz.backToSkipped}</PixelButton>}
+        <p role="status" className="m-0">
+          {ui.quiz.summary(p.answered, p.skipped)}
+        </p>
+        {firstSkipped >= 0 && (
+          <PixelButton variant="ghost" onClick={() => setIndex(firstSkipped)}>
+            {ui.quiz.backToSkipped}
+          </PixelButton>
+        )}
         <PixelButton onClick={exit}>{ui.quiz.done}</PixelButton>
       </main>
     );
@@ -211,17 +230,29 @@ function Runner({ ownerId, layer, aboutId, aboutName, set, single, focusQ, onExi
           <p className="m-0 flex items-start gap-2 rounded-btn border border-lavender/40 p-3 text-sm">
             <ShieldAlert aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-orange" />
             <span>
-              {q.safetyNote} <Link to="/about" className="text-lavender underline">{ui.title.about}</Link>
+              {q.safetyNote}{' '}
+              <Link to="/about" className="text-lavender underline">
+                {ui.title.about}
+              </Link>
             </span>
           </p>
         )}
-        <ChoiceList label={questionText(q, layer, aboutName)} options={q.options} maxSelect={q.maxSelect} draft={draft} onChange={onChange} />
+        <ChoiceList
+          label={questionText(q, layer, aboutName)}
+          options={q.options}
+          maxSelect={q.maxSelect}
+          draft={draft}
+          onChange={onChange}
+        />
         <MetaOptions draft={draft} onChange={onChange} />
         <FreeTextField draft={draft} onChange={onChange} />
       </section>
 
       {/* Sticky so "next" is always reachable without scrolling on small screens. */}
-      <nav aria-label="การนำทางคำถาม" className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t border-lavender/20 bg-navy/95 px-4 py-3">
+      <nav
+        aria-label="การนำทางคำถาม"
+        className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t border-lavender/20 bg-navy/95 px-4 py-3"
+      >
         {single ? (
           saved ? (
             <PixelButton
@@ -239,7 +270,12 @@ function Runner({ ownerId, layer, aboutId, aboutName, set, single, focusQ, onExi
             <span />
           )
         ) : (
-          <PixelButton variant="ghost" disabled={index === 0} onClick={prev} icon={<ArrowLeft aria-hidden className="h-5 w-5" />}>
+          <PixelButton
+            variant="ghost"
+            disabled={index === 0}
+            onClick={prev}
+            icon={<ArrowLeft aria-hidden className="h-5 w-5" />}
+          >
             {ui.quiz.prev}
           </PixelButton>
         )}

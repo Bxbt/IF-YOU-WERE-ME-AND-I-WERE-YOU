@@ -423,3 +423,45 @@ export function addNextConversation(
 export function completeJourney(save: SaveRoot, jid: string): SaveRoot {
   return withJourney(save, jid, (j) => ({ ...j, status: 'completed' }));
 }
+
+/** Our Next Conversation checklist edits (docs/06 S9): done, edit text, delete. */
+export function updateNextConversation(
+  save: SaveRoot,
+  jid: string,
+  id: string,
+  change: { done?: boolean; text?: string } | 'delete',
+): SaveRoot {
+  return withJourney(save, jid, (j) => ({
+    ...j,
+    nextConversation:
+      change === 'delete'
+        ? j.nextConversation.filter((n) => n.id !== id)
+        : j.nextConversation.map((n) =>
+            n.id === id
+              ? {
+                  ...n,
+                  ...(change.done !== undefined ? { done: change.done } : {}),
+                  ...(change.text !== undefined ? { text: change.text.trim().slice(0, 200) || n.text } : {}),
+                }
+              : n,
+          ),
+  }));
+}
+
+/** Snapshot metadata only (docs/07 §8): what was exported and when — never the text itself. */
+export function recordReportExport(
+  save: SaveRoot,
+  jid: string,
+  ownerId: string,
+  id: string,
+  selectedItemIds: string[],
+  format: 'txt' | 'json' | 'png',
+): SaveRoot {
+  return {
+    ...save,
+    reports: {
+      ...save.reports,
+      [id]: { id, journeyId: jid, ownerId, generatedAt: nowIso(), selectedItemIds, format },
+    },
+  };
+}

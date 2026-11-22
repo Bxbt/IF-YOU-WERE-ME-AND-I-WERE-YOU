@@ -12,17 +12,31 @@ export function AboutScreen() {
       <p className="m-0">{a.what}</p>
 
       <section className="panel" aria-labelledby="not-h">
-        <h2 id="not-h" className="m-0 mb-2 text-lg font-semibold">{a.notTitle}</h2>
-        <ul className="m-0 pl-5 text-lavender">{a.notList.map((t) => <li key={t}>{t}</li>)}</ul>
+        <h2 id="not-h" className="m-0 mb-2 text-lg font-semibold">
+          {a.notTitle}
+        </h2>
+        <ul className="m-0 pl-5 text-lavender">
+          {a.notList.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
       </section>
 
       <section className="panel" aria-labelledby="pr-h">
-        <h2 id="pr-h" className="m-0 mb-2 text-lg font-semibold">{a.principlesTitle}</h2>
-        <ul lang="en" className="m-0 pl-5 italic text-lavender">{a.principles.map((t) => <li key={t}>{t}</li>)}</ul>
+        <h2 id="pr-h" className="m-0 mb-2 text-lg font-semibold">
+          {a.principlesTitle}
+        </h2>
+        <ul lang="en" className="m-0 pl-5 italic text-lavender">
+          {a.principles.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
       </section>
 
       <section className="panel" aria-labelledby="safe-h">
-        <h2 id="safe-h" className="m-0 mb-2 text-lg font-semibold">{a.safetyTitle}</h2>
+        <h2 id="safe-h" className="m-0 mb-2 text-lg font-semibold">
+          {a.safetyTitle}
+        </h2>
         <p className="m-0 mb-3 text-sm">{a.safetyBody}</p>
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {SUPPORT_RESOURCES.map((r) => (
@@ -30,7 +44,9 @@ export function AboutScreen() {
               <a href={`tel:${r.tel}`} className="btn btn-ghost w-full justify-start no-underline">
                 <Phone aria-hidden className="h-5 w-5 shrink-0 text-orange" />
                 <span className="flex flex-col text-left">
-                  <span className="font-semibold">{r.tel} · {r.name}</span>
+                  <span className="font-semibold">
+                    {r.tel} · {r.name}
+                  </span>
                   <span className="text-[13px] text-lavender">{r.when}</span>
                 </span>
               </a>
@@ -41,13 +57,21 @@ export function AboutScreen() {
       </section>
 
       <section className="panel" aria-labelledby="data-h">
-        <h2 id="data-h" className="m-0 mb-2 text-lg font-semibold">{a.dataTitle}</h2>
+        <h2 id="data-h" className="m-0 mb-2 text-lg font-semibold">
+          {a.dataTitle}
+        </h2>
         <p className="m-0 text-sm text-lavender">{a.dataBody}</p>
       </section>
 
       <section className="panel" aria-labelledby="cr-h">
-        <h2 id="cr-h" className="m-0 mb-2 text-lg font-semibold">{a.creditsTitle}</h2>
-        <ul className="m-0 pl-5 text-sm text-lavender">{a.credits.map((t) => <li key={t}>{t}</li>)}</ul>
+        <h2 id="cr-h" className="m-0 mb-2 text-lg font-semibold">
+          {a.creditsTitle}
+        </h2>
+        <ul className="m-0 pl-5 text-sm text-lavender">
+          {a.credits.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
       </section>
     </main>
   );

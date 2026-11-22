@@ -43,11 +43,15 @@ export function ArtPreviewScreen() {
       <ScreenHeader title={ui.artPreview.heading} />
       <p className="m-0 text-sm text-lavender">{ui.artPreview.note}</p>
       <section aria-labelledby="scene-h" className="flex flex-col gap-2">
-        <h2 id="scene-h" className="m-0 text-lg font-semibold">bg_elevator_emergency</h2>
+        <h2 id="scene-h" className="m-0 text-lg font-semibold">
+          bg_elevator_emergency
+        </h2>
         <PixelCanvas draw={draw} label={ui.artPreview.sceneLabel} className="w-full" />
       </section>
       <section aria-labelledby="bgs-h" className="flex flex-col gap-4">
-        <h2 id="bgs-h" className="m-0 text-lg font-semibold">{ui.artPreview.backgrounds}</h2>
+        <h2 id="bgs-h" className="m-0 text-lg font-semibold">
+          {ui.artPreview.backgrounds}
+        </h2>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {GALLERY.map((g, i) => {
             const env = { ...DEFAULT_ENV, ...g.env, bg: g.key };
@@ -64,7 +68,9 @@ export function ArtPreviewScreen() {
         </div>
       </section>
       <section aria-labelledby="chars-h" className="flex flex-col gap-3">
-        <h2 id="chars-h" className="m-0 text-lg font-semibold">{ui.artPreview.presets}</h2>
+        <h2 id="chars-h" className="m-0 text-lg font-semibold">
+          {ui.artPreview.presets}
+        </h2>
         <div className="flex flex-wrap gap-6">
           {Object.values(PRESETS).map((p) => (
             <SpriteView key={p.preset} appearance={p} scale={4} label={`preset ${p.preset}`} />
@@ -72,7 +78,9 @@ export function ArtPreviewScreen() {
         </div>
       </section>
       <section aria-labelledby="faces-h" className="flex flex-col gap-3">
-        <h2 id="faces-h" className="m-0 text-lg font-semibold">{ui.artPreview.portraits}</h2>
+        <h2 id="faces-h" className="m-0 text-lg font-semibold">
+          {ui.artPreview.portraits}
+        </h2>
         {Object.values(PRESETS).map((p) => (
           <div key={p.preset} className="flex flex-wrap gap-3">
             {EXPRESSIONS.map((e) => (
