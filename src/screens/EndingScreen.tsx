@@ -65,8 +65,8 @@ export function EndingScreen() {
         <img
           src="./brand/ending.jpg"
           alt={ui.ending.sceneLabel}
-          width={1024}
-          height={572}
+          width={2048}
+          height={1144}
           className="h-auto max-h-[50vh] w-full max-w-5xl object-cover"
         />
       </div>
