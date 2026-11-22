@@ -61,7 +61,7 @@
 
 | Milestone | งาน | Exit Criteria | ประเมิน |
 |---|---|---|---|
-| **M12 Sealed Exchange (3A)** | Invitation/Sealed export-import · AES-GCM · Reveal key UI · S17 แท็บไฟล์ | TC-EXP-11/12 · Manual test 2 เครื่อง | 4–5 วัน |
+| **M12 Sealed Exchange (3A)** ✅ (ทำแล้ว 2026-11-23 — Manual test 2 เครื่องยังรอเจ้าของ) | Invitation/Sealed export-import · AES-GCM · Reveal key UI · S17 แท็บไฟล์ | TC-EXP-11/12 · Manual test 2 เครื่อง | 4–5 วัน |
 | **Gate 3B** | Q-03 (ส่วนตัว/สาธารณะ) และ Q-05 ได้คำตอบ · ถ้าสาธารณะ: Privacy Policy ผ่านการตรวจ | — | — |
 | **M13 Supabase Foundation (3B)** | Project · SQL migrations · RLS · RPC · Anonymous auth · Supabase local ใน CI | TC-RMT-01–07, 09 | 5–6 วัน |
 | **M14 Remote Client (3B)** | RemoteAdapter · S17 · Realtime (consents/members/events) · Offline queue · Revoke/Delete/Leave · Expiry job | TC-RMT-08, 10, 11 · TC-DEL-06 | 5–6 วัน |

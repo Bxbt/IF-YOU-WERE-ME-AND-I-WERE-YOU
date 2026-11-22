@@ -18,14 +18,15 @@ export function ModeSelectScreen() {
   const [confirm, setConfirm] = useState<ModeKey | null>(null);
   const [showFull, setShowFull] = useState(false);
 
-  const cards: { key: ModeKey; Icon: typeof User; enabled: boolean; reason: string }[] = [
-    { key: 'solo', Icon: User, enabled: FEATURES.characterCreation, reason: ui.mode.soloNotReady },
-    { key: 'together', Icon: Users, enabled: FEATURES.together, reason: ui.comingSoon },
+  // Owner art (docs/09 §7); remote keeps its icon until its art arrives.
+  const cards: { key: ModeKey; Icon: typeof User; img?: string; enabled: boolean; reason: string }[] = [
+    { key: 'solo', Icon: User, img: './brand/mode-solo.png', enabled: FEATURES.characterCreation, reason: ui.mode.soloNotReady },
+    { key: 'together', Icon: Users, img: './brand/mode-together.png', enabled: FEATURES.together, reason: ui.comingSoon },
     { key: 'remote', Icon: Globe2, enabled: FEATURES.remote, reason: ui.comingSoon },
   ];
 
   function choose(key: ModeKey) {
-    if (key === 'remote') return;
+    if (key === 'remote') return navigate('/remote');
     if (full) return setShowFull(true);
     // TC-RES-09: an unfinished journey is archived only after the player agrees.
     if (hasActive) setConfirm(key);
@@ -36,7 +37,7 @@ export function ModeSelectScreen() {
     <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-6 px-4 py-8">
       <ScreenHeader title={ui.mode.heading} backTo="/intro" />
       <ul className="m-0 grid list-none gap-4 p-0 lg:grid-cols-3">
-        {cards.map(({ key, Icon, enabled, reason }) => {
+        {cards.map(({ key, Icon, img, enabled, reason }) => {
           const text = ui.mode[key];
           const reasonId = `mode-${key}-reason`;
           return (
@@ -48,7 +49,19 @@ export function ModeSelectScreen() {
                 onClick={() => choose(key)}
                 className="panel flex h-full w-full flex-col items-start gap-2 text-left disabled:opacity-60"
               >
-                <Icon aria-hidden className="h-7 w-7 text-orange" />
+                {img ? (
+                  // Decorative; navy box matches the opaque together art's background (#171C2F).
+                  <img
+                    src={img}
+                    alt=""
+                    aria-hidden
+                    width={128}
+                    height={128}
+                    className="h-28 w-28 self-center rounded-btn bg-[#171C2F] lg:h-32 lg:w-32"
+                  />
+                ) : (
+                  <Icon aria-hidden className="h-7 w-7 text-orange" />
+                )}
                 <span className="text-lg font-semibold">{text.title}</span>
                 <span className="text-sm">{text.body}</span>
                 <span className="text-[13px] text-lavender">{text.needs}</span>

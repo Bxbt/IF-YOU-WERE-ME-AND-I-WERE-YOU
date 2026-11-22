@@ -477,7 +477,7 @@ interface MemoryScene {                 // Phase 2
 - Together (Phase 2): `full` และ `journey` ที่มีข้อมูลของผู้เล่นอื่นซึ่งยังไม่ Reveal ต้องผ่าน PIN ของ **ทุก** ผู้เล่นที่ตั้ง PIN ไว้ · ถ้าไม่ผ่าน ให้ส่งออกได้เฉพาะข้อมูลของผู้เล่นที่ใช้งานอยู่ + ข้อมูลที่ Revealed แล้ว
 - `report`: รายการ `source = partner_revealed` **ไม่ถูกเลือกเป็นค่าเริ่มต้น** และเมื่อเลือกต้องมีป้าย "คำตอบของ {other}" ในไฟล์
 | `invitation` (3A) | Journey id, ชื่อและ Avatar ของผู้เชิญ, Scenario, Content version — **ไม่มีคำตอบ** | เชิญเล่นแบบ Sealed |
-| `sealed` (3A) | `{ questionIds, ciphertext, iv }` | ส่งคำตอบที่ปิดผนึก |
+| `sealed` (3A) | `{ journeyId, questionIds, ciphertext, iv }` (journeyId ใช้จับคู่ ไม่ใช่คำตอบ) | ส่งคำตอบที่ปิดผนึก |
 
 ชื่อไฟล์: `iywm-{scope}-{yyyyMMdd-HHmm}.json` (ไม่ใส่ชื่อผู้เล่นในชื่อไฟล์)
 

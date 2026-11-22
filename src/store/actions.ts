@@ -64,7 +64,7 @@ export function currentJourney(save: SaveRoot): GameSession | undefined {
 }
 
 /** MVP: one active journey (A-23). Any existing active journey is archived first. */
-function createJourney(mode: 'solo' | 'together', aId: string, bId: string): string {
+function createJourney(mode: 'solo' | 'together' | 'remote_sealed', aId: string, bId: string): string {
   const id = newJourneyId();
   const t = nowIso();
   useGame.getState().update((s) => {
@@ -85,6 +85,7 @@ function createJourney(mode: 'solo' | 'together', aId: string, bId: string): str
       observed: [],
       nextConversation: [],
       introSeen: true,
+      ...(mode === 'remote_sealed' ? { remote: { kind: 'sealed' as const } } : {}),
       createdAt: t,
       updatedAt: t,
       lastPlayedAt: t,
@@ -99,6 +100,10 @@ export const createSoloJourney = (selfId: string, imaginedId: string) =>
 
 /** Phase 2: two real players on one device (docs/05 §4). */
 export const createTogetherJourney = (aId: string, bId: string) => createJourney('together', aId, bId);
+
+/** Phase 3A: plays like Solo on each device; Mirror answers are exchanged as sealed files (docs/05 §5.1). */
+export const createRemoteJourney = (selfId: string, partnerId: string) =>
+  createJourney('remote_sealed', selfId, partnerId);
 
 export function profileKey(ownerId: string, layer: 'self' | 'perceived', aboutId?: string): string {
   return layer === 'self' ? `${ownerId}:self` : `${ownerId}:perceived:${aboutId}`;

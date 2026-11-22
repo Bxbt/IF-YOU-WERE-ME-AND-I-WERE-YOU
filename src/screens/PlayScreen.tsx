@@ -257,7 +257,10 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   const isPrivate =
     !!step && ['cards', 'reflection', 'interpretation', 'mirror', 'statements'].includes(step.kind);
   const pendingEntry = progress.pendingPrivateSteps?.find((x) => x.itemId === stepKey);
-  const remaining = together && isPrivate ? (pendingEntry?.playerIds ?? [...journey.playerIds]) : [];
+  const remaining = useMemo(
+    () => (together && isPrivate ? (pendingEntry?.playerIds ?? [...journey.playerIds]) : []),
+    [together, isPrivate, pendingEntry, journey.playerIds],
+  );
   const answeringId = together && isPrivate ? (remaining[0] ?? selfId) : selfId;
   const answeringRole = together ? roleOf(journey, answeringId) : mySelfRole;
   const answeringSpeaker = answeringRole === 'insider' ? 'in' : 'out';
@@ -285,7 +288,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         ),
       },
     }),
-    [baseCtx, content, state, journey.storyAnswers, selfId],
+    [baseCtx, content, state, journey.storyAnswers, journey.playerIds],
   );
   const selfSpeaker = mySelfRole === 'insider' ? 'in' : 'out';
   // {me}/{other} in private questions always mean the person answering right now.
@@ -427,7 +430,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       };
       moveTo(advance(content, pos, st), pos, st, (s) => recordChoice(s, journey.id, ch, choice));
     },
-    [pos, step, state, content, moveTo, selfId, journey.id, ch],
+    [pos, step, state, content, moveTo, journey, ch],
   );
 
   /** "พิมพ์เอง" (Ch3 s06): the text is kept as plain text in a story answer, the flag says "custom". */
@@ -463,7 +466,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         ),
       );
     },
-    [pos, step, state, content, moveTo, selfId, journey.id, ch],
+    [pos, step, state, content, moveTo, selfId, journey, ch],
   );
 
   const onSkipScene = useCallback(() => {

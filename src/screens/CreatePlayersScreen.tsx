@@ -5,6 +5,7 @@ import { ui } from '../content/th/ui';
 import { PlayerForm, emptyPlayerInput, randomPreset } from '../components/PlayerForm';
 import {
   createPlayer,
+  createRemoteJourney,
   createSoloJourney,
   createTogetherJourney,
   imaginedWithThoughts,
@@ -95,7 +96,9 @@ const toInput = (p: Player): PlayerInput => ({
 export function CreatePlayersScreen() {
   const [params] = useSearchParams();
   const mode = params.get('mode');
-  const solo = mode === 'solo';
+  const remote = mode === 'remote';
+  // Remote (3A) creates players like Solo: the partner is pictured here (docs/05 §5.0).
+  const solo = mode === 'solo' || remote;
   const together = mode === 'together';
   const navigate = useNavigate();
   const [self, setSelf] = useState<{ id: string; input: PlayerInput } | null>(null);
@@ -132,9 +135,10 @@ export function CreatePlayersScreen() {
   function done(partnerId: string) {
     if (!self) return;
     if (together) createTogetherJourney(self.id, partnerId);
+    else if (remote) createRemoteJourney(self.id, partnerId);
     else createSoloJourney(self.id, partnerId);
     useGame.getState().flush();
-    navigate('/profile?created=1', { replace: true });
+    navigate(remote ? '/remote' : '/profile?created=1', { replace: true });
   }
 
   function finish(partnerId: string) {
@@ -164,7 +168,7 @@ export function CreatePlayersScreen() {
 
   const back = (
     <div>
-      <Link to={solo || together ? '/mode' : '/'} className="btn btn-ghost no-underline">
+      <Link to={remote ? '/remote' : solo || together ? '/mode' : '/'} className="btn btn-ghost no-underline">
         <ArrowLeft aria-hidden className="h-5 w-5" />
         {ui.back}
       </Link>

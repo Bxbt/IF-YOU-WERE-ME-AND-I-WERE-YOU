@@ -1,5 +1,4 @@
 import { useEffect, useId, useRef } from 'react';
-import { HandHelping, Smartphone } from 'lucide-react';
 import { ui } from '../content/th/ui';
 import { PixelButton } from './PixelButton';
 
@@ -32,10 +31,8 @@ export function Handoff({
       className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-navy p-6 text-center"
       data-testid="handoff"
     >
-      <div aria-hidden className="flex items-end gap-2 text-lavender">
-        <HandHelping className="h-12 w-12" />
-        <Smartphone className="h-10 w-10 text-orange" />
-      </div>
+      {/* Owner art (docs/09 §7): decorative — the heading says who gets the device. */}
+      <img src="./brand/handoff.png" alt="" aria-hidden width={256} height={256} className="h-auto w-48 sm:w-64" />
       <h2 id={titleId} className="m-0 text-2xl font-semibold">
         {kind === 'to' ? ui.handoff.to(name) : ui.handoff.back(name)}
       </h2>
