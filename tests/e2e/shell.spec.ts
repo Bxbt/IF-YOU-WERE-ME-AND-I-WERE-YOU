@@ -59,3 +59,14 @@ test('TC-A11Y-07: 200% font scale keeps screens free of horizontal scroll', asyn
     expect(overflow, path).toBeLessThanOrEqual(0);
   }
 });
+
+test('title: every control can be tapped — nothing covers it on any viewport', async ({ page }) => {
+  await page.goto('/');
+  const controls = page.locator('a:visible, button:visible:not([disabled])');
+  const n = await controls.count();
+  expect(n).toBeGreaterThan(0);
+  // trial click runs the actionability checks (including "another element intercepts pointer events").
+  for (let i = 0; i < n; i++) await controls.nth(i).click({ trial: true, timeout: 2000 });
+  await page.getByRole('link', { name: 'ตั้งค่า' }).click();
+  await expect(page).toHaveURL(/#\/settings$/);
+});

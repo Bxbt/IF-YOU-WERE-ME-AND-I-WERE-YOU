@@ -33,7 +33,7 @@ export function TitleScreen() {
       <PixelCanvas draw={draw} label={ui.title.sceneLabel} fit="cover" className="absolute inset-0 h-full w-full" />
       <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-navy/30 via-transparent to-navy/80" />
 
-      <div className="absolute right-3 top-3 z-10 flex gap-2">
+      <div className="absolute right-3 top-3 z-20 flex gap-2">
         <SoundToggle />
         <Link to="/settings" aria-label={ui.title.settings} className="btn btn-ghost min-w-[44px] bg-navy/60 px-2 no-underline">
           <SettingsIcon aria-hidden className="h-5 w-5" />
@@ -78,7 +78,7 @@ export function TitleScreen() {
 
         <div aria-hidden className="h-[22vh] lg:h-[12vh]" />
       </main>
-      <p className="absolute left-3 top-4 z-10 m-0 text-[13px] text-lavender">{ui.version(APP_VERSION)}</p>
+      <p className="absolute left-3 top-4 z-20 m-0 text-[13px] text-lavender">{ui.version(APP_VERSION)}</p>
     </div>
   );
 }
