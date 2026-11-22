@@ -7,7 +7,19 @@ import { PortraitView, SpriteView } from '../scene/CharacterCanvas';
 import { PRESETS } from '../scene/draw/character';
 import type { PlayerInput } from '../store/actions';
 
-export const emptyPlayerInput = (preset: keyof typeof PRESETS = 'p1'): PlayerInput => ({
+type PresetKey = keyof typeof PRESETS;
+
+/**
+ * Random starting preset (docs/06 S3). A fixed A=p1 / B=p2 pairing would imply the first and
+ * second person must look a certain way, so every create form starts from a random preset and
+ * the partner never gets the same one as `avoid`.
+ */
+export function randomPreset(avoid?: PresetKey, rnd: () => number = Math.random): PresetKey {
+  const keys = (Object.keys(PRESETS) as PresetKey[]).filter((k) => k !== avoid);
+  return keys[Math.floor(rnd() * keys.length)] ?? keys[0]!;
+}
+
+export const emptyPlayerInput = (preset: PresetKey = randomPreset()): PlayerInput => ({
   nickname: '',
   sentenceEnding: '',
   addressStyle: 'เธอ',
