@@ -140,3 +140,48 @@ test('M10: Ch4 mirror — both answer privately, consent on the shared screen, t
   void A;
   void B;
 });
+
+test('M10b: each player picks personality answers to open; only questions both picked appear', async ({
+  page,
+}) => {
+  const save = seed({ scenario: 'me', together: true }) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const ans = (qid: string, layer: string, selected: string[]) => ({
+    questionId: qid, layer, selected, meta: null, status: 'answered', revision: 1, answeredAt: T, updatedAt: T,
+  });
+  save.profiles = {
+    [`${A}:self`]: { key: `${A}:self`, ownerId: A, hiddenObservedCards: [], confirmedObserved: {}, updatedAt: T,
+      answers: { Q13: ans('Q13', 'self', ['q13_hug']), Q16: ans('Q16', 'self', ['q16_empathy']) } },
+    [`${B}:self`]: { key: `${B}:self`, ownerId: B, hiddenObservedCards: [], confirmedObserved: {}, updatedAt: T,
+      answers: { Q13: ans('Q13', 'self', ['q13_listen']), Q16: ans('Q16', 'self', ['q16_solution']) } },
+    [`${B}:perceived:${A}`]: { key: `${B}:perceived:${A}`, ownerId: B, aboutId: A, updatedAt: T,
+      answers: { Q13: ans('Q13', 'perceived', ['q13_hug']) } },
+  };
+  await seedSave(page, save);
+  await page.goto(`/#/j/${J}/compare`);
+  await expect(page.getByTestId('profile-offer')).toBeVisible();
+  await noSeriousA11y(page);
+
+  // ดาว opens Q13 and Q16; เมฆ opens only Q13.
+  await tap(page.getByRole('button', { name: 'ดาว: เลือกข้อที่ยอมเปิด' }));
+  const list = page.getByTestId('offer-list');
+  await tap(list.getByRole('checkbox', { name: /อยากให้คนรักปลอบแบบไหน/ }));
+  await tap(list.getByRole('checkbox', { name: /เล่าปัญหาให้คนรักฟัง/ }));
+  await tap(page.getByRole('button', { name: 'บันทึกที่เลือก' }));
+  await expect(page.getByTestId('offer-list')).toHaveCount(0);
+  expect(await page.locator('main').innerText()).not.toContain('กอด หรือสัมผัสอบอุ่น'); // nothing open yet
+
+  await tap(page.getByRole('button', { name: 'เมฆ: เลือกข้อที่ยอมเปิด' }));
+  await tap(page.getByTestId('offer-list').getByRole('checkbox', { name: /อยากให้คนรักปลอบแบบไหน/ }));
+  await tap(page.getByRole('button', { name: 'บันทึกที่เลือก' }));
+
+  // Q13 is compared (เมฆ guessed ดาว's answer); Q16 stays closed (only ดาว picked it).
+  await expect(page.getByTestId('compare-similar')).toContainText('กอด หรือสัมผัสอบอุ่น');
+  expect(await page.locator('main').innerText()).not.toContain('วิธีแก้ปัญหา');
+  await noSeriousA11y(page);
+});
+
+test('M10b: Play Together can be started from mode selection', async ({ page }) => {
+  await page.goto('/#/mode');
+  await tap(page.getByRole('button', { name: /เล่นด้วยกัน/ }));
+  await expect(page).toHaveURL(/players\/new\?mode=together/);
+});

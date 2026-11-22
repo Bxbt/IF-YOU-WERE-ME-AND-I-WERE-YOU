@@ -5,6 +5,7 @@ import { templates } from '../content/th/templates';
 import { MIRRORS } from '../content/th/questions';
 import { ScreenHeader, EmptyState } from '../components/Misc';
 import { RevealPanel, describeAnswer } from '../components/Reveal';
+import { ProfileOffer } from '../components/ProfileOffer';
 import { PixelButton } from '../components/PixelButton';
 import { useGame } from '../store/game';
 import { compareTogether, optionTexts, sharedTexts, type TogetherItem, type TogetherView } from '../engine/compare';
@@ -18,9 +19,10 @@ const c = templates.compare;
  * no colours meaning right/wrong. Items still awaiting consent can be opened here (shared screen).
  */
 export function CompareTogether({ journey }: { journey: GameSession }) {
-  const players = useGame((s) => s.save.players);
-  const live = useGame((s) => s.save.journeys[journey.id]) ?? journey;
-  const cmp = useMemo(() => compareTogether(live), [live]);
+  const save = useGame((s) => s.save);
+  const players = save.players;
+  const live = save.journeys[journey.id] ?? journey;
+  const cmp = useMemo(() => compareTogether(live, save), [live, save]);
   const [view, setView] = useState<TogetherView | 'all'>('all');
   const [opening, setOpening] = useState(false);
   const [a, b] = live.playerIds;
@@ -84,6 +86,8 @@ export function CompareTogether({ journey }: { journey: GameSession }) {
           )}
         </section>
       )}
+
+      <ProfileOffer journey={live} />
 
       {!cmp.comparable ? (
         <EmptyState

@@ -111,6 +111,16 @@ export function sharedTexts(q: QuestionContent, x: PersonalityAnswer, y: Persona
 
 // ---------- Play Together (docs/04 §7.1, M10) ----------
 
+/**
+ * One number for the owner's current version of a profile question: self and perceived-about-the-
+ * partner revisions together. Any edit to either changes it, so a revealed item hides again (R7).
+ */
+export function profileRevision(save: SaveRoot, ownerId: string, aboutId: string, qid: string): number {
+  const self = save.profiles[`${ownerId}:self`]?.answers[qid]?.revision ?? 0;
+  const perceived = save.profiles[`${ownerId}:perceived:${aboutId}`]?.answers[qid]?.revision ?? 0;
+  return self + 100_000 * perceived;
+}
+
 export type TogetherView = 'a_view' | 'b_view' | 'direct';
 
 export interface TogetherItem {
@@ -139,9 +149,36 @@ export interface TogetherComparison {
  * unrevealed, so this can never leak a private answer (R1). W3 (context 'role') is never used.
  * Profile Q01–Q36 reveal is not part of M10 (documented follow-up).
  */
-export function compareTogether(j: GameSession): TogetherComparison {
+export function compareTogether(j: GameSession, save?: SaveRoot): TogetherComparison {
   const [a, b] = j.playerIds;
   const out: TogetherComparison = { comparable: false, similar: [], different: [], ask: [], pending: [] };
+  if (save) {
+    // Profile Q01–Q36 opened in this journey (M10b): read from the profiles, shown only while the
+    // owner's current version is the one both agreed to (R7 — profileRevision).
+    for (const q of QUESTIONS) {
+      const item = j.mirrorItems[q.id];
+      if (!item || item.kind !== 'profile' || item.state !== 'revealed') continue;
+      if (
+        item.revealedRevision?.[a] !== profileRevision(save, a, b, q.id) ||
+        item.revealedRevision?.[b] !== profileRevision(save, b, a, q.id)
+      )
+        continue;
+      const self = (p: string) => save.profiles[`${p}:self`]?.answers[q.id];
+      const guess = (p: string, about: string) => save.profiles[`${p}:perceived:${about}`]?.answers[q.id];
+      const defs: [TogetherView, string, string, PersonalityAnswer | undefined, PersonalityAnswer | undefined][] = [
+        ['a_view', a, b, self(a), guess(b, a)],
+        ['b_view', b, a, self(b), guess(a, b)],
+        ['direct', a, b, self(a), self(b)],
+      ];
+      for (const [view, xOwner, yOwner, x, y] of defs) {
+        if (!x && !y) continue;
+        const category = categorize(x, y);
+        if (category === 'excluded') continue;
+        if (x && y) out.comparable = true;
+        out[category].push({ question: q, dimension: dimOf(q), category, view, xOwner, yOwner, x, y });
+      }
+    }
+  }
   for (const q of MIRRORS) {
     const item = j.mirrorItems[q.id];
     if (!item || item.kind !== 'mirror' || item.context !== 'self') continue;

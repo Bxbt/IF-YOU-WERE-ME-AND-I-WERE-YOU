@@ -201,7 +201,7 @@ export function buildReport(
             {
               id: 'd-revealed',
               title: t.differencesRevealed,
-              items: compareTogether(j)
+              items: compareTogether(j, save)
                 .different.filter((d) => d.xOwner === ownerId || d.yOwner === ownerId)
                 .filter((d) => d.x && d.y)
                 .map((d) => {

@@ -57,14 +57,15 @@ describe('S1 Title', () => {
 });
 
 describe('S2 Mode Selection', () => {
-  it('together and remote stay disabled with a reason; solo opens character creation', async () => {
+  it('remote stays disabled with a reason; solo and together open character creation', async () => {
     const router = renderAt('/mode');
-    for (const name of [/เล่นด้วยกัน/, /เล่นระยะไกล/]) {
-      const card = screen.getByRole('button', { name });
-      expect(card).toBeDisabled();
-      expect(card).toHaveAccessibleDescription();
-    }
-    await userEvent.click(screen.getByRole('button', { name: /เล่นคนเดียว/ }));
+    const remote = screen.getByRole('button', { name: /เล่นระยะไกล/ });
+    expect(remote).toBeDisabled();
+    expect(remote).toHaveAccessibleDescription();
+    await userEvent.click(screen.getByRole('button', { name: /เล่นด้วยกัน/ }));
+    expect(router.state.location.search).toBe('?mode=together');
+    await router.navigate('/mode');
+    await userEvent.click(await screen.findByRole('button', { name: /เล่นคนเดียว/ }));
     expect(router.state.location.pathname).toBe('/players/new');
     expect(router.state.location.search).toBe('?mode=solo');
   });

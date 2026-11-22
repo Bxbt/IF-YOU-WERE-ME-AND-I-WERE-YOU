@@ -7,7 +7,8 @@ import type { GameSession, SaveRoot } from '../persistence/schema';
 import type { StoryState, TokenContext } from '../engine/dialogue';
 import type { AnswerInput } from './actions';
 import { nowIso } from '../lib/ids';
-import { setGroupConsent, submitEntry } from '../engine/reveal';
+import { setConsent, setGroupConsent, submitEntry } from '../engine/reveal';
+import { profileRevision } from '../engine/compare';
 import { useGame } from './game';
 
 type Progress = GameSession['chapterProgress'][string];
@@ -604,4 +605,63 @@ export function setRevealMode(
   mode: 'per_question' | 'end_of_chapter',
 ): SaveRoot {
   return withProgress(save, jid, ch, (p) => ({ ...p, revealMode: mode }));
+}
+
+// ---------- Profile Q01–Q36 reveal (M10b, docs/04 §6.3.0) ----------
+
+/**
+ * A player offers (or stops offering) profile questions to be opened in this journey. Offering =
+ * submit + consent in one step; a question opens only when both players offered it. Answers are
+ * never copied into the journey — they are read from the profiles when shown.
+ */
+export function offerProfileAnswers(
+  save: SaveRoot,
+  jid: string,
+  playerId: string,
+  offer: readonly string[],
+  withdraw: readonly string[],
+): SaveRoot {
+  const j0 = save.journeys[jid];
+  if (!j0) return save;
+  const [a, b] = j0.playerIds;
+  const other = playerId === a ? b : a;
+  return withJourney(save, jid, (j, t) => {
+    const items = { ...j.mirrorItems };
+    const revs = (qid: string) => ({
+      [a]: profileRevision(save, a, b, qid),
+      [b]: profileRevision(save, b, a, qid),
+    });
+    for (const qid of offer) {
+      const rev = profileRevision(save, playerId, other, qid);
+      if (rev === 0) continue; // nothing answered → nothing to offer
+      let item = submitEntry(
+        items[qid],
+        qid,
+        { questionId: qid, kind: 'profile', context: 'self' },
+        j.playerIds,
+        playerId,
+        { revision: rev },
+        t,
+      );
+      // Offering is consent. The engine only records consent once both have submitted, so when the
+      // item reaches awaiting_consent every player who offered consents now (→ revealed).
+      // R7: after an earlier reveal, an edited answer needs both to agree again — so then only the
+      // player offering now consents, and the partner re-offers from S8.
+      if (item.state === 'awaiting_consent') {
+        const consenters = item.revealedRevision ? [playerId] : Object.keys(item.entries);
+        for (const p of consenters) item = setConsent(item, p, true, t, revs(qid));
+      }
+      items[qid] = item;
+    }
+    for (const qid of withdraw) {
+      const item = items[qid];
+      // R3: nothing can be withdrawn once revealed. Before that, withdrawing removes the offer.
+      if (!item || item.state === 'revealed' || !item.entries[playerId]) continue;
+      const entries = { ...item.entries };
+      delete entries[playerId];
+      if (Object.keys(entries).length === 0) delete items[qid];
+      else items[qid] = { ...item, entries, state: 'partial' };
+    }
+    return { ...j, mirrorItems: items };
+  });
 }
