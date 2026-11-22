@@ -1,0 +1,222 @@
+# 10 — Technical Specification
+
+> เจ้าของข้อมูล: Stack, Architecture, โครงสร้างโฟลเดอร์, ขอบเขตทางเทคนิคของแต่ละ Phase
+> **กฎ:** ห้ามสร้างฟังก์ชันจำลอง (mock/fake) แล้วแสดงใน UI ว่าทำงานจริง ฟีเจอร์ที่ยังไม่ทำต้องแสดงสถานะ "เร็ว ๆ นี้" และปิดใช้งาน
+
+---
+
+## 1. Stack
+
+| ส่วน | เลือกใช้ | สถานะ |
+|---|---|---|
+| Framework | React 18 | กำหนดโดยเจ้าของ |
+| Language | TypeScript 5 (`strict: true`) | กำหนดโดยเจ้าของ |
+| Styling | Tailwind CSS 3 + CSS variables สำหรับ token | กำหนดโดยเจ้าของ |
+| Animation | Framer Motion | กำหนดโดยเจ้าของ |
+| Icons | lucide-react | กำหนดโดยเจ้าของ |
+| Build | Vite 5 | A-07 |
+| State | Zustand (+ middleware persist แบบเขียนเอง เพื่อคุม debounce/validation/migration) | A-07 |
+| Routing | Hash router (React Router `createHashRouter`) — ทำงานบน static host ได้โดยไม่ต้องตั้ง rewrite | A-07 |
+| Validation | Zod (schema ของ Save, Import, Content) | A-07 |
+| ID | nanoid | A-07 |
+| Unit/Component test | Vitest + @testing-library/react + jsdom | A-07 |
+| E2E | Playwright (Chromium, WebKit, Firefox · viewport มือถือ/แท็บเล็ต/เดสก์ท็อป) | A-07 |
+| A11y test | @axe-core/playwright | A-07 |
+| Lint/Format | ESLint (typescript-eslint, react-hooks, jsx-a11y) + Prettier | A-07 |
+| Phase 3B | Supabase JS client v2 | A-10 |
+
+เวอร์ชันระบุแบบ exact ใน `package.json` และ commit `package-lock.json`
+
+---
+
+## 2. Architecture
+
+```
+┌────────────────────────── UI Layer (React) ──────────────────────────┐
+│ screens/ (S1–S18)   components/ (shared)   scene/ (canvas renderer)  │
+└──────────────┬───────────────────────────────────────┬───────────────┘
+               │ hooks / selectors                     │
+┌──────────────▼──────────────┐        ┌───────────────▼───────────────┐
+│ Store (Zustand)              │        │ Engines (pure TS, no React)   │
+│ - saveSlice (SaveRoot)       │◄──────►│ - dialogueEngine              │
+│ - uiSlice (ephemeral)        │        │ - personalityEngine           │
+│ - sessionSlice (handoff/PIN) │        │ - comparisonEngine            │
+└──────────────┬──────────────┘        │ - revealEngine (state machine)│
+               │                        │ - reportEngine                │
+┌──────────────▼──────────────┐        │ - observedEngine              │
+│ Persistence Adapter          │        └───────────────┬───────────────┘
+│ - localStorageAdapter        │                        │
+│ - migrations                 │        ┌───────────────▼───────────────┐
+│ - exportImport               │        │ Content (static TS/JSON)      │
+└──────────────┬──────────────┘        │ chapters, questions, signals, │
+               │ (Phase 3)              │ templates, safety keywords    │
+┌──────────────▼──────────────┐        └───────────────────────────────┘
+│ Remote Adapter (interface)   │
+│ - sealedExchange (3A)        │
+│ - supabaseAdapter (3B)       │
+└──────────────────────────────┘
+```
+
+**หลักการ**
+- Engines เป็น pure function รับ state + content คืนผลลัพธ์ — ทดสอบได้โดยไม่ต้อง render
+- UI ไม่เข้าถึง localStorage โดยตรง ผ่าน Persistence Adapter เท่านั้น
+- Content แยกจากโค้ด เปลี่ยนบท/คำถามได้โดยไม่แก้ Engine
+- Remote เป็น interface `RemoteAdapter` — Phase 1–2 ไม่มี implementation (ไม่ใช่ mock ที่แกล้งทำงาน)
+
+---
+
+## 3. Folder Structure
+
+```
+/
+├── docs/                         # เอกสารชุดนี้
+├── public/fonts, audio, icons
+├── src/
+│   ├── main.tsx, App.tsx, router.tsx
+│   ├── screens/                  # TitleScreen.tsx, ModeSelect.tsx, ... (1 ไฟล์/หน้าจอ ตาม Screen ID)
+│   ├── components/               # PixelButton, DialogueBox, ChoiceList, MetaOptions, ...
+│   ├── scene/                    # SceneCanvas, SpriteLayer, Effects (rain, stars, haze)
+│   ├── engines/
+│   │   ├── dialogue/             # interpreter ของ SceneContent, conditions, tokens
+│   │   ├── personality/          # summary, validation
+│   │   ├── comparison/           # categorize()
+│   │   ├── reveal/               # state machine
+│   │   ├── observed/
+│   │   └── report/               # build + export (txt/json/png)
+│   ├── store/                    # slices, selectors
+│   ├── persistence/              # adapter, schema (zod), migrations, exportImport
+│   ├── remote/                   # RemoteAdapter interface (+ impl ใน Phase 3)
+│   ├── content/
+│   │   ├── th/
+│   │   │   ├── chapters/ch1.ts … ch5.ts
+│   │   │   ├── questions.ts      # Q01–Q36, M01–M07, reflection, sets
+│   │   │   ├── signals.ts
+│   │   │   ├── templates.ts      # ประโยค Report/Comparison
+│   │   │   ├── ui.ts             # ข้อความ UI ทั้งหมด
+│   │   │   └── safety.ts         # keywords + resources
+│   │   └── index.ts              # contentVersion, loader
+│   ├── assets/                   # ดู 09 §8
+│   ├── styles/                   # tokens.css, tailwind.css
+│   └── lib/                      # crypto (PBKDF2, AES-GCM), ids, dates, sanitize
+├── tests/
+│   ├── unit/                     # engines, persistence, content lint
+│   ├── fixtures/                 # save files ทุก schema version
+│   └── e2e/                      # Playwright specs
+├── index.html
+└── package.json, vite.config.ts, tailwind.config.ts, tsconfig.json, playwright.config.ts
+```
+
+ข้อความ UI ทั้งหมดอยู่ใน `content/th/ui.ts` (ไม่ hardcode ใน component) เพื่อรองรับภาษาอื่นในอนาคต (Q-14)
+
+---
+
+## 4. Dialogue Engine
+
+| ความสามารถ | รายละเอียด |
+|---|---|
+| Interpreter | เดิน `SceneContent.lines` ตาม `lineIndex` ข้ามบรรทัดที่ `when` ไม่ผ่าน |
+| Tokens | แทน `{A} {B} {in} {out} {me} {other} {you} {in.end} {out.end}` และ fragment Template จาก Flag · token ที่ไม่รู้จัก → throw ใน dev, แสดงเป็นว่างใน prod + log |
+| Conditions | `flag eq`, `scenario.priorWarning`, `all`, `any` |
+| Controller | คำนวณว่าใครควบคุมบรรทัด CHOICE จาก `owner` + Scenario + โหมด + Part (Ch2 สลับ) → ส่ง `perspective` ให้ PerspectiveBanner |
+| ENV | ส่งคำสั่งไป SceneCanvas (background, rain level, light mode, haze, shake, split) |
+| Save | ทุก CHOICE/QUESTION → dispatch ไป store → autosave |
+| Fallback | Flag ว่างจากการข้าม → เลือก line ที่มี `when: { flag: X, eq: '__missing' }` หรือข้อความ fallback ทั่วไป |
+
+**Content Lint (unit test):** ทุก `next` ชี้ไป scene ที่มีอยู่ · ไม่มี scene ที่ไปไม่ถึง · ทุก Flag ที่ใช้ใน `when` มีผู้ตั้ง · ทุก tag อยู่ใน signals registry · ทุก option id ไม่ซ้ำ · ไม่มีคำต้องห้าม ([04](04-personality-system.md) §4.2) · ทุก Background key อยู่ใน asset registry
+
+---
+
+## 5. Persistence
+
+ตาม [07](07-data-architecture.md) §10–12:
+- `load()`: probe → read → parse → zod → migrate → store
+- `save()`: debounce 300ms + flush on `visibilitychange`/`pagehide`
+- `storage` event: ตรวจ Save ถูกแก้จากแท็บอื่น → ล็อก UI + ขอให้โหลดใหม่
+- Draft: debounce 2s
+
+---
+
+## 6. Rendering & Performance
+
+| เป้าหมาย | ค่า |
+|---|---|
+| Initial JS (gzip) | ≤ 250 KB (ไม่รวมฟอนต์) |
+| ฟอนต์รวม | ≤ 400 KB (subset) |
+| LCP (มือถือระดับกลาง, 4G) | ≤ 2.5s |
+| Animation | 60fps บนเดสก์ท็อป, ≥ 30fps บนมือถือระดับกลาง · Effects หยุดเมื่อแท็บไม่แสดง |
+| Code splitting | แยก chunk ต่อบท (`content/th/chapters/*`) และ S8/S9 |
+| Pixel assets | สร้างจากข้อมูลครั้งเดียวต่อ Appearance แล้ว cache (`Map<key, ImageBitmap/dataURL>`) |
+
+---
+
+## 7. Browser Support
+
+Safari iOS 16+, Chrome Android 110+, Chrome/Edge/Firefox/Safari desktop 2 เวอร์ชันล่าสุด · ต้องมี WebCrypto (`crypto.subtle`) สำหรับ PIN/Sealed (แสดงข้อความถ้าไม่มี — ฟีเจอร์นั้นปิด เกมหลักยังเล่นได้)
+
+---
+
+## 8. MVP (Phase 1) — Scope
+
+| รวม | ไม่รวม |
+|---|---|
+| S1, S1a, S1b, S2 (โหมดอื่นเป็น "เร็ว ๆ นี้"), S3, S4, S5, S5a, S6, S7 (Solo), S8, S9, S10, S11, S14, S15, S18 | Play Together, PIN, Handoff, Reveal state machine (UI) |
+| Ch1–Ch5 ครบตาม [02](02-story-script.md) | Memory Scenes |
+| Q01–Q36 (Quick/Full) + M01–M07 + Reflection | LLM / AI generation ใด ๆ |
+| Observed patterns | Backend, Remote |
+| Comparison (Solo rules) + Report + Export TXT/JSON/PNG + Import JSON | Analytics |
+| localStorage + Migration framework + S18 | Local encryption |
+| Pixel assets แบบ SVG/Canvas (P0) | Audio files (ใช้ WebAudio แบบเรียบง่าย หรือปิดเสียงทั้งหมดถ้าไม่ทัน — ปุ่มเสียงต้องไม่แสดงถ้าไม่มีเสียง) |
+| Reduced motion, font scale, text speed, keyboard, a11y ตาม [06](06-ui-ux-specification.md) §4 | — |
+
+**MVP Definition of Done:** ผ่าน Test cases ที่ทำเครื่องหมาย `MVP` ใน [11](11-testing-and-acceptance-criteria.md) ทั้งหมด
+
+---
+
+## 9. Phase 2 — Two-player Pass-and-play
+
+| งาน | รายละเอียด |
+|---|---|
+| Together mode | S2 เปิดใช้, S3 สร้าง 2 คน, Controller logic สำหรับ Ch2 สลับ |
+| Handoff | S12 + `history.replaceState` สำหรับหน้าลับ + กันการย้อนกลับ |
+| PIN | S13 + PBKDF2 + lockout + Forgot PIN flow |
+| Reveal engine | State machine R1–R7 + UI Consent/Waiting/Reveal ใน S7, Ch3 S05, Ch5 |
+| Private answers | Selector ที่กรองข้อมูลตาม `activePlayerId` — **ทุก selector ที่คืนคำตอบต้องรับ `viewerId`** และมี unit test ว่าไม่คืนข้อมูลที่ยังไม่ Reveal |
+| Comparison (Together rules) | ใช้เฉพาะ Revealed |
+| Memory Scenes | S16 (A-06) |
+
+---
+
+## 10. Phase 3 — Remote
+
+### 10.1 Phase 3A — Sealed Exchange (ไม่ต้องมี Backend)
+
+- `scope=invitation` และ `scope=sealed` ใน Export/Import
+- AES-GCM-128 ผ่าน WebCrypto · Key แสดงเป็น Base32
+- S17 แท็บไฟล์ + ข้อความข้อจำกัด ([08](08-privacy-and-safety.md) §6.1)
+
+### 10.2 Phase 3B — Supabase
+
+| งาน | รายละเอียด |
+|---|---|
+| Infra | Supabase project (region ใกล้ไทย เช่น Singapore) · migrations SQL ใน `supabase/migrations/` · RLS ตาม [08](08-privacy-and-safety.md) §6.2 |
+| Auth | Anonymous sign-in |
+| RPC | `create_session`, `create_invite`, `revoke_invite`, `join_session(code)`, `submit_answer`, `set_consent`, `get_revealed`, `leave_session`, `delete_session` |
+| Sync | Realtime subscription เฉพาะตาราง `consents`, `session_members`, `story_events` (ไม่ subscribe `answers`) |
+| Offline | คิว `pendingUploads` + retry exponential backoff (1s → 60s) |
+| Cleanup | Scheduled function ลบเซสชันไม่มีกิจกรรม 90 วัน |
+| Config | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` ผ่าน env — ไม่ commit · ถ้าไม่มี env → S2 แสดง "ออนไลน์: ยังไม่ได้ตั้งค่า" และปิดใช้งาน (ไม่ fake) |
+| Tests | Integration test กับ Supabase local (CLI) รวม RLS negative tests |
+
+**ห้าม:** แสดง UI ว่า "เชื่อมต่อแล้ว/ซิงก์แล้ว" ถ้าไม่ได้รับการยืนยันจาก Server จริง
+
+---
+
+## 11. Build, Deploy, CI
+
+| ส่วน | รายละเอียด |
+|---|---|
+| Scripts | `dev`, `build`, `preview`, `test`, `test:e2e`, `lint`, `typecheck`, `content:lint` |
+| CI (GitHub Actions) | ทุก PR: typecheck → lint → unit → content lint → build → e2e (Chromium + WebKit mobile) → axe |
+| Deploy | Static host (A-17, Q-10) · ตั้ง CSP header ตาม [08](08-privacy-and-safety.md) §10 |
+| Versioning | `appVersion` (SemVer) แสดงใน S1/S10 · `schemaVersion`, `contentVersion` แยก |
+| Repository | `https://github.com/Bxbt/IF-YOU-WERE-ME-AND-I-WERE-YOU` (branch `main`) |

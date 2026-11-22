@@ -1,0 +1,231 @@
+# 05 — Game Flow
+
+> เจ้าของข้อมูล: ลำดับหน้าจอ จุดเริ่ม/จบ การข้าม การเล่นต่อ และกรณีข้อมูลไม่ครบ ของทุกโหมด
+> รายละเอียดหน้าจออยู่ใน [06-ui-ux-specification.md](06-ui-ux-specification.md) (ใช้ Screen ID เดียวกัน)
+
+---
+
+## 1. Screen Registry
+
+| ID | หน้าจอ | Route (hash) | Phase |
+|---|---|---|---|
+| S1 | Title Screen | `#/` | MVP |
+| S1b | Journey List | `#/journeys` | MVP |
+| S1a | Safety Intro | `#/intro` | MVP |
+| S2 | Mode Selection | `#/mode` | MVP (Together/Remote แสดงเป็น "เร็ว ๆ นี้" จนกว่าจะถึง Phase) |
+| S3 | Character Creation | `#/players` | MVP |
+| S4 | Personality Setup | `#/profile/:playerId/:layer` | MVP |
+| S5 | Chapter Selection | `#/chapters` | MVP |
+| S5a | Scenario Setup | `#/scenario` | MVP |
+| S6 | Narrative Gameplay | `#/play/:chapterId` | MVP |
+| S7 | Perspective Mirror | `#/mirror/:questionId` (ภายใน Ch3/Ch4 ใช้เป็น overlay) | MVP |
+| S8 | Personality Comparison | `#/compare` | MVP |
+| S9 | Reflection Report | `#/report/:playerId` | MVP |
+| S10 | Settings & Privacy | `#/settings` | MVP |
+| S11 | About & Safety Resources | `#/about` | MVP |
+| S12 | Handoff Screen | overlay | Phase 2 |
+| S13 | PIN Gate | overlay | Phase 2 |
+| S14 | Pause Menu | overlay | MVP |
+| S15 | Ending | `#/ending` | MVP |
+| S16 | Memory Scenes | `#/memories` | Phase 2 |
+| S17 | Remote Lobby | `#/remote` | Phase 3 |
+| S18 | Data Recovery | `#/recovery` | MVP |
+
+**Profile Hub** เป็นส่วนหนึ่งของ S3 (แท็บ "โปรไฟล์") เข้าถึงได้จาก S5 และ S10
+
+---
+
+## 2. Global Rules
+
+| กฎ | รายละเอียด |
+|---|---|
+| G1 Autosave | บันทึกลง localStorage ทุกครั้งที่: เลือก Choice, ตอบคำถาม, จบฉาก, เปลี่ยนหน้าจอ, แก้โปรไฟล์ |
+| G2 Resume point | `ChapterProgress.currentSceneId` + `lineIndex` (กลับไปต้นบรรทัด Dialogue ล่าสุด ไม่ใช่กลางการพิมพ์) |
+| G3 No dead ends | ทุกหน้าจอมีปุ่มกลับหรือปุ่มไป S1/S5 · ทุก overlay ปิดได้ |
+| G4 Pause | ปุ่มหยุดอยู่มุมขวาบนทุกหน้าใน S6/S7 และกด `Esc` ได้ |
+| G5 Skip scene | จาก S14 → "ข้ามฉากนี้" → ไปฉากถัดไปตามลำดับ Flag ที่ไม่ได้ตั้งใช้ fallback ([02](02-story-script.md) ภาคผนวก B) |
+| G6 Skip chapter | จาก S14 หรือ S5 → "ข้ามบทนี้" → สถานะ `skipped` → บทถัดไปเปิดได้ |
+| G7 Skip question | ทุกคำถามมี Meta `ข้าม` |
+| G8 Chapter access | ทุกบทเปิดเล่นได้ตั้งแต่ต้น แต่ S5 แนะนำลำดับ 1→5 · ถ้ายังไม่มี Scenario (ข้าม Ch1) → เข้าบทใดก็ตามต้องผ่าน S5a ก่อน |
+| G9 Storage unavailable | ถ้า localStorage เขียนไม่ได้ → แบนเนอร์ถาวร "ตอนนี้ความคืบหน้าจะไม่ถูกบันทึก (โหมดส่วนตัวของเบราว์เซอร์?) — ส่งออกไฟล์ก่อนปิดหน้า" · เกมยังเล่นได้ด้วย state ในหน่วยความจำ |
+| G10 Corrupt save | อ่าน save ไม่ได้/Schema ไม่ผ่าน → S18 (ห้ามลบอัตโนมัติ) |
+| G11 Exit | ออกจากเกมกลางบท → ไม่ถามยืนยัน (เพราะ Autosave) ยกเว้นกำลังพิมพ์ข้อความอิสระที่ยังไม่บันทึก |
+
+---
+
+## 3. Play Alone (MVP)
+
+### 3.1 Flowchart
+
+```mermaid
+flowchart TD
+    S1[S1 Title] -->|เริ่มการเดินทางใหม่| S1a[S1a Safety Intro]
+    S1 -->|เล่นต่อ| CHK{มี Journey?}
+    CHK -->|1 Journey| RES[กลับไปจุดล่าสุด]
+    CHK -->|หลาย Journey| S1b[S1b Journey List] --> RES
+    CHK -->|ไม่มี| DIS[ปุ่มปิดใช้งาน]
+    S1 -->|สร้างตัวตนของฉัน| S3
+    S1 -->|เกี่ยวกับเกม| S11[S11 About]
+    S1a --> S2[S2 Mode Selection]
+    S2 -->|เล่นคนเดียว| S3[S3 Character Creation<br/>ตัวฉัน + คู่ในจินตนาการ]
+    S3 --> ASK{ตอบคำถามบุคลิกภาพตอนนี้?}
+    ASK -->|ฉบับสั้น 12 ข้อ| S4[S4 Personality Setup]
+    ASK -->|ฉบับเต็ม 36 ข้อ| S4
+    ASK -->|ไว้ทีหลัง| S5
+    S4 -->|self เสร็จ| S4P[S4 Perceived ของคู่<br/>ทางเลือก]
+    S4P --> S5[S5 Chapter Selection]
+    S5 -->|บทที่ยังไม่มี Scenario| S5a[S5a Scenario Setup] --> S6
+    S5 --> S6[S6 Narrative Ch1–Ch5]
+    S6 -->|Ch3 S05, Ch4| S7[S7 Mirror แบบคนเดียว]
+    S7 --> S6
+    S6 -->|จบบท| S5
+    S6 -->|จบ Ch5| S15[S15 Ending]
+    S15 --> S8[S8 Comparison]
+    S15 --> S9[S9 Report]
+    S15 --> S1
+    S8 --> S9
+    S9 -->|ส่งออก| EXP[TXT / JSON / PNG]
+    S9 --> S1
+```
+
+### 3.2 จุดเริ่มต้นและจุดสิ้นสุด
+
+| | รายละเอียด |
+|---|---|
+| Entry points | S1 "เริ่มใหม่", S1 "เล่นต่อ", S1 "สร้างตัวตนของฉัน" (สร้างผู้เล่นโดยยังไม่เลือกโหมด → เก็บไว้ใช้ใน Journey ถัดไป) |
+| End state (สำเร็จ) | Ch5 `completed` → S15 → S8/S9 · Journey สถานะ `completed` แต่ยังเปิดดู แก้ และเล่นบทซ้ำได้ |
+| End state (บางส่วน) | ผู้เล่นออกเมื่อใดก็ได้ · Report สร้างได้จากข้อมูลที่มี |
+
+### 3.3 ข้อบังคับขั้นต่ำ
+
+| ก่อนเข้าถึง | ต้องมี |
+|---|---|
+| S5 | ผู้เล่น 1 คนที่มีชื่อ + คู่ (Imagined) ที่มีชื่อ |
+| S6 | Scenario (`insiderPlayerId`, `priorWarning`) |
+| S8 | ข้อมูลอย่างน้อย 1 คู่ที่เปรียบเทียบได้ → ไม่งั้น Empty state |
+| S9 | ไม่มีข้อบังคับ (รองรับว่างทั้งหมด) |
+
+---
+
+## 4. Play Together (Phase 2)
+
+### 4.1 Flowchart
+
+```mermaid
+flowchart TD
+    S2[S2 Mode Selection] -->|เล่นด้วยกัน| S3[S3 สร้างผู้เล่น A และ B]
+    S3 --> PIN{ตั้ง PIN?<br/>ทางเลือกต่อคน}
+    PIN --> S4Q{ตอบบุคลิกภาพตอนนี้?}
+    S4Q -->|ใช่| HA[S12 Handoff → A] --> S4A[S4 A: self + perceived] --> HB[S12 Handoff → B] --> S4B[S4 B: self + perceived] --> S5
+    S4Q -->|ไว้ทีหลัง| S5[S5 Chapter Selection]
+    S5 --> S5a[S5a Scenario Setup<br/>ทั้งคู่เห็นด้วยกัน]
+    S5a --> CH1[Ch1: เจ้าของบทบาทเลือก<br/>อีกคนดูด้วย]
+    CH1 --> R1[Reflection ท้ายบท:<br/>Handoff A → ตอบ → Handoff B → ตอบ]
+    R1 --> CH2[Ch2: สลับบทบาท<br/>Part A โดย waiter / Part B โดย insider]
+    CH2 --> R2[Reflection ส่วนตัว]
+    R2 --> CH3[Ch3: เนื้อเรื่องเปิดเผย]
+    CH3 --> IC[Interpretation + W3 Mirror<br/>Handoff แยกตอบ]
+    IC --> RV1{ทั้งคู่ยินยอม?}
+    RV1 -->|ใช่| REV1[Reveal]
+    RV1 -->|เก็บไว้ก่อน| CH3E
+    REV1 --> CH3E[Ch3 จบ]
+    CH3E --> CH4[Ch4: M01–M07<br/>Handoff ต่อข้อ หรือตอบทั้งชุด]
+    CH4 --> RV2{Reveal รายข้อ / ตอนจบบท}
+    RV2 --> CH5[Ch5: Statements ส่วนตัว]
+    CH5 --> RV3{เปิดข้อที่ทั้งคู่เลือกแชร์}
+    RV3 --> S15[S15 Ending]
+    S15 --> S8[S8 Comparison<br/>เฉพาะข้อที่ Revealed]
+    S8 --> S9A[S9 Report ของ A<br/>ต้องผ่าน PIN A]
+    S8 --> S9B[S9 Report ของ B<br/>ต้องผ่าน PIN B]
+```
+
+### 4.2 Handoff Protocol
+
+1. หน้าจอ S12 คลุมเต็มจอ ไม่แสดงเนื้อหาของคนก่อนหน้า: "ส่งเครื่องให้ {next} แล้วให้ {next} กดปุ่ม"
+2. ถ้า {next} ตั้ง PIN → S13 ก่อนเข้า
+3. ตอนออกจากส่วนลับ → S12 อีกครั้ง: "เสร็จแล้ว ส่งเครื่องคืนให้ {other}" ก่อนแสดงหน้าถัดไป
+4. ไม่มีปุ่ม "ย้อนกลับ" ที่พากลับไปยังหน้าคำตอบของอีกคน
+5. ประวัติเบราว์เซอร์ (Back) ข้ามหน้าคำตอบส่วนตัว — ใช้ `history.replaceState` สำหรับหน้าลับ
+
+### 4.3 เงื่อนไขพิเศษ
+
+| สถานการณ์ | ผล |
+|---|---|
+| คนหนึ่งตอบเสร็จ อีกคนอยากเลื่อนไปทีหลัง | MirrorItem ค้างที่ `partial` · S5 แสดงป้าย "รอ {B} ตอบ" · เล่นบทถัดไปได้ |
+| คนหนึ่งต้องการหยุดทั้งเกม | Pause → "พักไว้ก่อน" → กลับ S1 · ข้อมูลทั้งสองคนบันทึก |
+| คนหนึ่งลืม PIN | S13 → "ลืม PIN" → ลบ PIN ได้โดยต้องยืนยันว่าจะ **ลบคำตอบที่ยังไม่ Reveal ของผู้เล่นนั้นทั้งหมด** (ป้องกันการใช้ "ลืม PIN" เพื่อแอบดู) หรือยกเลิก ดู [08](08-privacy-and-safety.md) §4 |
+| ต้องการเปลี่ยนเป็นเล่นคนเดียว | ไม่รองรับการแปลงโหมด Journey · สร้าง Journey ใหม่และใช้ผู้เล่นเดิมได้ |
+
+---
+
+## 5. Play Remotely (Phase 3)
+
+### 5.1 Phase 3A — Sealed Exchange (ไม่มี Backend)
+
+```mermaid
+sequenceDiagram
+    participant A as เครื่อง A
+    participant B as เครื่อง B
+    Note over A: A สร้าง Remote Journey<br/>ส่งออก "Invitation file" (ไม่มีคำตอบ)
+    A->>B: ส่งไฟล์ผ่านช่องทางที่ทั้งคู่เลือก (แชต/อีเมล)
+    Note over B: B นำเข้า → สร้างโปรไฟล์ → เล่นบทที่ตกลงกัน
+    Note over A,B: ทั้งคู่เล่นเนื้อเรื่องแยกกัน (ตัวเลือกเนื้อเรื่อง = ของใครของมัน)
+    Note over A: A ตอบ Mirror → ส่งออก "Sealed file"<br/>(คำตอบเข้ารหัส AES-GCM ด้วยกุญแจสุ่มที่เก็บในเครื่อง A)
+    Note over B: B ตอบ Mirror → ส่งออก Sealed file
+    A->>B: Sealed file ของ A
+    B->>A: Sealed file ของ B
+    Note over A,B: ต่างคนต่างนำเข้า — เห็นแค่ว่า "ได้รับคำตอบที่ปิดผนึกแล้ว"
+    Note over A: A กดยินยอม → แสดง "Reveal key" (รหัส 26 ตัวอักษร)
+    A->>B: Reveal key ของ A
+    B->>A: Reveal key ของ B
+    Note over A,B: ใส่ Key → ถอดรหัส → แสดง Mirror
+```
+
+ข้อจำกัดที่ต้องแจ้งผู้เล่นตรง ๆ (ดู [08](08-privacy-and-safety.md) §6.1): ระบบไม่สามารถบังคับว่าอีกฝ่ายจะส่ง Key กลับมา และ Key ที่ส่งไปแล้วเรียกคืนไม่ได้
+
+### 5.2 Phase 3B — Supabase
+
+```mermaid
+flowchart TD
+    A1[A: S17 Remote Lobby] -->|สร้างเซสชัน| A2[ได้ Invitation code 8 ตัว<br/>หมดอายุ 7 วัน ใช้ได้ครั้งเดียว]
+    A2 -->|ส่งโค้ดให้ B ทางช่องทางใดก็ได้| B1[B: S17 → ใส่โค้ด]
+    B1 --> V{โค้ดถูกต้อง<br/>ยังไม่หมดอายุ<br/>ยังไม่ถูกใช้?}
+    V -->|ไม่| ERR[แสดงข้อผิดพลาด + วิธีแก้]
+    V -->|ใช่| J[B เข้าร่วม · โค้ดถูกเผา]
+    J --> P[ทั้งคู่สร้างโปรไฟล์บนเครื่องตัวเอง]
+    P --> PLAY[เล่นแยกกัน · ส่งคำตอบขึ้น Server]
+    PLAY --> W{อีกคนส่งแล้ว?}
+    W -->|ยัง| WAIT[แสดง 'รอ {other}' · เล่นต่อได้]
+    W -->|แล้ว| C{ยินยอมครบ?}
+    C -->|ยัง| CW[ปุ่ม ยินยอม / เก็บไว้ก่อน]
+    C -->|ครบ| REV[Server คืนคำตอบอีกฝ่าย → Reveal]
+    REV --> REP[Comparison / Report บนเครื่องตัวเอง]
+    A1 -->|เจ้าของ| REVOKE[ยกเลิกโค้ด / ลบเซสชัน]
+```
+
+| สถานการณ์ | ผล |
+|---|---|
+| ออฟไลน์ระหว่างเล่น | เก็บคำตอบในคิว localStorage · ส่งเมื่อออนไลน์ · แสดง "ยังไม่ได้ส่ง" |
+| เจ้าของลบเซสชัน | ข้อมูลบน Server ถูกลบ · เครื่อง B แสดง "เซสชันนี้ถูกปิดแล้ว" ข้อมูลที่ Reveal ไปแล้วบนเครื่อง B ยังอยู่จนกว่า B ลบ (แจ้งตรง ๆ) |
+| B ออกจากเซสชัน | คำตอบของ B ถูกลบจาก Server · A เห็น "{B} ออกจากเซสชันแล้ว" |
+| เปลี่ยนเครื่อง / ล้างเบราว์เซอร์ | Anonymous identity หาย → เข้าเซสชันเดิมไม่ได้ (MVP ของ 3B) · แจ้งก่อนเริ่ม |
+| เซสชันหมดอายุ (90 วันไม่มีกิจกรรม) | ลบอัตโนมัติ · แจ้งล่วงหน้าเมื่อเปิดแอปช่วง 7 วันสุดท้าย |
+
+---
+
+## 6. Resume & Incomplete Data Matrix
+
+| สถานการณ์ | พฤติกรรม |
+|---|---|
+| ปิดแท็บกลางบท | เปิดใหม่ → S1 → "เล่นต่อ" → ฉากและบรรทัดล่าสุด |
+| ปิดแท็บกลาง Personality Setup | กลับไปข้อที่ยังไม่ตอบข้อแรก |
+| ปิดแท็บระหว่างพิมพ์ข้อความอิสระ | ร่างข้อความถูกบันทึกทุก 2 วินาที (debounce) ใน `drafts` · กู้คืนเมื่อกลับมา |
+| ข้าม Ch1 ทั้งบท | Ch2–Ch3 ต้องการ Scenario → S5a · Flag ของ Ch1 ว่าง → ใช้ fallback |
+| ข้าม Ch2 | Ch3 ใช้ fallback สำหรับ `in_need` (MONO แบบกลาง) |
+| ข้าม Ch4 ทั้งบท | Comparison ใช้เฉพาะ Personality Setup + W3 |
+| ไม่ตอบ Personality เลย + ข้าม Ch4 | S8 แสดง Empty state: "ยังไม่มีข้อมูลพอจะเปรียบเทียบ" + ปุ่ม "ตอบฉบับสั้น 12 ข้อ" และ "เล่นบทที่ 4" |
+| Report ทั้งหมดว่าง | S9 แสดงโครงทั้ง 4 ส่วนพร้อม CTA ในแต่ละส่วน · ปุ่มส่งออกยังใช้ได้ (ได้ไฟล์ที่มีโครงว่าง) |
+| แก้ไขโปรไฟล์หลังจบเกม | Comparison และ Report คำนวณใหม่ทันที (ไม่ Cache) |
+| เปลี่ยน Scenario กลางเกม | ถามยืนยัน → รีเซ็ตความคืบหน้าของ Ch1–Ch3 (Flags) · คำตอบ Reflection/Mirror ยังอยู่ |
+| เล่นบทซ้ำ | ถาม "เริ่มบทใหม่ (ตัวเลือกเดิมจะถูกแทนที่)" หรือ "ดูอย่างเดียว" (ไม่บันทึก) |
+| Import ไฟล์ที่มี Journey ซ้ำ id | ถาม: แทนที่ / เก็บเป็นสำเนา / ยกเลิก |

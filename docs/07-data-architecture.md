@@ -1,0 +1,519 @@
+# 07 — Data Architecture
+
+> เจ้าของข้อมูล: Data Schema, Storage, Export/Import, Migration
+> Schema Version ปัจจุบัน: **`1.0.0`** (SemVer: MAJOR = ไม่เข้ากันย้อนหลัง, MINOR = เพิ่มฟิลด์ที่มีค่าเริ่มต้น, PATCH = แก้ไขที่ไม่กระทบโครงสร้าง)
+
+---
+
+## 1. ภาพรวม
+
+```
+SaveRoot (localStorage)
+├── schemaVersion
+├── settings: Settings
+├── players: Record<PlayerId, Player>
+├── profiles: Record<ProfileKey, PlayerProfile | PerceivedPartnerProfile>
+├── journeys: Record<JourneyId, GameSession>
+│   ├── scenario
+│   ├── chapterProgress: Record<ChapterId, ChapterProgress>
+│   ├── storyAnswers (Reflection / Interpretation / Statements)
+│   ├── mirrorItems: Record<MirrorKey, SharedAnswer>
+│   ├── observed: ObservedSignal[]
+│   └── nextConversation: NextConversationItem[]
+├── reports: Record<ReportId, ReflectionReport>   (snapshot เฉพาะเมื่อส่งออก)
+├── memories: Record<MemoryId, MemoryScene>       (Phase 2)
+└── drafts: Record<DraftKey, Draft>
+```
+
+Content (บท คำถาม) **ไม่อยู่ใน Save** — อยู่ในไฟล์ Content ที่ build มากับแอป (§5) Save อ้างอิงด้วย id เท่านั้น
+
+---
+
+## 2. Common Types
+
+```ts
+type ISODate = string;            // "2026-11-22T10:15:00.000Z"
+type PlayerId = string;           // "pl_" + nanoid(12)
+type JourneyId = string;          // "jr_" + nanoid(12)
+type QuestionId = `Q${string}` | `M${string}` | string; // Q01–Q36, M01–M07, r1_1, w3_1, cs1, ...
+type OptionId = string;           // "q13_hug"
+type DimensionId = 'D01'|'D02'|'D03'|'D04'|'D05'|'D06'|'D07'|'D08'|'D09'|'D10'|'D11'|'D12';
+type ChapterId = 'ch1'|'ch2'|'ch3'|'ch4'|'ch5';
+type Role = 'insider' | 'waiter';
+type Layer = 'self' | 'perceived';
+type Mode = 'solo' | 'together' | 'remote_sealed' | 'remote_online';
+type Meta = null | 'depends' | 'not_sure' | 'prefer_not' | 'skipped';
+```
+
+---
+
+## 3. Player
+
+```ts
+interface Player {
+  id: PlayerId;
+  kind: 'real' | 'imagined';        // imagined = คู่ในจินตนาการ (Play Alone)
+  createdBy: PlayerId | null;       // imagined: id ของผู้เล่นที่สร้าง
+  nickname: string;                 // 1–20 ตัวอักษร (trim)
+  sentenceEnding: '' | 'ครับ' | 'ค่ะ' | 'นะ';  // A-04
+  addressStyle: 'เธอ' | 'ตัวเอง' | 'name';     // คำเรียกคู่ในบทพูด
+  pronouns?: string;                // ≤ 20 ไม่ใช้ในตรรกะใด
+  bio?: string;                     // ≤ 140
+  appearance: Appearance;
+  pin?: PinRecord;                  // Phase 2 — ดู §3.1
+  createdAt: ISODate;
+  updatedAt: ISODate;
+}
+
+interface Appearance {
+  preset: 'p1'|'p2'|'p3'|'p4'|'p5'|'p6';
+  skin: 0|1|2|3|4|5;
+  hairStyle: 0|1|2|3|4|5|6|7;
+  hairColor: 0|1|2|3|4|5|6|7;
+  outfit: 0|1|2|3|4|5;
+  outfitColor: 0|1|2|3|4|5|6|7;
+  accessory: 'none'|'glasses'|'hat';
+}
+```
+
+### 3.1 PinRecord (Phase 2)
+
+```ts
+interface PinRecord {
+  algo: 'PBKDF2-SHA256';
+  iterations: 210000;
+  salt: string;          // base64, 16 bytes จาก crypto.getRandomValues
+  hash: string;          // base64, 32 bytes
+  failedAttempts: number;
+  lockedUntil?: ISODate;
+}
+```
+**ข้อจำกัด:** PIN เป็นเพียงประตูกันการแอบดูบนหน้าจอ ข้อมูลคำตอบไม่ได้ถูกเข้ารหัสด้วย PIN ดู [08](08-privacy-and-safety.md) §4
+
+---
+
+## 4. Profiles & Answers
+
+```ts
+type ProfileKey = `${PlayerId}:self` | `${PlayerId}:perceived:${PlayerId}`;
+
+interface PlayerProfile {               // Self-reported
+  key: `${PlayerId}:self`;
+  ownerId: PlayerId;
+  answers: Record<QuestionId, PersonalityAnswer>;   // Q01–Q36
+  hiddenObservedCards: string[];        // "D09:act"
+  confirmedObserved: Record<string, boolean>;       // "D09:act" → true/false
+  updatedAt: ISODate;
+}
+
+interface PerceivedPartnerProfile {     // Perceived
+  key: `${PlayerId}:perceived:${PlayerId}`;
+  ownerId: PlayerId;                    // คนที่คิด
+  aboutId: PlayerId;                    // คนที่ถูกคิดถึง (real หรือ imagined)
+  answers: Record<QuestionId, PersonalityAnswer>;
+  updatedAt: ISODate;
+}
+
+interface PersonalityAnswer {
+  questionId: QuestionId;
+  layer: Layer;
+  selected: OptionId[];                 // ≤ maxSelect
+  meta: Meta;
+  freeText?: string;                    // ≤ 280 plain text
+  status: 'answered' | 'skipped';
+  revision: number;                     // เริ่ม 1 เพิ่มทุกครั้งที่แก้
+  answeredAt: ISODate;
+  updatedAt: ISODate;
+}
+```
+
+Invariants (ตรวจตอนบันทึกและตอน Import):
+- `meta !== null` ⇒ `selected.length === 0`
+- `meta === 'skipped'` ⇒ `status === 'skipped'` และไม่มี `freeText`
+- `selected` ทุกตัวต้องเป็น option ของ `questionId` ตาม Content version ปัจจุบัน (ถ้าไม่ใช่ → ตัดทิ้งพร้อม log ใน Import report)
+
+---
+
+## 5. Scenario & Content Model
+
+### 5.1 Scenario (ค่าที่ผู้เล่นตั้ง — อยู่ใน Save)
+
+```ts
+interface ScenarioConfig {
+  insiderPlayerId: PlayerId;            // waiter = อีกคน
+  priorWarning: boolean;                // ค่าเริ่มต้น true (A-03)
+  randomized: boolean;
+  setAt: ISODate;
+}
+```
+
+### 5.2 Content (อยู่ในโค้ด `src/content/` — ไม่อยู่ใน Save)
+
+```ts
+interface ChapterContent {
+  id: ChapterId;
+  titleEn: string; titleTh: string;
+  estimatedMinutes: [number, number];
+  scenes: SceneContent[];
+  reflection: QuestionContent[];        // r1_1 ...
+}
+
+interface SceneContent {
+  id: string;                           // "ch1_s01"
+  background: string;                   // asset key "bg_apartment_evening"
+  ariaLabel: string;
+  controller: 'insider' | 'waiter' | 'A' | 'B' | 'both' | 'narrator';
+  lines: LineContent[];
+  next: string | NextRule[];            // scene id หรือเงื่อนไข
+}
+
+type LineContent =
+  | { type: 'NARR' | 'SYS'; text: string; when?: Condition }
+  | { type: 'DLG' | 'MONO'; speaker: 'in'|'out'|'A'|'B'|string; expression?: Expression; text: string; when?: Condition }
+  | { type: 'ENV'; set: Record<string, string | number | boolean> }
+  | { type: 'CHOICE'; id: string; owner: 'insider'|'waiter'|'A'|'B'|'each'; options: ChoiceOption[] }
+  | { type: 'QUESTION'; questionId: QuestionId; layer: Layer | 'both'; private: boolean }
+  | { type: 'SAFETY_NOTE'; text: string; when?: Condition };
+
+interface ChoiceOption {
+  id: string; text: string;
+  textByCondition?: { when: Condition; text: string }[];
+  setFlags?: Record<string, string>;
+  tag?: `${DimensionId}:${string}`;
+  responseLines?: LineContent[];
+}
+
+type Condition = { flag: string; eq: string } | { scenario: 'priorWarning'; eq: boolean } | { all: Condition[] } | { any: Condition[] };
+type Expression = 'neutral'|'happy'|'sad'|'worried'|'angry'|'scared'|'relieved'|'thinking';
+
+interface QuestionContent {
+  id: QuestionId;
+  dimension?: DimensionId;
+  self: string; perceived?: string;
+  options: { id: OptionId; text: string }[];
+  maxSelect: number;
+  freeText: boolean;
+  interpretation?: string;              // สำหรับระบบ ไม่แสดงตรง
+  reflectionPrompt?: string;
+  quick?: boolean;
+}
+```
+
+Content มี `contentVersion` (เช่น `"1.0.0"`) แยกจาก `schemaVersion` · Option id ห้ามเปลี่ยนหลังปล่อย (เพิ่มได้ ลบให้ mark `deprecated`)
+
+---
+
+## 6. Game Session (Journey)
+
+```ts
+interface GameSession {
+  id: JourneyId;
+  mode: Mode;
+  playerIds: [PlayerId, PlayerId];      // [A, B] — solo: B = imagined
+  status: 'active' | 'completed' | 'archived';
+  scenario?: ScenarioConfig;
+  chapterProgress: Record<ChapterId, ChapterProgress>;
+  storyAnswers: Record<StoryAnswerKey, StoryAnswer>;
+  mirrorItems: Record<MirrorKey, SharedAnswer>;
+  observed: ObservedSignal[];
+  nextConversation: NextConversationItem[];
+  introSeen: boolean;
+  remote?: RemoteLink;                  // Phase 3
+  createdAt: ISODate;
+  updatedAt: ISODate;
+  lastPlayedAt: ISODate;
+}
+
+interface ChapterProgress {
+  chapterId: ChapterId;
+  status: 'not_started' | 'in_progress' | 'completed' | 'skipped';
+  currentSceneId?: string;
+  lineIndex?: number;
+  flags: Record<string, string>;        // ภาคผนวก B ของ 02
+  choiceLog: { choiceId: string; optionId: string; byPlayerId: PlayerId; asRole: Role | 'self'; at: ISODate }[];
+  skippedScenes: string[];
+  revealMode?: 'per_question' | 'end_of_chapter';   // ch4
+  startedAt?: ISODate;
+  completedAt?: ISODate;
+  playCount: number;
+}
+
+type StoryAnswerKey = `${PlayerId}:${string}`;     // "pl_x:r1_1", "pl_x:ic_out_blame", "pl_x:cs3"
+
+interface StoryAnswer {
+  key: StoryAnswerKey;
+  playerId: PlayerId;
+  itemId: string;                       // r1_1 | ic_<speaker>_<flag> | cs1–cs5 | rewrite_*
+  kind: 'reflection' | 'interpretation' | 'statement' | 'emotion_card';
+  layer: Layer;
+  selected: OptionId[];
+  interpretation?: Record<string, 'yes' | 'no' | 'unsure'>;   // Interpretation Check
+  meta: Meta;
+  freeText?: string;
+  shareIntent: boolean;                 // Ch5: ผู้เล่นเลือกแชร์ · อื่น ๆ false
+  updatedAt: ISODate;
+}
+
+interface ObservedSignal {
+  dimension: DimensionId;
+  signal: string;
+  sourceChoiceId: string;               // unique ต่อ (playerId, sourceChoiceId)
+  playerId: PlayerId;
+  layer: Layer;
+  at: ISODate;
+}
+
+interface NextConversationItem {
+  id: string;
+  ownerId: PlayerId;
+  text: string;                         // ≤ 200
+  source: 'comparison' | 'mirror' | 'reflection' | 'manual';
+  sourceRef?: string;                   // questionId
+  done: boolean;
+  createdAt: ISODate;
+}
+```
+
+---
+
+## 7. Shared Answer (Mirror Item)
+
+```ts
+type MirrorKey = string;                // questionId เช่น "M01", "w3_1"
+
+interface SharedAnswer {
+  key: MirrorKey;
+  questionId: QuestionId;
+  state: 'open' | 'partial' | 'awaiting_consent' | 'revealed' | 'skipped';
+  entries: Record<PlayerId, {
+    self?: PersonalityAnswer;
+    perceived?: PersonalityAnswer;
+    submittedAt?: ISODate;
+    consent: boolean;
+    consentAt?: ISODate;
+  }>;
+  revealedAt?: ISODate;
+  revealedRevision?: Record<PlayerId, number>;   // R7
+}
+```
+
+- Solo: `state` ไม่ถูกใช้ (คงที่ `open`) · `entries` มีเฉพาะผู้เล่นจริง
+- Remote 3B: คำตอบของอีกฝ่ายถูกเขียนลง `entries[otherId]` **เฉพาะหลัง Server ส่งกลับเมื่อ revealed** (ก่อนหน้านั้น local มีแค่ `submittedAt`, `consent`)
+
+### 7.1 Remote Link (Phase 3)
+
+```ts
+interface RemoteLink {
+  kind: 'sealed' | 'online';
+  // sealed (3A)
+  myRevealKey?: string;                 // base32 26 ตัว (128-bit) เก็บเฉพาะเครื่องตัวเอง
+  partnerSealed?: { questionIds: QuestionId[]; ciphertext: string; iv: string; importedAt: ISODate };
+  // online (3B)
+  sessionId?: string;                   // uuid จาก Server
+  role?: 'owner' | 'member';
+  inviteExpiresAt?: ISODate;
+  pendingUploads?: string[];            // MirrorKey ที่ยังไม่ส่ง
+}
+```
+
+---
+
+## 8. Reflection Report
+
+Report คำนวณสดจากข้อมูล ([04](04-personality-system.md) §8) — เก็บ Snapshot เฉพาะตอนส่งออก เพื่อให้ผู้เล่นรู้ว่าส่งอะไรออกไปแล้ว
+
+```ts
+interface ReflectionReport {
+  id: string;                           // "rp_" + nanoid
+  journeyId: JourneyId;
+  ownerId: PlayerId;
+  generatedAt: ISODate;
+  selectedItemIds: string[];            // รายการที่ผู้เล่นเลือกส่งออก
+  format: 'txt' | 'json' | 'png';
+  sections: {
+    myPersonality: ReportItem[];
+    myUnderstanding: ReportItem[];
+    ourDifferences: ReportItem[];
+    nextConversation: ReportItem[];
+    confirmedPatterns: ReportItem[];
+  };
+}
+
+interface ReportItem {
+  id: string;
+  text: string;
+  source: 'self' | 'perceived' | 'partner_revealed' | 'observed_confirmed' | 'statement';
+  dimension?: DimensionId;
+  questionId?: QuestionId;
+}
+```
+
+Snapshot เก็บเฉพาะ metadata (`id`, `generatedAt`, `format`, `selectedItemIds`) ไม่เก็บเนื้อความซ้ำ (ข้อความเต็มอยู่ในไฟล์ที่ผู้เล่นดาวน์โหลดแล้ว)
+
+---
+
+## 9. Settings, Drafts, Memory Scenes
+
+```ts
+interface Settings {
+  fontScale: 1 | 1.15 | 1.3;
+  textSpeed: 'slow' | 'normal' | 'fast' | 'instant';
+  reducedMotion: 'system' | 'on' | 'off';
+  sound: { enabled: boolean; volume: number };   // 0–1, ค่าเริ่มต้น enabled=false
+  lastJourneyId?: JourneyId;
+}
+
+interface Draft { key: string; text: string; updatedAt: ISODate }   // ลบเมื่อบันทึกคำตอบ
+
+interface MemoryScene {                 // Phase 2
+  id: string; ownerId: PlayerId; journeyId?: JourneyId;
+  category: 'disagreement'|'happy'|'misunderstood'|'supported'|'unresolved'|'meaningful';
+  title: string;                        // ≤ 60
+  whatHappened: string;                 // ≤ 500 — ข้อมูลที่ผู้ใช้ให้ แสดงตามจริงเท่านั้น
+  myFeelings: { selected: string[]; freeText?: string };
+  myNeeds: { selected: string[]; freeText?: string };
+  partnerFeelingsGuess: { selected: string[]; freeText?: string };
+  background: string;
+  shareIntent: boolean;
+  createdAt: ISODate; updatedAt: ISODate;
+}
+```
+
+---
+
+## 10. Storage
+
+| Key | เนื้อหา | หมายเหตุ |
+|---|---|---|
+| `iywm:save` | `SaveRoot` ทั้งก้อน (JSON) | เขียนผ่าน debounce 300ms + เขียนทันทีเมื่อ `visibilitychange=hidden` |
+| `iywm:save:backup` | สำเนาล่าสุดก่อน Migration หรือก่อน Import | เก็บ 1 ชุด |
+| `iywm:probe` | ใช้ทดสอบว่าเขียนได้ | ลบทันที |
+
+- ขนาดคาดการณ์ต่อ Journey < 100 KB (เป้า SaveRoot < 1 MB; ขีดจำกัด localStorage ทั่วไป ~5 MB)
+- เขียนล้มเหลว (`QuotaExceededError`) → Toast + แนะนำส่งออก/ลบ Journey เก่า · state ในหน่วยความจำยังอยู่
+- อ่าน: `JSON.parse` → ตรวจด้วย Zod schema → Migration (§12) → ใช้งาน · ไม่ผ่าน → S18
+- หลายแท็บ: ฟัง event `storage` → ถ้า Save ถูกเปลี่ยนจากแท็บอื่น แสดง Dialog "เกมถูกเปิดในแท็บอื่น — โหลดใหม่" (ป้องกันเขียนทับกัน)
+
+---
+
+## 11. Export / Import
+
+### 11.1 Export Envelope
+
+```json
+{
+  "format": "iywm-export",
+  "schemaVersion": "1.0.0",
+  "contentVersion": "1.0.0",
+  "appVersion": "0.1.0",
+  "exportedAt": "2026-11-22T10:15:00.000Z",
+  "scope": "full",
+  "data": { "...": "SaveRoot หรือส่วนย่อยตาม scope" },
+  "checksum": "sha256-base64 ของ JSON.stringify(data)"
+}
+```
+
+| `scope` | เนื้อหา | ใช้เมื่อ |
+|---|---|---|
+| `full` | SaveRoot ทั้งหมด (ไม่รวม `pin` hash — ต้องตั้งใหม่หลัง Import) | สำรองข้อมูล / ย้ายเครื่อง |
+| `journey` | Journey 1 อัน + Player + Profile ที่เกี่ยวข้อง | ย้าย Journey |
+| `report` | ReportItem ที่ผู้เล่นเลือกเท่านั้น (ไม่มี id ภายใน) | แชร์ให้คู่/เก็บไว้อ่าน |
+| `invitation` (3A) | Journey id, ชื่อและ Avatar ของผู้เชิญ, Scenario, Content version — **ไม่มีคำตอบ** | เชิญเล่นแบบ Sealed |
+| `sealed` (3A) | `{ questionIds, ciphertext, iv }` | ส่งคำตอบที่ปิดผนึก |
+
+ชื่อไฟล์: `iywm-{scope}-{yyyyMMdd-HHmm}.json` (ไม่ใส่ชื่อผู้เล่นในชื่อไฟล์)
+
+### 11.2 Import Rules
+
+1. ขนาดไฟล์ ≤ 5 MB · เป็น JSON ที่ parse ได้ · `format === "iywm-export"`
+2. ตรวจ `checksum` · ไม่ตรง → ปฏิเสธ "ไฟล์อาจเสียหายหรือถูกแก้ไข"
+3. `schemaVersion` MAJOR > ของแอป → ปฏิเสธ "ไฟล์นี้มาจากเวอร์ชันใหม่กว่า กรุณาอัปเดต" · MAJOR ต่ำกว่า → Migration
+4. ตรวจ Zod schema ทั้งก้อน · ข้อความทั้งหมดเป็น plain text (ไม่ render HTML)
+5. แสดง **Import Preview**: จำนวนผู้เล่น/Journey, ความขัดแย้งของ id, ข้อมูลที่จะถูกตัด (option ที่ไม่รู้จัก)
+6. ความขัดแย้งของ id → ให้เลือก: แทนที่ / เก็บเป็นสำเนา (สร้าง id ใหม่) / ยกเลิก
+7. สำรอง `iywm:save:backup` ก่อนเขียน · ล้มเหลวกลางทาง → คืนค่าจาก backup
+8. `scope=full` แทนที่ทั้งหมด ต้องยืนยันแบบ destructive
+
+### 11.3 Text Export (.txt)
+
+UTF-8 · หัวเรื่องตามส่วนของ Report · ทุกบรรทัดมีป้ายแหล่งที่มา `[คุณบอก]` `[คุณคิด]` `[{other} บอก]` `[เกมสังเกต]` · ท้ายไฟล์: วันที่ + "สร้างจาก IF YOU WERE ME, AND I WERE YOU"
+
+### 11.4 PNG Reflection Card
+
+1080×1350 · พื้น `--c-navy` + กรอบ pixel · ชื่อเกม · ชื่อเล่นผู้ส่ง · รายการที่เลือก (สูงสุด 5 ข้อ ตัดข้อความที่ยาวเกิน 140 ตัวด้วย "…") · วาดด้วย Canvas 2D API + ฟอนต์ที่โหลดแล้ว (`document.fonts.ready`)
+
+---
+
+## 12. Migration
+
+```ts
+type Migration = { from: string; to: string; up: (data: unknown) => unknown };
+const migrations: Migration[] = [];     // 1.0.0 = baseline ยังไม่มี
+```
+
+- รันตามลำดับจาก `schemaVersion` ของข้อมูลจนถึงเวอร์ชันแอป
+- ก่อนรัน: เขียน `iywm:save:backup`
+- แต่ละ Migration ต้องมี Unit test ที่ใช้ Fixture ของเวอร์ชันก่อนหน้า
+- ล้มเหลว → S18 พร้อมไฟล์ backup ให้ดาวน์โหลด
+
+---
+
+## 13. Remote Data Model (Phase 3B — Supabase/Postgres)
+
+```sql
+create table sessions (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references auth.users,
+  content_version text not null,
+  scenario jsonb not null,            -- insider (owner|member), prior_warning
+  created_at timestamptz default now(),
+  last_activity_at timestamptz default now(),
+  closed_at timestamptz
+);
+
+create table invites (
+  code_hash text primary key,         -- sha256 ของโค้ด (ไม่เก็บโค้ดดิบ)
+  session_id uuid references sessions on delete cascade,
+  expires_at timestamptz not null,    -- +7 วัน
+  used_at timestamptz,
+  revoked_at timestamptz
+);
+
+create table session_members (
+  session_id uuid references sessions on delete cascade,
+  user_id uuid references auth.users,
+  role text check (role in ('owner','member')),
+  display_name text not null,         -- ชื่อเล่นเท่านั้น
+  appearance jsonb not null,
+  joined_at timestamptz default now(),
+  primary key (session_id, user_id)
+);
+
+create table answers (
+  session_id uuid references sessions on delete cascade,
+  user_id uuid references auth.users,
+  item_key text not null,             -- M01, w3_1, cs1 ...
+  payload jsonb not null,             -- { self?, perceived?, statement? }
+  revision int not null default 1,
+  submitted_at timestamptz default now(),
+  primary key (session_id, user_id, item_key)
+);
+
+create table consents (
+  session_id uuid references sessions on delete cascade,
+  user_id uuid references auth.users,
+  item_key text not null,
+  revision int not null,              -- ยินยอมต่อ revision (R7)
+  consented_at timestamptz default now(),
+  primary key (session_id, user_id, item_key)
+);
+
+create table story_events (           -- ตัวเลือกเนื้อเรื่องที่เปิดเผยระหว่างกันได้ (A-05)
+  session_id uuid references sessions on delete cascade,
+  user_id uuid references auth.users,
+  chapter_id text, choice_id text, option_id text,
+  created_at timestamptz default now()
+);
+```
+
+Access control (RLS) อยู่ใน [08](08-privacy-and-safety.md) §6.2 · Reflection, Interpretation และ Observed **ไม่ถูกส่งขึ้น Server** (เก็บเฉพาะในเครื่อง)
