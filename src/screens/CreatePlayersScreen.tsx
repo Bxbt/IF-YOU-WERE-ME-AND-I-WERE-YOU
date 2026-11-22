@@ -3,7 +3,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Check, UserPlus } from 'lucide-react';
 import { ui } from '../content/th/ui';
 import { PlayerForm, emptyPlayerInput, randomPreset } from '../components/PlayerForm';
-import { createPlayer, createSoloJourney, createTogetherJourney, type PlayerInput } from '../store/actions';
+import {
+  createPlayer,
+  createSoloJourney,
+  createTogetherJourney,
+  imaginedWithThoughts,
+  linkImaginedToReal,
+  type PlayerInput,
+} from '../store/actions';
 import { useGame } from '../store/game';
 import { PixelButton } from '../components/PixelButton';
 import { SpriteView } from '../scene/CharacterCanvas';
@@ -118,12 +125,41 @@ export function CreatePlayersScreen() {
     chooseSelf(id, v);
   }
 
-  function finish(partnerId: string) {
+  // Together: players who played alone before can carry over what they thought about their
+  // imagined partner (docs/05 §4.3). One question per player who has such thoughts.
+  const [linkQueue, setLinkQueue] = useState<{ owner: string; partner: string }[] | null>(null);
+
+  function done(partnerId: string) {
     if (!self) return;
     if (together) createTogetherJourney(self.id, partnerId);
     else createSoloJourney(self.id, partnerId);
     useGame.getState().flush();
     navigate('/profile?created=1', { replace: true });
+  }
+
+  function finish(partnerId: string) {
+    if (!self) return;
+    if (together) {
+      const save = useGame.getState().save;
+      const queue = [
+        { owner: self.id, partner: partnerId },
+        { owner: partnerId, partner: self.id },
+      ].filter((x) => imaginedWithThoughts(save, x.owner).length > 0);
+      if (queue.length > 0) {
+        setLinkQueue(queue);
+        setPartnerId(partnerId);
+        return;
+      }
+    }
+    done(partnerId);
+  }
+  const [partnerIdState, setPartnerId] = useState<string | null>(null);
+
+  function nextLink(link?: { owner: string; imagined: string; real: string }) {
+    if (link) useGame.getState().update((s) => linkImaginedToReal(s, link.owner, link.imagined, link.real));
+    const rest = (linkQueue ?? []).slice(1);
+    if (rest.length > 0) setLinkQueue(rest);
+    else if (partnerIdState) done(partnerIdState);
   }
 
   const back = (
@@ -136,7 +172,30 @@ export function CreatePlayersScreen() {
   );
 
   let body: React.ReactNode;
-  if (pickingSelf) {
+  const link = linkQueue?.[0];
+  if (link) {
+    const save = useGame.getState().save;
+    const ownerName = save.players[link.owner]?.nickname ?? '';
+    const partnerName = save.players[link.partner]?.nickname ?? '';
+    body = (
+      <section className="panel flex flex-col gap-3" aria-labelledby="link-h" data-testid="link-imagined">
+        <h1 id="link-h" className="m-0 text-xl font-semibold">
+          {ui.player.linkHeading(ownerName, partnerName)}
+        </h1>
+        <p className="m-0 text-sm text-lavender">{ui.player.linkBody(ownerName, partnerName)}</p>
+        <div className="flex flex-wrap gap-2">
+          {imaginedWithThoughts(save, link.owner).map((p) => (
+            <PixelButton key={p.id} onClick={() => nextLink({ owner: link.owner, imagined: p.id, real: link.partner })}>
+              {ui.player.linkUse(p.nickname)}
+            </PixelButton>
+          ))}
+          <PixelButton variant="ghost" onClick={() => nextLink()}>
+            {ui.player.linkNo}
+          </PixelButton>
+        </div>
+      </section>
+    );
+  } else if (pickingSelf) {
     body = (
       <PlayerPicker
         heading={together ? ui.player.pickAHeading : ui.player.pickSelfHeading}

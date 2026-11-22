@@ -209,3 +209,35 @@ export function saveDraft(ownerId: string, key: string, text: string) {
     return { ...s, drafts };
   });
 }
+
+/**
+ * "เคยเล่นคนเดียวไว้ แล้วคู่ตัวจริงมาเล่นด้วย" (docs/05 §4.3, audit M-1): copy what `ownerId` thought
+ * about the imagined partner to the real partner. The original stays; answers already given about
+ * the real partner are kept (only missing questions are copied). Nothing is shown to the partner —
+ * perceived answers stay private until revealed.
+ */
+export function linkImaginedToReal(save: SaveRoot, ownerId: string, imaginedId: string, realId: string): SaveRoot {
+  const from = save.profiles[`${ownerId}:perceived:${imaginedId}`];
+  if (!from || Object.keys(from.answers).length === 0) return save;
+  const key = `${ownerId}:perceived:${realId}`;
+  const existing = save.profiles[key];
+  const t = nowIso();
+  const answers = { ...Object.fromEntries(Object.entries(from.answers).map(([q, a]) => [q, { ...a, selected: [...a.selected] }])), ...(existing?.answers ?? {}) };
+  return {
+    ...save,
+    profiles: {
+      ...save.profiles,
+      [key]: { key, ownerId, aboutId: realId, answers, updatedAt: t },
+    },
+  };
+}
+
+/** Imagined partners this player created and has thoughts about (candidates for linking). */
+export function imaginedWithThoughts(save: SaveRoot, ownerId: string): Player[] {
+  return Object.values(save.players).filter(
+    (p) =>
+      p.kind === 'imagined' &&
+      p.createdBy === ownerId &&
+      Object.keys(save.profiles[`${ownerId}:perceived:${p.id}`]?.answers ?? {}).length > 0,
+  );
+}
