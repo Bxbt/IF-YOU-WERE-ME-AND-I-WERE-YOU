@@ -21,9 +21,12 @@
 | Mood ตาม Arc | Ch1 อุ่น (ส้ม/ครีม) → Ch2 เย็น-มืด (indigo + ส้มไฟฉุกเฉิน) → Ch3 ขาวเย็น → Ch4 นุ่ม (lavender/ครีม) → Ch5 navy + แสงอุ่นเล็ก ๆ |
 | ห้าม | ข้อความภาษาใด ๆ ในภาพที่มีความหมายต่อ UX (ป้ายในโลกเกมใช้ SystemCard แทน) · โลโก้แบรนด์จริง · ตัวละคร/ฉาก/UI ที่คล้ายเกมใดเกมหนึ่งโดยเจาะจง · นีออนจัด · สไตล์การ์ตูนเด็ก |
 
-### 1.2 MVP Strategy: SVG/CSS Generated Assets (Q-13)
+### 1.2 MVP Strategy: Code-generated Assets (Q-13, audit H-5)
 
-- Background และ Sprite ใน MVP สร้างจาก **ข้อมูลพิกเซลในโค้ด** (Array ของ palette index) แล้ว render เป็น SVG `<rect>` แบบ `shape-rendering="crispEdges"` หรือวาดลง `<canvas>` ครั้งเดียวแล้ว cache เป็น `ImageBitmap`
+- **Background:** วาดด้วย **คำสั่งวาดพื้นฐานบน `<canvas>` ขนาด 320×180** (fillRect ระดับพิกเซล, แถบสีไล่ระดับแบบ dithering, tile 16×16 ที่เก็บเป็น string สั้น ๆ เช่น `"0011/0122/…"` อ้าง palette index) วาดครั้งเดียวต่อฉากแล้ว cache เป็น `ImageBitmap`/offscreen canvas · แสดงผลด้วย CSS `image-rendering: pixelated`
+- **ห้าม** render background เป็น SVG `<rect>` ทีละพิกเซล (57,600 node/ฉาก ช้าเกินบนมือถือ) และห้ามเก็บ background เป็น Array พิกเซลเต็มขนาด (บวม bundle)
+- **Sprite เล็ก** (ตัวละคร 32×48, Portrait 64×64, ไอคอน) เก็บเป็นข้อมูลพิกเซลแบบ string ต่อแถวได้ แล้ววาดลง canvas พร้อม palette swap
+- ต้นแบบ 1 ฉาก (`bg_elevator_emergency`) + ตัวละคร 1 ตัว ใน M3 ให้เจ้าของดูก่อนทำที่เหลือ
 - เอฟเฟกต์ (ฝน ดาว ไฟกระพริบ หมอกร้อน) ทำด้วย CSS/Canvas ไม่ใช้ภาพ
 - **Asset Interface คงที่:** ทุก Asset อ้างผ่าน key (เช่น `bg_elevator_interior`) จาก `assetRegistry` — เปลี่ยนเป็น PNG ภายหลังได้โดยไม่แก้โค้ดเกม (แก้แค่ registry)
 - ตัวละคร compose จาก layer: `body(skin)` → `outfit(color)` → `hair(style,color)` → `accessory` → `expression` (ทับเฉพาะใบหน้า)
@@ -74,13 +77,15 @@ PNG sprite sheet + JSON atlas (รูปแบบ TexturePacker/Aseprite JSON) �
 | stand_side_by_side | ใช้ idle ×2 | — | — | — | P0 |
 | switch_seats (ch4) | ใช้ walk + sit | — | — | — | P0 |
 
-Layer ที่ต้องทำต่อเฟรม: body×6 สีผิว (palette swap), outfit×6 แบบ (สีเป็น palette swap 8 สี), hair×8 ทรง (สี palette swap 8 สี), accessory×2
+Layer ที่ต้องทำต่อเฟรม (MVP, audit H-6): body ×1 แบบ (สีผิว 6 = palette swap) · outfit ×3 แบบ (สี 8 = palette swap) · hair ×4 ทรง (สี 8 = palette swap) · accessory ×1 (แว่น) · ทรงผม/เสื้อเพิ่มเติม และหมวก = P1
+
+**MVP ตัดออก:** `reach_out` (P1) · `hug_pair` ทำเป็น 1 เฟรม · `walk` ใช้ 4 เฟรมเฉพาะทิศขวา แล้ว flip แนวนอนสำหรับทิศซ้าย
 
 ### 3.2 Portraits (Dialogue)
 
 | รายการ | ขนาด | จำนวน | โปร่งใส | Priority |
 |---|---|---|---|---|
-| Portrait ต่อ Appearance | 64×64 | 8 สีหน้า: neutral, happy, sad, worried, angry, scared, relieved, thinking | ✓ | P0 |
+| Portrait ต่อ Appearance | 64×64 | **MVP 5 สีหน้า:** neutral, happy, sad, worried, relieved · P1: angry, scared, thinking (ระหว่างนี้ map angry→worried, scared→worried, thinking→neutral) | ✓ | P0 (5) / P1 (3) |
 
 Portrait ใช้ layer เดียวกับ Sprite (สร้างในขนาดใหญ่ขึ้น) · สีหน้า "angry" ต้องไม่ดุร้าย — คิ้วขมวด ปากตรง พอ
 
@@ -185,6 +190,6 @@ art-source/                # (Phase 2+) ไฟล์ต้นฉบับ Asepri
 
 | Priority | ความหมาย | จำนวนโดยประมาณ |
 |---|---|---|
-| P0 | จำเป็นต่อการเล่น MVP จบได้ | 11 backgrounds, character layers ครบ, portraits 8 สีหน้า, UI หลัก, ฟอนต์, rain/stars |
+| P0 | จำเป็นต่อการเล่น MVP จบได้ | 11 backgrounds, character layers ครบ, portraits 5 สีหน้า, UI หลัก, ฟอนต์, rain/stars |
 | P1 | ทำให้ MVP สมบูรณ์ขึ้น | NPC, เสียงบรรยากาศ, การ์ดอารมณ์, stairwell, exterior |
 | P2 | Phase 2+ | เพลงจบ, SFX, PWA icons, Memory backgrounds |

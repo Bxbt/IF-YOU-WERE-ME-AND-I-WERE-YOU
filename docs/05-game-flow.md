@@ -10,23 +10,23 @@
 | ID | หน้าจอ | Route (hash) | Phase |
 |---|---|---|---|
 | S1 | Title Screen | `#/` | MVP |
-| S1b | Journey List | `#/journeys` | MVP |
+| S1b | Journey List | `#/journeys` | Phase 2 (MVP มี Journey ที่ใช้งานได้ทีละ 1 อัน) |
 | S1a | Safety Intro | `#/intro` | MVP |
 | S2 | Mode Selection | `#/mode` | MVP (Together/Remote แสดงเป็น "เร็ว ๆ นี้" จนกว่าจะถึง Phase) |
 | S3 | Character Creation | `#/players` | MVP |
 | S4 | Personality Setup | `#/profile/:playerId/:layer` | MVP |
-| S5 | Chapter Selection | `#/chapters` | MVP |
-| S5a | Scenario Setup | `#/scenario` | MVP |
-| S6 | Narrative Gameplay | `#/play/:chapterId` | MVP |
-| S7 | Perspective Mirror | `#/mirror/:questionId` (ภายใน Ch3/Ch4 ใช้เป็น overlay) | MVP |
-| S8 | Personality Comparison | `#/compare` | MVP |
-| S9 | Reflection Report | `#/report/:playerId` | MVP |
+| S5 | Chapter Selection | `#/j/:journeyId/chapters` | MVP |
+| S5a | Scenario Setup | `#/j/:journeyId/scenario` | MVP |
+| S6 | Narrative Gameplay | `#/j/:journeyId/play/:chapterId` | MVP |
+| S7 | Perspective Mirror | `#/j/:journeyId/mirror/:questionId` (ภายใน Ch3/Ch4 ใช้เป็น overlay) | MVP |
+| S8 | Personality Comparison | `#/j/:journeyId/compare` | MVP |
+| S9 | Reflection Report | `#/j/:journeyId/report/:playerId` | MVP |
 | S10 | Settings & Privacy | `#/settings` | MVP |
 | S11 | About & Safety Resources | `#/about` | MVP |
 | S12 | Handoff Screen | overlay | Phase 2 |
 | S13 | PIN Gate | overlay | Phase 2 |
 | S14 | Pause Menu | overlay | MVP |
-| S15 | Ending | `#/ending` | MVP |
+| S15 | Ending | `#/j/:journeyId/ending` | MVP |
 | S16 | Memory Scenes | `#/memories` | Phase 2 |
 | S17 | Remote Lobby | `#/remote` | Phase 3 |
 | S18 | Data Recovery | `#/recovery` | MVP |
@@ -46,7 +46,7 @@
 | G5 Skip scene | จาก S14 → "ข้ามฉากนี้" → ไปฉากถัดไปตามลำดับ Flag ที่ไม่ได้ตั้งใช้ fallback ([02](02-story-script.md) ภาคผนวก B) |
 | G6 Skip chapter | จาก S14 หรือ S5 → "ข้ามบทนี้" → สถานะ `skipped` → บทถัดไปเปิดได้ |
 | G7 Skip question | ทุกคำถามมี Meta `ข้าม` |
-| G8 Chapter access | ทุกบทเปิดเล่นได้ตั้งแต่ต้น แต่ S5 แนะนำลำดับ 1→5 · ถ้ายังไม่มี Scenario (ข้าม Ch1) → เข้าบทใดก็ตามต้องผ่าน S5a ก่อน |
+| G8 Chapter access | ทุกบทเปิดเล่นได้ตั้งแต่ต้น แต่ S5 แนะนำลำดับ 1→5 · ถ้ายังไม่มี Scenario (ข้าม Ch1) → เข้า Ch1–Ch3 ต้องผ่าน S5a ก่อน (Ch4, Ch5 ไม่ใช้ Scenario จึงไม่ต้อง) |
 | G9 Storage unavailable | ถ้า localStorage เขียนไม่ได้ → แบนเนอร์ถาวร "ตอนนี้ความคืบหน้าจะไม่ถูกบันทึก (โหมดส่วนตัวของเบราว์เซอร์?) — ส่งออกไฟล์ก่อนปิดหน้า" · เกมยังเล่นได้ด้วย state ในหน่วยความจำ |
 | G10 Corrupt save | อ่าน save ไม่ได้/Schema ไม่ผ่าน → S18 (ห้ามลบอัตโนมัติ) |
 | G11 Exit | ออกจากเกมกลางบท → ไม่ถามยืนยัน (เพราะ Autosave) ยกเว้นกำลังพิมพ์ข้อความอิสระที่ยังไม่บันทึก |
@@ -62,7 +62,7 @@ flowchart TD
     S1[S1 Title] -->|เริ่มการเดินทางใหม่| S1a[S1a Safety Intro]
     S1 -->|เล่นต่อ| CHK{มี Journey?}
     CHK -->|1 Journey| RES[กลับไปจุดล่าสุด]
-    CHK -->|หลาย Journey| S1b[S1b Journey List] --> RES
+    CHK -->|มี Journey ที่จบแล้วด้วย - Phase 2| S1b[S1b Journey List] --> RES
     CHK -->|ไม่มี| DIS[ปุ่มปิดใช้งาน]
     S1 -->|สร้างตัวตนของฉัน| S3
     S1 -->|เกี่ยวกับเกม| S11[S11 About]
@@ -145,7 +145,7 @@ flowchart TD
 2. ถ้า {next} ตั้ง PIN → S13 ก่อนเข้า
 3. ตอนออกจากส่วนลับ → S12 อีกครั้ง: "เสร็จแล้ว ส่งเครื่องคืนให้ {other}" ก่อนแสดงหน้าถัดไป
 4. ไม่มีปุ่ม "ย้อนกลับ" ที่พากลับไปยังหน้าคำตอบของอีกคน
-5. ประวัติเบราว์เซอร์ (Back) ข้ามหน้าคำตอบส่วนตัว — ใช้ `history.replaceState` สำหรับหน้าลับ
+5. ประวัติเบราว์เซอร์ (Back) ข้ามหน้าคำตอบส่วนตัว — ใช้ `navigate(path, { replace: true })` ของ React Router สำหรับหน้าลับ (ไม่เรียก `history.replaceState` เอง)
 
 ### 4.3 เงื่อนไขพิเศษ
 
@@ -155,10 +155,19 @@ flowchart TD
 | คนหนึ่งต้องการหยุดทั้งเกม | Pause → "พักไว้ก่อน" → กลับ S1 · ข้อมูลทั้งสองคนบันทึก |
 | คนหนึ่งลืม PIN | S13 → "ลืม PIN" → ลบ PIN ได้โดยต้องยืนยันว่าจะ **ลบคำตอบที่ยังไม่ Reveal ของผู้เล่นนั้นทั้งหมด** (ป้องกันการใช้ "ลืม PIN" เพื่อแอบดู) หรือยกเลิก ดู [08](08-privacy-and-safety.md) §4 |
 | ต้องการเปลี่ยนเป็นเล่นคนเดียว | ไม่รองรับการแปลงโหมด Journey · สร้าง Journey ใหม่และใช้ผู้เล่นเดิมได้ |
+| เคยเล่นคนเดียวไว้ แล้วคู่ตัวจริงมาเล่นด้วย | สร้าง Together Journey ใหม่ → ระบบถามว่า "{B} คือ {imagined} ที่คุณเคยสร้างไว้ไหม" → ถ้าใช่ คัดลอก Perceived profile (`aboutId` imagined → B) — ของเดิมไม่ถูกลบ และยังไม่ถูกแสดงให้ B จนกว่าจะ Reveal (audit M-1) |
+| ออกกลางลำดับส่วนตัว (A ตอบแล้ว B ยัง) | `pendingPrivateSteps` บันทึกว่าใครยังต้องตอบ → กลับมาแล้วเริ่มที่ Handoff ไปยังคนที่ยังไม่ตอบ (audit M-2) |
 
 ---
 
 ## 5. Play Remotely (Phase 3)
+
+### 5.0 กฎร่วมของ Remote (audit H-1)
+
+- **เนื้อเรื่อง Ch1–Ch3 เล่นแบบ Solo บนเครื่องตัวเอง** (เลือกทุกบทบาท บทบาทของคู่มี Imagined Banner) — ไม่มีการรอตาของอีกฝ่าย จึงไม่มี dead end เมื่ออีกฝ่ายไม่เข้ามา
+- สิ่งที่แชร์ข้ามเครื่องมีแค่: Mirror (M01–M07, W3), Profile Q01–Q36 ที่เลือกเปิด, Ch5 Statements ที่เลือกแชร์ — ทุกอย่างผ่าน Reveal
+- ถ้าอีกฝ่ายไม่เคยตอบ ผู้เล่นยังเล่นจบได้ และเห็นการ์ด "ยังไม่รู้" แบบ Play Alone
+- แก้คำตอบหลังส่งแล้ว: 3A ต้องส่ง Sealed file ใหม่ (อีกฝ่ายเห็นค่าเดิมจนกว่าจะได้ไฟล์ใหม่ — แสดงคำเตือนนี้ตอนแก้) · 3B ใช้ R7
 
 ### 5.1 Phase 3A — Sealed Exchange (ไม่มี Backend)
 
@@ -169,7 +178,7 @@ sequenceDiagram
     Note over A: A สร้าง Remote Journey<br/>ส่งออก "Invitation file" (ไม่มีคำตอบ)
     A->>B: ส่งไฟล์ผ่านช่องทางที่ทั้งคู่เลือก (แชต/อีเมล)
     Note over B: B นำเข้า → สร้างโปรไฟล์ → เล่นบทที่ตกลงกัน
-    Note over A,B: ทั้งคู่เล่นเนื้อเรื่องแยกกัน (ตัวเลือกเนื้อเรื่อง = ของใครของมัน)
+    Note over A,B: ทั้งคู่เล่นเนื้อเรื่องแบบ Solo บนเครื่องตัวเอง (§5.0)
     Note over A: A ตอบ Mirror → ส่งออก "Sealed file"<br/>(คำตอบเข้ารหัส AES-GCM ด้วยกุญแจสุ่มที่เก็บในเครื่อง A)
     Note over B: B ตอบ Mirror → ส่งออก Sealed file
     A->>B: Sealed file ของ A

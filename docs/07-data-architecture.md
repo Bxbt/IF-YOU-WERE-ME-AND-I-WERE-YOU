@@ -11,19 +11,21 @@
 SaveRoot (localStorage)
 ├── schemaVersion
 ├── settings: Settings
-├── players: Record<PlayerId, Player>
-├── profiles: Record<ProfileKey, PlayerProfile | PerceivedPartnerProfile>
-├── journeys: Record<JourneyId, GameSession>
+├── players: Record<PlayerId, Player>                       (global)
+├── profiles: Record<ProfileKey, PlayerProfile | PerceivedPartnerProfile>   (global)
+├── journeys: Record<JourneyId, GameSession>                (ทุกอย่างข้างใต้ = ต่อ Journey)
 │   ├── scenario
 │   ├── chapterProgress: Record<ChapterId, ChapterProgress>
 │   ├── storyAnswers (Reflection / Interpretation / Statements)
 │   ├── mirrorItems: Record<MirrorKey, SharedAnswer>
-│   ├── observed: ObservedSignal[]
+│   ├── observed: ObservedSignal[]   (Phase 2 — MVP ว่างเสมอ)
 │   └── nextConversation: NextConversationItem[]
 ├── reports: Record<ReportId, ReflectionReport>   (snapshot เฉพาะเมื่อส่งออก)
 ├── memories: Record<MemoryId, MemoryScene>       (Phase 2)
 └── drafts: Record<DraftKey, Draft>
 ```
+
+ขอบเขต Global vs Journey ของข้อมูลแต่ละชนิดกำหนดใน [04](04-personality-system.md) §2.1 · MVP มี Journey สถานะ `active` ได้ทีละ 1 อัน (อันเก่าเป็น `completed`/`archived`)
 
 Content (บท คำถาม) **ไม่อยู่ใน Save** — อยู่ในไฟล์ Content ที่ build มากับแอป (§5) Save อ้างอิงด้วย id เท่านั้น
 
@@ -66,13 +68,13 @@ interface Player {
 }
 
 interface Appearance {
-  preset: 'p1'|'p2'|'p3'|'p4'|'p5'|'p6';
-  skin: 0|1|2|3|4|5;
-  hairStyle: 0|1|2|3|4|5|6|7;
-  hairColor: 0|1|2|3|4|5|6|7;
-  outfit: 0|1|2|3|4|5;
-  outfitColor: 0|1|2|3|4|5|6|7;
-  accessory: 'none'|'glasses'|'hat';
+  preset: 'p1'|'p2'|'p3'|'p4';        // MVP 4 preset (audit H-6) — เพิ่มได้แบบ MINOR
+  skin: 0|1|2|3|4|5;                   // palette swap
+  hairStyle: 0|1|2|3;                  // MVP 4 ทรง
+  hairColor: 0|1|2|3|4|5|6|7;          // palette swap
+  outfit: 0|1|2;                       // MVP 3 แบบ
+  outfitColor: 0|1|2|3|4|5|6|7;        // palette swap
+  accessory: 'none'|'glasses';         // hat = P1
 }
 ```
 
@@ -190,7 +192,8 @@ interface QuestionContent {
   id: QuestionId;
   dimension?: DimensionId;
   self: string; perceived?: string;
-  options: { id: OptionId; text: string }[];
+  options: { id: OptionId; text: string; exclusive?: boolean }[];   // exclusive = เลือกแล้วล้างข้ออื่น ([04] §3.2)
+  context?: 'self' | 'role';            // 'role' = ตอบในบทบาทสมมติ (W3) ไม่นับใน Profile/Comparison
   maxSelect: number;
   freeText: boolean;
   interpretation?: string;              // สำหรับระบบ ไม่แสดงตรง
@@ -233,34 +236,33 @@ interface ChapterProgress {
   choiceLog: { choiceId: string; optionId: string; byPlayerId: PlayerId; asRole: Role | 'self'; at: ISODate }[];
   skippedScenes: string[];
   revealMode?: 'per_question' | 'end_of_chapter';   // ch4
+  pendingPrivateSteps?: { itemId: string; playerIds: PlayerId[] }[];  // Phase 2: ใครยังต้องตอบส่วนลับ (resume กลาง Handoff)
   startedAt?: ISODate;
   completedAt?: ISODate;
   playCount: number;
 }
 
-type StoryAnswerKey = `${PlayerId}:${string}`;     // "pl_x:r1_1", "pl_x:ic_out_blame", "pl_x:cs3"
+type StoryAnswerKey = `${PlayerId}:${string}`;     // "pl_x:r1_1", "pl_x:ic_out_blame"
 
 interface StoryAnswer {
   key: StoryAnswerKey;
   playerId: PlayerId;
-  itemId: string;                       // r1_1 | ic_<speaker>_<flag> | cs1–cs5 | rewrite_*
-  kind: 'reflection' | 'interpretation' | 'statement' | 'emotion_card';
+  itemId: string;                       // r1_1 | ic_<speaker>_<flag> | rewrite_* | ec_<chapter>
+  kind: 'reflection' | 'interpretation' | 'emotion_card';   // Statements ย้ายไป SharedAnswer (§7)
   layer: Layer;
   selected: OptionId[];
   interpretation?: Record<string, 'yes' | 'no' | 'unsure'>;   // Interpretation Check
   meta: Meta;
   freeText?: string;
-  shareIntent: boolean;                 // Ch5: ผู้เล่นเลือกแชร์ · อื่น ๆ false
   updatedAt: ISODate;
 }
 
-interface ObservedSignal {
+interface ObservedSignal {             // Phase 2 — MVP ไม่สร้าง
   dimension: DimensionId;
   signal: string;
   sourceChoiceId: string;               // unique ต่อ (playerId, sourceChoiceId)
   playerId: PlayerId;
-  layer: Layer;
-  at: ISODate;
+  at: ISODate;                          // เก็บเฉพาะเมื่อเล่นบทบาทของตัวเอง (ไม่มี layer perceived)
 }
 
 interface NextConversationItem {
@@ -279,15 +281,22 @@ interface NextConversationItem {
 ## 7. Shared Answer (Mirror Item)
 
 ```ts
-type MirrorKey = string;                // questionId เช่น "M01", "w3_1"
+type MirrorKey = string;                // "M01", "w3_1", "cs1", "Q13"
 
 interface SharedAnswer {
   key: MirrorKey;
   questionId: QuestionId;
+  kind: 'mirror' | 'statement' | 'profile';
+  // mirror    = M01–M07, w3_* (คำตอบเก็บใน entries)
+  // statement = cs1–cs5 (ข้อความเก็บใน entries[].statement, เปิดตาม shareIntent — [04] §6.3.1)
+  // profile   = Q01–Q36 ใน Together/Remote: เก็บแค่ consent, คำตอบอ่านจาก Profile ตอนแสดง ([04] §6.3.0)
+  context: 'self' | 'role';             // w3_* = 'role'
   state: 'open' | 'partial' | 'awaiting_consent' | 'revealed' | 'skipped';
   entries: Record<PlayerId, {
     self?: PersonalityAnswer;
     perceived?: PersonalityAnswer;
+    statement?: { text: string; starterId?: string; meta: Meta };
+    shareIntent?: boolean;              // statement เท่านั้น ค่าเริ่มต้น false
     submittedAt?: ISODate;
     consent: boolean;
     consentAt?: ISODate;
@@ -363,7 +372,8 @@ interface Settings {
   lastJourneyId?: JourneyId;
 }
 
-interface Draft { key: string; text: string; updatedAt: ISODate }   // ลบเมื่อบันทึกคำตอบ
+interface Draft { key: `${PlayerId}:${string}`; playerId: PlayerId; text: string; updatedAt: ISODate }
+// key ต้องขึ้นต้นด้วย playerId · ลบเมื่อบันทึกคำตอบ · ลบ drafts ของผู้เล่นเมื่อ Handoff ออกจากผู้เล่นนั้น หรือเมื่อลบผู้เล่น
 
 interface MemoryScene {                 // Phase 2
   id: string; ownerId: PlayerId; journeyId?: JourneyId;
@@ -386,7 +396,7 @@ interface MemoryScene {                 // Phase 2
 | Key | เนื้อหา | หมายเหตุ |
 |---|---|---|
 | `iywm:save` | `SaveRoot` ทั้งก้อน (JSON) | เขียนผ่าน debounce 300ms + เขียนทันทีเมื่อ `visibilitychange=hidden` |
-| `iywm:save:backup` | สำเนาล่าสุดก่อน Migration หรือก่อน Import | เก็บ 1 ชุด |
+| `iywm:save:backup` | สำเนาล่าสุดก่อน Migration หรือก่อน Import | เก็บ 1 ชุด · **ลบทันทีเมื่อ Import/Migration สำเร็จ** และ **ลบทุกครั้งที่มีการลบข้อมูลใด ๆ** (ลบคำตอบ, Journey, ผู้เล่น, ลืม PIN, ลบทั้งหมด) เพื่อไม่ให้ข้อมูลที่ลบแล้วค้างอยู่ |
 | `iywm:probe` | ใช้ทดสอบว่าเขียนได้ | ลบทันที |
 
 - ขนาดคาดการณ์ต่อ Journey < 100 KB (เป้า SaveRoot < 1 MB; ขีดจำกัด localStorage ทั่วไป ~5 MB)
@@ -416,8 +426,13 @@ interface MemoryScene {                 // Phase 2
 | `scope` | เนื้อหา | ใช้เมื่อ |
 |---|---|---|
 | `full` | SaveRoot ทั้งหมด (ไม่รวม `pin` hash — ต้องตั้งใหม่หลัง Import) | สำรองข้อมูล / ย้ายเครื่อง |
-| `journey` | Journey 1 อัน + Player + Profile ที่เกี่ยวข้อง | ย้าย Journey |
+| `journey` (Phase 2) | Journey 1 อัน + Player + Profile ที่เกี่ยวข้อง | ย้าย Journey |
 | `report` | ReportItem ที่ผู้เล่นเลือกเท่านั้น (ไม่มี id ภายใน) | แชร์ให้คู่/เก็บไว้อ่าน |
+
+**กฎความเป็นส่วนตัวของ Export (audit H-2):**
+- MVP มีผู้เล่นจริงคนเดียว จึงส่งออก `full` ได้โดยไม่มีเงื่อนไข
+- Together (Phase 2): `full` และ `journey` ที่มีข้อมูลของผู้เล่นอื่นซึ่งยังไม่ Reveal ต้องผ่าน PIN ของ **ทุก** ผู้เล่นที่ตั้ง PIN ไว้ · ถ้าไม่ผ่าน ให้ส่งออกได้เฉพาะข้อมูลของผู้เล่นที่ใช้งานอยู่ + ข้อมูลที่ Revealed แล้ว
+- `report`: รายการ `source = partner_revealed` **ไม่ถูกเลือกเป็นค่าเริ่มต้น** และเมื่อเลือกต้องมีป้าย "คำตอบของ {other}" ในไฟล์
 | `invitation` (3A) | Journey id, ชื่อและ Avatar ของผู้เชิญ, Scenario, Content version — **ไม่มีคำตอบ** | เชิญเล่นแบบ Sealed |
 | `sealed` (3A) | `{ questionIds, ciphertext, iv }` | ส่งคำตอบที่ปิดผนึก |
 
@@ -426,13 +441,15 @@ interface MemoryScene {                 // Phase 2
 ### 11.2 Import Rules
 
 1. ขนาดไฟล์ ≤ 5 MB · เป็น JSON ที่ parse ได้ · `format === "iywm-export"`
-2. ตรวจ `checksum` · ไม่ตรง → ปฏิเสธ "ไฟล์อาจเสียหายหรือถูกแก้ไข"
+2. ตรวจ `checksum` · ไม่ตรง → ปฏิเสธ "ไฟล์อาจเสียหาย" — checksum (SHA-256 ไม่มีกุญแจลับ) **ตรวจได้แค่ความเสียหายโดยไม่ตั้งใจ ไม่ได้กันการแก้ไขไฟล์** ใครก็คำนวณใหม่ได้ ห้ามอ้างว่าเป็นการป้องกันการปลอมแปลง
 3. `schemaVersion` MAJOR > ของแอป → ปฏิเสธ "ไฟล์นี้มาจากเวอร์ชันใหม่กว่า กรุณาอัปเดต" · MAJOR ต่ำกว่า → Migration
 4. ตรวจ Zod schema ทั้งก้อน · ข้อความทั้งหมดเป็น plain text (ไม่ render HTML)
 5. แสดง **Import Preview**: จำนวนผู้เล่น/Journey, ความขัดแย้งของ id, ข้อมูลที่จะถูกตัด (option ที่ไม่รู้จัก)
 6. ความขัดแย้งของ id → ให้เลือก: แทนที่ / เก็บเป็นสำเนา (สร้าง id ใหม่) / ยกเลิก
 7. สำรอง `iywm:save:backup` ก่อนเขียน · ล้มเหลวกลางทาง → คืนค่าจาก backup
 8. `scope=full` แทนที่ทั้งหมด ต้องยืนยันแบบ destructive
+9. ไฟล์ภายนอกไม่น่าเชื่อถือ: `SharedAnswer.state = revealed` ที่มาจากไฟล์ซึ่งมีผู้เล่นมากกว่า 1 คน ถูกรีเซ็ตเป็น `awaiting_consent` และ consent ถูกล้าง (กันการแก้ไฟล์เพื่อเปิดคำตอบเอง) — ยกเว้นผู้เล่นทุกคนผ่าน PIN ตอน Import
+10. **MVP รองรับเฉพาะ `scope=full`** (แทนที่ทั้งหมด) · การรวมข้อมูล/แก้ id ชน (ข้อ 6) เป็น Phase 2
 
 ### 11.3 Text Export (.txt)
 
@@ -485,6 +502,9 @@ create table session_members (
   role text check (role in ('owner','member')),
   display_name text not null,         -- ชื่อเล่นเท่านั้น
   appearance jsonb not null,
+  sentence_ending text not null default '',
+  address_style text not null default 'เธอ',
+  -- เครื่องปลายทางสร้าง Player{kind:'real', remoteUserId:user_id} จากแถวนี้ (audit M-12)
   joined_at timestamptz default now(),
   primary key (session_id, user_id)
 );
@@ -508,12 +528,7 @@ create table consents (
   primary key (session_id, user_id, item_key)
 );
 
-create table story_events (           -- ตัวเลือกเนื้อเรื่องที่เปิดเผยระหว่างกันได้ (A-05)
-  session_id uuid references sessions on delete cascade,
-  user_id uuid references auth.users,
-  chapter_id text, choice_id text, option_id text,
-  created_at timestamptz default now()
-);
 ```
+ไม่มีตาราง `story_events`: ใน Remote แต่ละคนเล่นเนื้อเรื่องบนเครื่องตัวเอง ([05](05-game-flow.md) §5, audit H-1)
 
 Access control (RLS) อยู่ใน [08](08-privacy-and-safety.md) §6.2 · Reflection, Interpretation และ Observed **ไม่ถูกส่งขึ้น Server** (เก็บเฉพาะในเครื่อง)

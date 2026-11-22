@@ -12,6 +12,7 @@
 | เอกสาร 00–12 | ✅ Draft v0.1 |
 | เจ้าของตอบคำถามที่บล็อก MVP | ไม่มีคำถามที่บล็อก MVP — ใช้ Assumptions ได้ ([00](00-project-overview.md) §6) |
 | เจ้าของตรวจบท [02](02-story-script.md) | ⏳ แนะนำให้ทำก่อน M3 (แก้ Content ไม่กระทบโค้ด) |
+| Pre-development audit | ✅ แก้ Critical/High ครบ ([reviews/pre-development-audit-2026-11-22.md](../reviews/pre-development-audit-2026-11-22.md)) |
 | Git repository | ✅ `main` → `github.com/Bxbt/IF-YOU-WERE-ME-AND-I-WERE-YOU` |
 
 ---
@@ -20,12 +21,12 @@
 
 | Milestone | งาน | Exit Criteria | ประเมิน |
 |---|---|---|---|
-| **M1 Foundation** | Vite + React + TS + Tailwind + Framer + Lucide · tokens.css · ฟอนต์ self-host · Router (hash) · Zustand store · Persistence adapter + Zod schema + Migration framework · S18 · CI (typecheck, lint, unit, build) | `npm run build` ผ่าน · TC-ERR-01/02/03 ผ่าน · CI เขียว | 3–4 วัน |
-| **M2 UI Shell** | Shared components ([06](06-ui-ux-specification.md) §2) · S1, S1a, S1b, S2, S10, S11, S14 · Error boundary · 404 | ทุกปุ่มบน S1/S2/S10 ทำงาน · TC-A11Y-01 สำหรับหน้าจอเหล่านี้ · TC-RWD-01 | 3–4 วัน |
+| **M1 Foundation** | Vite + React + TS + Tailwind + Framer + Lucide · tokens.css · ฟอนต์ self-host · Router (hash, routes มี journeyId) · Zustand store · Persistence (probe → parse → Zod → ตรวจ schemaVersion; รายการ migration ว่าง) · Zod schema ตาม [07](07-data-architecture.md) · Export/Import `full` · S18 · CI (typecheck, lint, unit, build) | `npm run build` ผ่าน · TC-ERR-01/02/03, TC-EXP-01–04, TC-DEL-04/07 ผ่าน · CI เขียว | 3–4 วัน |
+| **M2 UI Shell** | Shared components ([06](06-ui-ux-specification.md) §2) · S1, S1a, S2, S10, S11, S14 · Error boundary · 404 | ทุกปุ่มบน S1/S2/S10 ทำงาน · TC-A11Y-01 สำหรับหน้าจอเหล่านี้ · TC-RWD-01 | 3–4 วัน |
 | **M3 Characters & Profile** | Pixel character renderer (layers, palette swap) · AvatarPicker · S3 + Profile Hub · Content Q01–Q36 · S4 (Quick/Full, Edit mode) · Personality engine | TC-PROF-01–06 · TC-SKIP-01–05 | 4–5 วัน |
 | **M4 Dialogue Engine & Scene** | Content model · Dialogue interpreter · Conditions/Tokens/Flags · SceneCanvas · Effects (rain, stars, emergency light, haze) · Backgrounds P0 · S5, S5a, S6 · Autosave/Resume · Content lint | Ch1 เล่นจบได้ · TC-PLAY-04/06 · TC-RES-01–04 | 6–8 วัน |
 | **M5 Chapters 2–5** | Content ch2–ch5 · Part C Timeline · Interpretation Check · Safety notes · Solo Mirror (S7) · Ch5 statements · S15 Ending | TC-PLAY-01–10 · TC-REV-09 | 6–8 วัน |
-| **M6 Insight** | Observed engine · Comparison engine + S8 · Report engine + S9 · Next Conversation · Export TXT/JSON/PNG · Import + Preview | TC-SKIP-09–11 · TC-PROF-07/08 · TC-EXP-01–10 | 5–6 วัน |
+| **M6 Insight** | Comparison engine + S8 · Report engine + S9 · Next Conversation · Export TXT/PNG | TC-SKIP-09–14 · TC-EXP-06–10 | 5–6 วัน |
 | **M7 Polish & QA** | Responsive ทุกหน้าจอ · Reduced motion · Keyboard · Safety keyword card · Asset P1 (ถ้าทัน) · Lighthouse · Manual QA · Content review | MVP Acceptance Criteria ([11](11-testing-and-acceptance-criteria.md) §15) ครบ | 4–5 วัน |
 
 **รวม MVP ≈ 31–40 วันทำงาน**
@@ -45,10 +46,11 @@
 
 | Milestone | งาน | Exit Criteria | ประเมิน |
 |---|---|---|---|
-| **M8 Two Players** | Together mode ใน S2/S3 · Controller logic (Ch2 สลับ) · S12 Handoff · `history.replaceState` · Viewer-scoped selectors | TC-PLAY-11 · TC-PRIV-01/02/03/08 | 4–5 วัน |
+| **M8 Two Players** | Together mode ใน S2/S3 · Controller logic (Ch2 สลับ) · S12 Handoff · `navigate(…, { replace: true })` · Viewer-scoped selectors | TC-PLAY-11 · TC-PRIV-01/02/03/08 | 4–5 วัน |
 | **M9 PIN** | S13 · PBKDF2 · Lockout · Forgot PIN · ข้อความข้อจำกัด | TC-PRIV-04–07 | 2–3 วัน |
 | **M10 Reveal** | Reveal engine (R1–R7) · UI Waiting/Consent/Reveal ใน S7, Ch3, Ch4, Ch5 · Comparison (Together rules) | TC-REV-01–08, 10 · TC-PRIV-09 | 4–5 วัน |
 | **M11 Memory Scenes** | S16 · MemoryScene schema · Template conversion · Reveal สำหรับความทรงจำ | Test ใหม่ TC-MEM-* (เพิ่มใน 11 ก่อนเริ่ม) | 3–4 วัน |
+| **M11b Deferred from MVP** | Journey List (S1b) + Import แบบรวม · Observed patterns · เสียง · Link imagined → real | TC-RES-05, TC-EXP-05, TC-PROF-07/08 | 4–5 วัน |
 
 **รวม Phase 2 ≈ 13–17 วัน**
 

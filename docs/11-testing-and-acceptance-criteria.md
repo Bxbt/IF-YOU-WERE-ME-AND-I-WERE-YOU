@@ -14,7 +14,7 @@
 | Tablet | 768×1024 | WebKit, Chromium |
 | Desktop | 1280×800, 1920×1080 | Chromium, Firefox, WebKit |
 
-Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-complete.json`, `save-together-partial.json`, `save-corrupt.json`, `save-v0-legacy.json` (เมื่อมี Migration)
+Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-complete.json`, `save-together-partial.json` (Phase 2), `save-corrupt.json` · fixture ของ schema เก่าเพิ่มเมื่อมี migration แรก · **fixture ทุกไฟล์ใช้ชื่อสมมติ (เช่น "ผู้เล่น A") ห้ามใช้ชื่อหรือข้อมูลของคนจริง**
 
 ---
 
@@ -49,6 +49,9 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-SKIP-09 | MVP | E | ไม่ตอบ Personality + ข้าม Ch4 → S8 | Empty state + CTA 2 ปุ่มทำงาน |
 | TC-SKIP-10 | MVP | E | Journey ว่าง → S9 | แสดงโครง 4 ส่วนพร้อม CTA · ส่งออก TXT ได้ |
 | TC-SKIP-11 | MVP | U | `categorize()` ครบทุกกรณีใน [04](04-personality-system.md) §7.2 | ผลตรงตามตาราง (missing/skipped/prefer_not/depends/free-text-only/overlap/no overlap) |
+| TC-SKIP-12 | MVP | U/C | Q15 เลือก 2 ข้อ แล้วเลือก `q15_none` (exclusive) · จากนั้นเลือกข้ออื่น | ข้อเดิมถูกล้างเหลือ `q15_none` · เลือกข้ออื่นแล้ว `q15_none` ถูกล้าง |
+| TC-SKIP-13 | MVP | U | Comparison/Report ที่มีคำตอบ W3 (`context: role`) | W3 ไม่ปรากฏใน Comparison/Report/Profile |
+| TC-SKIP-14 | MVP | U | สอง Journey ที่ตอบ M01 ต่างกัน | Comparison ของแต่ละ Journey ใช้ M01 ของ Journey นั้น · Profile Q01–Q36 เป็นค่าเดียวกัน |
 
 ## 4. Resume Progress & Persistence
 
@@ -58,7 +61,9 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-RES-02 | MVP | E | ตอบ S4 ถึงข้อ 7 → ปิดแท็บ → เปิดใหม่ | กลับไปข้อที่ยังไม่ตอบข้อแรก · คำตอบ 1–6 อยู่ครบ |
 | TC-RES-03 | MVP | E | พิมพ์ข้อความอิสระ 3 วินาที → reload | ร่างข้อความกู้คืน |
 | TC-RES-04 | MVP | E | ไม่มี Save | "เล่นต่อ" disabled + tooltip |
-| TC-RES-05 | MVP | E | มี 3 Journey | "เล่นต่อ" → S1b แสดง 3 การ์ด ไม่มีเนื้อหาคำตอบ |
+| TC-RES-05 | P2 | E | มี 3 Journey | "เล่นต่อ" → S1b แสดง 3 การ์ด ไม่มีเนื้อหาคำตอบ |
+| TC-RES-09 | MVP | E | มี Journey `active` อยู่แล้ว → "เริ่มการเดินทางใหม่" | Dialog: เก็บอันเดิมเป็น archived (ส่งออกก่อนได้) หรือยกเลิก · ไม่มีข้อมูลหายโดยไม่ถาม |
+| TC-RES-10 | P2 | E | Together: A ตอบ Reflection → ปิดแท็บก่อน B ตอบ → เปิดใหม่ | เริ่มที่ Handoff ไป B (`pendingPrivateSteps`) · A ไม่ถูกถามซ้ำ |
 | TC-RES-06 | MVP | E | เปิด 2 แท็บ แก้ในแท็บ 1 | แท็บ 2 แสดง Dialog "เกมถูกเปิดในแท็บอื่น" และไม่เขียนทับ |
 | TC-RES-07 | MVP | E | เล่นซ้ำ Ch1 เลือก "เริ่มบทใหม่" | Flag ch1 ถูกแทนที่ · ObservedSignal จาก ch1 แทนที่ (ไม่ซ้ำ) |
 | TC-RES-08 | MVP | E | เปลี่ยน Scenario จาก S5 | ยืนยัน → Flag Ch1–Ch3 รีเซ็ต · Reflection/Mirror ยังอยู่ |
@@ -73,8 +78,8 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-PROF-04 | MVP | E | แก้คำตอบ Q13 หลังจบเกม → S8 | Comparison อัปเดตทันที · `revision` เพิ่ม |
 | TC-PROF-05 | MVP | E | ลบคำตอบข้อเดียว → Undo | คำตอบกลับมา |
 | TC-PROF-06 | MVP | E | เปลี่ยนรูปลักษณ์ | Sprite และ Portrait ในฉากอัปเดต |
-| TC-PROF-07 | MVP | E | การ์ด Observed → "ซ่อน" → Settings กู้คืน | การ์ดกลับมา |
-| TC-PROF-08 | MVP | U | Observed: สัญญาณ D09 2 ครั้ง | ไม่แสดงการ์ด · 3 ครั้งพร้อม signal ซ้ำ ≥2 → แสดง |
+| TC-PROF-07 | P2 | E | การ์ด Observed → "ซ่อน" → Settings กู้คืน | การ์ดกลับมา |
+| TC-PROF-08 | P2 | U | Observed: สัญญาณ D09 2 ครั้ง | ไม่แสดงการ์ด · 3 ครั้งพร้อม signal ซ้ำ ≥2 → แสดง |
 
 ## 6. Private Answers (Phase 2)
 
@@ -89,6 +94,9 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-PRIV-07 | P2 | M | หน้าตั้ง PIN | ข้อความ [08](08-privacy-and-safety.md) §4.3 แสดงคำต่อคำ |
 | TC-PRIV-08 | P2 | E | Reflection ของ A | ไม่มีทางแสดงให้ B เห็นในหน้าจอใด |
 | TC-PRIV-09 | P2 | E | `meta=prefer_not` แล้ว Reveal | อีกฝ่ายเห็น "{X} เลือกไม่ตอบข้อนี้" |
+| TC-PRIV-10 | P2 | E | B ส่งออก `full`/`journey` โดยไม่รู้ PIN ของ A | ไฟล์มีเฉพาะข้อมูลของ B + ข้อมูลที่ Revealed |
+| TC-PRIV-11 | P2 | E | A พิมพ์ข้อความอิสระค้างไว้ → Handoff → B เปิดคำถามเดียวกัน | ไม่มีร่างของ A แสดง |
+| TC-PRIV-12 | P2 | U | Report export ค่าเริ่มต้น | ไม่มีรายการ `partner_revealed` ถูกเลือก |
 
 ## 7. Mutual Reveal (Phase 2/3)
 
@@ -110,10 +118,11 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | ID | Phase | Type | ขั้นตอน | Expected Result |
 |---|---|---|---|---|
 | TC-EXP-01 | MVP | E | Export full → ลบข้อมูลทั้งหมด → Import | ข้อมูลทุกอย่างกลับมาเหมือนเดิม (deep equal ยกเว้น `pin`) |
-| TC-EXP-02 | MVP | U | Checksum ถูกแก้ | Import ปฏิเสธพร้อมข้อความ |
+| TC-EXP-02 | MVP | U | Checksum ไม่ตรงกับข้อมูล | Import ปฏิเสธด้วยข้อความ "ไฟล์อาจเสียหาย" (ไม่อ้างว่าตรวจการปลอมแปลงได้) |
+| TC-EXP-13 | P2 | U | Import ไฟล์หลายผู้เล่นที่มี `state=revealed` | ถูกรีเซ็ตเป็น `awaiting_consent` และล้าง consent |
 | TC-EXP-03 | MVP | U | `schemaVersion` MAJOR สูงกว่า | ปฏิเสธ "มาจากเวอร์ชันใหม่กว่า" |
 | TC-EXP-04 | MVP | U | ไฟล์ไม่ใช่ JSON / > 5 MB / format ผิด | ปฏิเสธพร้อมข้อความเฉพาะกรณี ไม่มีข้อมูลเดิมหาย |
-| TC-EXP-05 | MVP | E | Import Journey id ซ้ำ → "เก็บเป็นสำเนา" | มี 2 Journey id ต่างกัน |
+| TC-EXP-05 | P2 | E | Import Journey id ซ้ำ → "เก็บเป็นสำเนา" | มี 2 Journey id ต่างกัน |
 | TC-EXP-06 | MVP | U | Import ที่มี option id ไม่รู้จัก | ถูกตัดและแสดงใน Import Preview |
 | TC-EXP-07 | MVP | E | Report → เลือก 3 รายการ → TXT | ไฟล์มีเฉพาะ 3 รายการ + ป้ายแหล่งที่มา |
 | TC-EXP-08 | MVP | E | Report → PNG | ไฟล์ 1080×1350 · ข้อความไทยแสดงถูก (ตรวจ snapshot) |
@@ -186,6 +195,7 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-DEL-04 | MVP | E | ลบทั้งหมด — พิมพ์ "ลบทั้งหมด" | localStorage ไม่มี key `iywm:*` · กลับ S1 · "เล่นต่อ" disabled |
 | TC-DEL-05 | MVP | M | ข้อความยืนยันการลบ | แจ้งว่าไฟล์ที่ส่งออกไว้ไม่ถูกลบ |
 | TC-DEL-06 | P3B | I | member ออกจากเซสชัน | แถวของ member ในทุกตารางถูกลบ |
+| TC-DEL-07 | MVP | U | ลบคำตอบ/Journey/ผู้เล่น หลังจากเคย Import (มี backup) | `iywm:save:backup` ไม่มีอยู่หรือไม่มีข้อมูลที่ลบแล้ว · Drafts ของผู้เล่นที่ลบหายด้วย |
 
 ## 14. Safety & Content
 
@@ -196,6 +206,7 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-SAFE-03 | MVP | E | พิมพ์ "อยากตาย" ในข้อความอิสระ | การ์ดแหล่งช่วยเหลือแสดง ปิดได้ · บันทึกคำตอบได้ · ไม่มีอะไรถูกเก็บเพิ่มใน Save |
 | TC-SAFE-04 | MVP | M | Review บททั้งหมดด้วย Checklist [02](02-story-script.md) §0.4 | ผ่านทุกข้อ (ผู้ตรวจ 2 คน) |
 | TC-SAFE-05 | MVP | E | S11 | แหล่งช่วยเหลือแสดงครบ · ลิงก์ `tel:` |
+| TC-SAFE-07 | MVP | U | สแกน repo (docs, fixtures, content) หาชื่อหรือข้อมูลของคนจริง · รายการคำเก็บ **นอก repo** (GitHub Actions secret `PII_DENYLIST` หรือไฟล์ local ที่อยู่ใน `.gitignore`) — ห้ามใส่ชื่อจริงใน repo เพื่อใช้ตรวจ | 0 match (รันใน CI เมื่อมี secret) |
 | TC-SAFE-06 | MVP | M | Imagined data ทุกจุดที่แสดง | มีป้าย "สิ่งที่คุณคิด/จินตนาการ" (ตรวจทุกหน้าจอ S4, S6, S7, S8, S9) |
 
 ---

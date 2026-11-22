@@ -61,7 +61,7 @@
 - Engines เป็น pure function รับ state + content คืนผลลัพธ์ — ทดสอบได้โดยไม่ต้อง render
 - UI ไม่เข้าถึง localStorage โดยตรง ผ่าน Persistence Adapter เท่านั้น
 - Content แยกจากโค้ด เปลี่ยนบท/คำถามได้โดยไม่แก้ Engine
-- Remote เป็น interface `RemoteAdapter` — Phase 1–2 ไม่มี implementation (ไม่ใช่ mock ที่แกล้งทำงาน)
+- ไม่มีโค้ด Remote ใน MVP/Phase 2 เลย (ไม่สร้าง interface ล่วงหน้า — audit M-14) เพิ่มเมื่อเริ่ม Phase 3
 
 ---
 
@@ -85,7 +85,6 @@
 │   │   └── report/               # build + export (txt/json/png)
 │   ├── store/                    # slices, selectors
 │   ├── persistence/              # adapter, schema (zod), migrations, exportImport
-│   ├── remote/                   # RemoteAdapter interface (+ impl ใน Phase 3)
 │   ├── content/
 │   │   ├── th/
 │   │   │   ├── chapters/ch1.ts … ch5.ts
@@ -145,7 +144,7 @@
 | LCP (มือถือระดับกลาง, 4G) | ≤ 2.5s |
 | Animation | 60fps บนเดสก์ท็อป, ≥ 30fps บนมือถือระดับกลาง · Effects หยุดเมื่อแท็บไม่แสดง |
 | Code splitting | แยก chunk ต่อบท (`content/th/chapters/*`) และ S8/S9 |
-| Pixel assets | สร้างจากข้อมูลครั้งเดียวต่อ Appearance แล้ว cache (`Map<key, ImageBitmap/dataURL>`) |
+| Pixel assets | Background วาดด้วยคำสั่งบน canvas 320×180, Sprite จาก string พิกเซล ([09](09-asset-specification.md) §1.2) · วาดครั้งเดียวต่อ key/Appearance แล้ว cache (`Map<key, ImageBitmap>`) · ห้าม SVG rect ทีละพิกเซล |
 
 ---
 
@@ -159,13 +158,14 @@ Safari iOS 16+, Chrome Android 110+, Chrome/Edge/Firefox/Safari desktop 2 เว
 
 | รวม | ไม่รวม |
 |---|---|
-| S1, S1a, S1b, S2 (โหมดอื่นเป็น "เร็ว ๆ นี้"), S3, S4, S5, S5a, S6, S7 (Solo), S8, S9, S10, S11, S14, S15, S18 | Play Together, PIN, Handoff, Reveal state machine (UI) |
+| S1, S1a, S2 (โหมดอื่นเป็น "เร็ว ๆ นี้"), S3, S4, S5, S5a, S6, S7 (Solo), S8, S9, S10, S11, S14, S15, S18 | Play Together, PIN, Handoff, Reveal state machine (UI) |
+| Journey ที่ใช้งานได้ทีละ 1 อัน (อันที่จบแล้วเก็บเป็น archived) | S1b Journey List, Import แบบรวม/แก้ id ชน (Phase 2 — audit M-5) |
 | Ch1–Ch5 ครบตาม [02](02-story-script.md) | Memory Scenes |
 | Q01–Q36 (Quick/Full) + M01–M07 + Reflection | LLM / AI generation ใด ๆ |
-| Observed patterns | Backend, Remote |
-| Comparison (Solo rules) + Report + Export TXT/JSON/PNG + Import JSON | Analytics |
-| localStorage + Migration framework + S18 | Local encryption |
-| Pixel assets แบบ SVG/Canvas (P0) | Audio files (ใช้ WebAudio แบบเรียบง่าย หรือปิดเสียงทั้งหมดถ้าไม่ทัน — ปุ่มเสียงต้องไม่แสดงถ้าไม่มีเสียง) |
+| Comparison (Solo rules) + Report + Export TXT/JSON/PNG + Import JSON (`scope=full` เท่านั้น) | Observed patterns (Phase 2 — audit M-7) |
+| localStorage + Zod + ตรวจ schemaVersion (รายการ migration ว่าง) + S18 | Backend, Remote, Analytics |
+| Pixel assets แบบวาดด้วยโค้ดบน canvas (P0 ตาม [09](09-asset-specification.md)) | Local encryption |
+| — | เสียงทั้งหมด (Phase 2 — audit M-9): `SoundToggle` ถูกซ่อนด้วย feature flag `FEATURE_SOUND=false` |
 | Reduced motion, font scale, text speed, keyboard, a11y ตาม [06](06-ui-ux-specification.md) §4 | — |
 
 **MVP Definition of Done:** ผ่าน Test cases ที่ทำเครื่องหมาย `MVP` ใน [11](11-testing-and-acceptance-criteria.md) ทั้งหมด
@@ -177,12 +177,16 @@ Safari iOS 16+, Chrome Android 110+, Chrome/Edge/Firefox/Safari desktop 2 เว
 | งาน | รายละเอียด |
 |---|---|
 | Together mode | S2 เปิดใช้, S3 สร้าง 2 คน, Controller logic สำหรับ Ch2 สลับ |
-| Handoff | S12 + `history.replaceState` สำหรับหน้าลับ + กันการย้อนกลับ |
+| Handoff | S12 + `navigate(…, { replace: true })` สำหรับหน้าลับ + กันการย้อนกลับ |
 | PIN | S13 + PBKDF2 + lockout + Forgot PIN flow |
 | Reveal engine | State machine R1–R7 + UI Consent/Waiting/Reveal ใน S7, Ch3 S05, Ch5 |
 | Private answers | Selector ที่กรองข้อมูลตาม `activePlayerId` — **ทุก selector ที่คืนคำตอบต้องรับ `viewerId`** และมี unit test ว่าไม่คืนข้อมูลที่ยังไม่ Reveal |
 | Comparison (Together rules) | ใช้เฉพาะ Revealed |
 | Memory Scenes | S16 (A-06) |
+| Journey List + Import แบบรวม | S1b, `scope=journey`, แก้ id ชน |
+| Observed patterns | เพิ่ม tag ให้มิติที่มี < 3 ก่อน แล้วทำ engine + การ์ด |
+| เสียง | WebAudio/ไฟล์ CC0 + เปิด `FEATURE_SOUND` |
+| Link imagined → real | [05](05-game-flow.md) §4.3 |
 
 ---
 
@@ -201,7 +205,7 @@ Safari iOS 16+, Chrome Android 110+, Chrome/Edge/Firefox/Safari desktop 2 เว
 | Infra | Supabase project (region ใกล้ไทย เช่น Singapore) · migrations SQL ใน `supabase/migrations/` · RLS ตาม [08](08-privacy-and-safety.md) §6.2 |
 | Auth | Anonymous sign-in |
 | RPC | `create_session`, `create_invite`, `revoke_invite`, `join_session(code)`, `submit_answer`, `set_consent`, `get_revealed`, `leave_session`, `delete_session` |
-| Sync | Realtime subscription เฉพาะตาราง `consents`, `session_members`, `story_events` (ไม่ subscribe `answers`) |
+| Sync | Realtime subscription เฉพาะตาราง `consents`, `session_members` (ไม่ subscribe `answers`) · เนื้อเรื่องไม่ sync ([05](05-game-flow.md) §5.0) |
 | Offline | คิว `pendingUploads` + retry exponential backoff (1s → 60s) |
 | Cleanup | Scheduled function ลบเซสชันไม่มีกิจกรรม 90 วัน |
 | Config | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` ผ่าน env — ไม่ commit · ถ้าไม่มี env → S2 แสดง "ออนไลน์: ยังไม่ได้ตั้งค่า" และปิดใช้งาน (ไม่ fake) |

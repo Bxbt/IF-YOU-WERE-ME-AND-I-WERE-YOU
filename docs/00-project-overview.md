@@ -5,7 +5,7 @@
 
 | รายการ | ค่า |
 |---|---|
-| สถานะเอกสาร | Draft v0.1 — รอเจ้าของโปรเจกต์ยืนยันคำถามใน §6 |
+| สถานะเอกสาร | v0.2 — แก้ตาม Pre-development audit แล้ว (Critical/High ครบ) · คำถามใน §6 ที่เหลือไม่บล็อก MVP |
 | วันที่จัดทำ | 2026-11-22 |
 | Schema Version ที่อ้างอิง | `1.0.0` (ดู [07-data-architecture.md](07-data-architecture.md)) |
 | ภาษาเริ่มต้นของเกม | ไทย (ชื่อเกมเป็นภาษาอังกฤษ) |
@@ -132,13 +132,15 @@
 | A-12 | เบอร์สายด่วนในหน้า Safety (1323, 1300, 191) ต้องตรวจสอบความถูกต้องก่อนปล่อย | ต่ำ | Q-11 |
 | A-13 | ตอนจบแสดงข้อความทั้งสองชุดต่อกัน | ต่ำ | Q-07 |
 | A-14 | Personality Setup มี 2 แบบ: ฉบับสั้น 12 ข้อ (มิติละ 1) และฉบับเต็ม 36 ข้อ | ต่ำ | — |
-| A-15 | Observed Pattern แสดงเมื่อมีสัญญาณในมิติเดียวกันอย่างน้อย 3 ครั้ง | ต่ำ | — |
+| A-15 | Observed Pattern (Phase 2) แสดงเมื่อมีสัญญาณในมิติเดียวกันอย่างน้อย 3 ครั้ง | ต่ำ | — |
 | A-16 | Reflection Card ส่งออกเป็น PNG โดยวาดลง `<canvas>` เอง (ไม่พึ่ง screenshot library) | ต่ำ | — |
 | A-17 | Hosting เป็น static site (เช่น Vercel/Netlify/GitHub Pages) | ต่ำ | Q-10 |
 | A-18 | กลุ่มเป้าหมายอายุ 18 ปีขึ้นไป | ต่ำ | Q-03 |
 | A-19 | ไม่มี Analytics / Tracking ใด ๆ ใน MVP | ต่ำ | Q-12 |
 | A-20 | PIN เป็น "ทางเลือก" ไม่บังคับ ใน Phase 2 | ต่ำ | Q-09 |
 | A-21 | ตรวจคำอ่อนไหวในข้อความอิสระ **ภายในเครื่อง** เพื่อแสดงการ์ดแหล่งช่วยเหลือ ไม่บันทึก ไม่ส่งข้อมูล ([08](08-privacy-and-safety.md) §9.3) | ต่ำ | Q-11 |
+| A-23 | MVP มี Journey `active` ได้ทีละ 1 อัน · Import รองรับเฉพาะแทนที่ทั้งหมด · ไม่มีเสียง · ไม่มี Observed (audit M-5, M-7, M-9) | ต่ำ | — |
+| A-24 | Remote: เนื้อเรื่อง Ch1–Ch3 เล่นแบบ Solo บนเครื่องตัวเอง แชร์เฉพาะ Mirror/Profile ที่เลือก/Statements (audit H-1) | กลาง | Q-05 |
 | A-22 | ในไฟล์ Content คำเรียกคู่ ("เธอ") เขียนเป็น token `{you}` และแปลงตาม `addressStyle` ของผู้พูด — ในเอกสารบทแสดงเป็น "เธอ" เพื่อให้อ่านง่าย | ต่ำ | — |
 
 ---
@@ -166,9 +168,11 @@
 
 ## 7. ขอบเขตแต่ละ Phase (สรุป)
 
+> **เจ้าของข้อมูลขอบเขต Phase คือ [10-technical-specification.md](10-technical-specification.md) §8–10** ตารางนี้เป็นสรุปเท่านั้น ถ้าไม่ตรงกันให้ยึด 10
+
 | Phase | ขอบเขต | รายละเอียด |
 |---|---|---|
-| MVP (Phase 1) | Play Alone ครบ 5 บท, Character creation, Personality setup (Self + Imagined partner), Mirror แบบคนเดียว, Comparison, Report, Export/Import JSON, localStorage, Template content, ไม่มี LLM, ไม่มี Backend | [10](10-technical-specification.md) §8 |
+| MVP (Phase 1) | Play Alone ครบ 5 บท, Character creation, Personality setup (Self + Imagined partner), Mirror แบบคนเดียว, Comparison, Report, Export/Import JSON (`full`), localStorage, Template content, ไม่มี LLM, ไม่มี Backend, ไม่มีเสียง/Observed | [10](10-technical-specification.md) §8 |
 | Phase 2 | Play Together บนเครื่องเดียว, Handoff screen, PIN (ทางเลือก), Private answers, Mutual reveal, Memory Scenes | [10](10-technical-specification.md) §9 |
 | Phase 3A | Remote แบบ Sealed Exchange (ไม่มี Backend) | [10](10-technical-specification.md) §10 |
 | Phase 3B | Remote ด้วย Supabase: Invitation code, Sync, Access control, Revoke/Delete | [10](10-technical-specification.md) §10 |

@@ -19,11 +19,24 @@
 
 | ชั้น | Key | ใครเป็นเจ้าของ | เกี่ยวกับใคร | แหล่งที่มา | การแสดงผล |
 |---|---|---|---|---|---|
-| Self-reported | `self` | ผู้เล่น X | ผู้เล่น X | Personality Setup (Q01–Q36), Mirror self, Interpretation `layer=self`, Reflection | "สิ่งที่คุณบอก" |
+| Self-reported | `self` | ผู้เล่น X | ผู้เล่น X | Personality Setup (Q01–Q36), Mirror self (M01–M07 ของ Journey นั้น), Interpretation `layer=self`, Reflection | "สิ่งที่คุณบอก" |
 | Perceived | `perceived` | ผู้เล่น X | ผู้เล่น Y (หรือ Imagined Partner) | Personality Setup แบบ Perceived, Mirror perceived, Interpretation `layer=perceived` | "สิ่งที่คุณคิดเกี่ยวกับ {Y}" + ป้าย "สมมติฐาน" |
-| Observed | `observed` | ระบบ (ผู้เล่น X ควบคุม) | ผู้เล่น X (`observed.self`) หรือภาพที่ X จินตนาการถึง Y (`observed.perceived`) | Story choice tags | "รูปแบบที่เกมสังเกต" + ป้าย "อาจ" |
+| Observed (Phase 2) | `observed` | ระบบ (ผู้เล่น X ควบคุม) | ผู้เล่น X เท่านั้น | Story choice tags (เฉพาะตอนเล่นบทบาทของตัวเอง) | "รูปแบบที่เกมสังเกต" + ป้าย "อาจ" |
 
 **Imagined Partner (Play Alone):** มีเฉพาะชั้น `self` ของผู้เล่น และ `perceived` ที่ผู้เล่นสร้างเกี่ยวกับคู่ — ไม่มีชั้น `self` ของคู่ ช่องนั้นแสดง "ยังไม่รู้"
+
+### 2.1 Data Scope (Global vs Journey)
+
+| ข้อมูล | ขอบเขต | เหตุผล |
+|---|---|---|
+| Player, Appearance | Global (ต่อผู้เล่น) | ใช้ซ้ำได้ทุก Journey |
+| Profile Self Q01–Q36 | Global (ต่อผู้เล่น) | "ตัวฉัน" มีค่าเดียว |
+| Profile Perceived Q01–Q36 | Global (ต่อคู่ owner→about) | ความคิดเกี่ยวกับคนเดิมมีค่าเดียว |
+| Mirror M01–M07 (self + perceived) | **ต่อ Journey** | ผูกกับบริบทการเล่นและการ Reveal ของ Journey นั้น |
+| W3 (`w3_1`, `w3_2`) | **ต่อ Journey, `context: 'role'`** | ตอบในบทบาทสมมติ — **ไม่นับใน Profile และไม่ใช้ใน Comparison/Report** ใช้เฉพาะฉาก Ch3 |
+| Reflection, Interpretation, Emotion cards | ต่อ Journey | — |
+| Ch5 Statements | ต่อ Journey | — |
+| Comparison, Report | **ต่อ Journey** = Profile (global) + ข้อมูลของ Journey นั้น | — |
 
 ---
 
@@ -47,6 +60,7 @@
 | `meta ∈ {depends, not_sure, prefer_not}` | `selected` ต้องว่าง · `freeText` อนุญาต |
 | `meta = skipped` | `selected` ว่าง · `freeText` ว่าง · `status = skipped` |
 | เลือกเกิน `maxSelect` | ตัวเลือกที่เหลือ disabled พร้อมข้อความ "เลือกได้สูงสุด N ข้อ" |
+| เลือก option ที่ `exclusive: true` (เช่น "ไม่มี") | ล้างตัวเลือกอื่นทั้งหมด · เลือกตัวเลือกอื่นภายหลัง → ล้าง exclusive ออก · `selected` มี exclusive ได้อย่างมาก 1 และอยู่คนเดียว |
 
 ### 3.3 การบันทึกและแก้ไข
 
@@ -87,12 +101,15 @@ for each dimension D:
 
 ---
 
-## 5. Observed Gameplay Patterns
+## 5. Observed Gameplay Patterns (Phase 2)
+
+> **ย้ายออกจาก MVP** (audit M-7): ต่อการเล่นหนึ่งรอบมีจุดเลือกราว 14 จุด มิติส่วนใหญ่ไม่ถึงเกณฑ์ 3 สัญญาณ ฟีเจอร์จึงแทบไม่แสดงผลใน MVP · MVP **ไม่เก็บ** ObservedSignal (PR4: ไม่เก็บข้อมูลที่ไม่ได้ใช้) · Content ยังใส่ `tag` ไว้ได้เพื่อใช้ใน Phase 2 · Phase 2 ต้องเพิ่ม tag ให้มิติที่มีน้อยกว่า 3 ก่อนเปิดใช้
+> เก็บเฉพาะ `layer = self` — ไม่มี `observed.perceived` (ไม่มีหน้าจอใดใช้)
 
 ### 5.1 การเก็บสัญญาณ
 
 - ทุก Choice ที่มี `tag = "Dxx:signal"` ([02](02-story-script.md) §0.7) เมื่อถูกเลือก → เพิ่ม `ObservedSignal { dimension, signal, sourceChoiceId, layer }`
-- `layer = self` ถ้าผู้เลือกกำลังเล่นบทบาทของตัวเอง, `layer = perceived` ถ้ากำลังเล่นบทบาทของคู่
+- เก็บเฉพาะเมื่อผู้เลือกกำลังเล่นบทบาทของตัวเอง · ตัวเลือกที่เลือกในบทบาทของคู่ไม่ถูกเก็บเป็นสัญญาณ
 - เล่นบทซ้ำ: สัญญาณจากการเล่นครั้งใหม่ของ Choice เดิม **แทนที่** ของเดิม (นับ 1 สัญญาณต่อ Choice เสมอ)
 
 ### 5.2 เงื่อนไขการแสดง (A-15)
@@ -197,6 +214,17 @@ stateDiagram-v2
 - แสดงทันที: `self` ↔ `perceived` ของตัวเอง โดยมุมของคู่แสดงสองช่อง: "สิ่งที่คุณคิดว่า {other} ต้องการ" และ "สิ่งที่ {other} บอก: ยังไม่รู้"
 - ปุ่ม "เพิ่มเป็นคำถามที่อยากถาม" → บันทึก `reflectionPrompt` ลง Next Conversation
 
+### 6.3.0 Profile Questions (Q01–Q36) ใน Together/Remote
+
+คำตอบ Profile เป็น global แต่การเปิดให้คู่เห็นเป็น **ต่อ Journey**: ใช้ `SharedAnswer` key = `Qxx` ใน Journey นั้นที่เก็บเฉพาะ consent + `revealedRevision` (ไม่คัดลอกคำตอบ) ตอนแสดงผลอ่านคำตอบจาก Profile และเปิดเฉพาะถ้า `revision` ปัจจุบันตรงกับ `revealedRevision` (R7) · หน้าจอ S8 มีปุ่ม "เลือกคำตอบบุคลิกภาพที่จะเปิดให้ {other} เห็น" (ค่าเริ่มต้น: ไม่เลือก)
+
+### 6.3.1 Ch5 Statements
+
+Statements (`cs1`–`cs5`) ใช้ `SharedAnswer` และ State machine เดียวกับ Mirror ([07](07-data-architecture.md) §7) ต่างกันที่:
+- แต่ละคนตั้ง `shareIntent` เองต่อข้อ (ค่าเริ่มต้น `false`) · ข้อที่ `shareIntent=false` ไม่ถูกเปิดไม่ว่ากรณีใด
+- Reveal เกิดเมื่อทั้งสองคนกด "เปิดพร้อมกัน" (consent ระดับชุด) → เปิด **เฉพาะข้อที่เจ้าของเลือกแชร์** ของแต่ละคน (ไม่จำเป็นต้องแชร์ข้อเดียวกัน)
+- ไม่มีการเปรียบเทียบหรือจัดหมวด
+
 ### 6.4 ประวัติการ Reveal
 
 เก็บเฉพาะ `revealedAt` และ `revealedRevision` ของแต่ละ MirrorItem เพื่อให้ R7 ทำงาน ไม่เก็บค่าเก่า
@@ -207,7 +235,7 @@ stateDiagram-v2
 
 ### 7.1 Input
 
-ต้องมีอย่างน้อย 1 คู่ที่เปรียบเทียบได้ (ไม่อย่างนั้นแสดง Empty state)
+คำนวณต่อ Journey (§2.1) จาก Profile Q01–Q36 + Mirror M01–M07 ของ Journey นั้น · ไม่ใช้ W3 · ต้องมีอย่างน้อย 1 คู่ที่เปรียบเทียบได้ (ไม่อย่างนั้นแสดง Empty state)
 
 | โหมด | คู่ที่ใช้ |
 |---|---|
@@ -253,7 +281,7 @@ function categorize(x, y):
 
 ## 8. Reflection Report Generation
 
-ทุกส่วนสร้างจาก Template + ข้อมูลจริงเท่านั้น ถ้าไม่มีข้อมูล แสดงสถานะว่างพร้อม CTA
+Report เป็นของผู้เล่นหนึ่งคนในหนึ่ง Journey (§2.1) · ทุกส่วนสร้างจาก Template + ข้อมูลจริงเท่านั้น ถ้าไม่มีข้อมูล แสดงสถานะว่างพร้อม CTA
 
 | ส่วนของ Report | แหล่งข้อมูล | ถ้าว่าง |
 |---|---|---|
@@ -268,6 +296,6 @@ function categorize(x, y):
 | Our Next Conversation: คำถาม | หมวด `ask` + r4_3 + r5_2 + รายการที่ผู้เล่นเพิ่มเอง | — |
 | Our Next Conversation: สิ่งที่ควรขอบคุณ | self ของ Q34 ของอีกฝ่าย (Revealed) | — |
 | Our Next Conversation: วิธีดูแลกัน | Q26, Q13 ของอีกฝ่าย (Revealed) หรือ perceived (Solo, มีป้าย) | — |
-| รูปแบบที่คุณยืนยัน | Observed ที่ `confirmed = true` | ไม่แสดงส่วนนี้ |
+| รูปแบบที่คุณยืนยัน (Phase 2) | Observed ที่ `confirmed = true` | ไม่แสดงส่วนนี้ (MVP ไม่มีส่วนนี้) |
 
 Report เป็นของผู้เล่นแต่ละคน ไม่มี Report รวมที่แสดงข้อมูลส่วนตัวของอีกฝ่ายโดยไม่ได้ Reveal — **Shared Reflection** ใน Ch5 แสดงเฉพาะ Statements ที่ทั้งสองแชร์ และ MirrorItem ที่ Revealed เท่านั้น
