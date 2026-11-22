@@ -5,14 +5,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: 'var(--c-navy)',
-        indigo: 'var(--c-indigo)',
-        lavender: 'var(--c-lavender)',
-        cream: 'var(--c-cream)',
-        pink: 'var(--c-pink)',
-        orange: 'var(--c-orange)',
-        blue: 'var(--c-blue)',
-        danger: 'var(--c-danger)',
+        navy: 'rgb(var(--c-navy) / <alpha-value>)',
+        indigo: 'rgb(var(--c-indigo) / <alpha-value>)',
+        lavender: 'rgb(var(--c-lavender) / <alpha-value>)',
+        cream: 'rgb(var(--c-cream) / <alpha-value>)',
+        pink: 'rgb(var(--c-pink) / <alpha-value>)',
+        orange: 'rgb(var(--c-orange) / <alpha-value>)',
+        blue: 'rgb(var(--c-blue) / <alpha-value>)',
+        danger: 'rgb(var(--c-danger) / <alpha-value>)',
       },
       fontFamily: {
         pixel: ['Silkscreen', 'monospace'],

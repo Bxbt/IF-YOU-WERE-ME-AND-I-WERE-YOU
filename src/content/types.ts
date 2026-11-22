@@ -15,6 +15,7 @@ export interface QuestionContent {
   context?: 'self' | 'role';
   reflectionPrompt?: string;
   quick?: boolean;
+  safetyNote?: string;
 }
 
 export type MetaValue = 'depends' | 'not_sure' | 'prefer_not' | 'skipped';

@@ -4,7 +4,7 @@
  * Flip a flag in the milestone that ships the screen.
  */
 export const FEATURES = {
-  characterCreation: false, // S3 — M3
+  characterCreation: true, // S3/S4 — shipped in M3
   chapters: false, // S5/S6 — M4
   together: false, // Phase 2
   remote: false, // Phase 3

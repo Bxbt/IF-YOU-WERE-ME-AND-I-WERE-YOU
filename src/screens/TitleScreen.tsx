@@ -14,6 +14,7 @@ import { APP_VERSION } from '../persistence/exportImport';
 export function TitleScreen() {
   const navigate = useNavigate();
   const hasActive = useGame((s) => Object.values(s.save.journeys).some((j) => j.status === 'active'));
+  const hasPlayers = useGame((s) => Object.values(s.save.players).some((p) => p.kind === 'real'));
   const stars = useMemo(makeStars, []);
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, t: number) => {
@@ -58,8 +59,16 @@ export function TitleScreen() {
             </PixelButton>
           </DisabledAware>
           <DisabledAware reason={createReason} id="create-reason">
-            <PixelButton variant="ghost" block className="bg-navy/60" icon={<UserPlus aria-hidden className="h-5 w-5" />} disabled={!!createReason} aria-describedby={createReason ? 'create-reason' : undefined}>
-              {ui.title.createSelf}
+            <PixelButton
+              variant="ghost"
+              block
+              className="bg-navy/60"
+              icon={<UserPlus aria-hidden className="h-5 w-5" />}
+              disabled={!!createReason}
+              aria-describedby={createReason ? 'create-reason' : undefined}
+              onClick={() => navigate(hasPlayers ? '/profile' : '/players/new')}
+            >
+              {hasPlayers ? ui.title.profile : ui.title.createSelf}
             </PixelButton>
           </DisabledAware>
           <PixelButton variant="ghost" block className="bg-navy/60" icon={<Info aria-hidden className="h-5 w-5" />} onClick={() => navigate('/about')}>

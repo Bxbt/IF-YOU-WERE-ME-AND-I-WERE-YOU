@@ -1,13 +1,14 @@
-/* Design tokens — docs/06 §1.1 (single night theme). */
+/* Design tokens — docs/06 §1.1 (single night theme).
+   Colours are stored as RGB channels so Tailwind opacity modifiers (bg-navy/80) work. */
 :root {
-  --c-navy: #171c2f;
-  --c-indigo: #292b45;
-  --c-lavender: #a49bcb;
-  --c-cream: #f3ebdd;
-  --c-pink: #d9a3a7;
-  --c-orange: #e9b77b;
-  --c-blue: #8eacc8;
-  --c-danger: #e08a7e;
+  --c-navy: 23 28 47; /* #171C2F */
+  --c-indigo: 41 43 69; /* #292B45 */
+  --c-lavender: 164 155 203; /* #A49BCB */
+  --c-cream: 243 235 221; /* #F3EBDD */
+  --c-pink: 217 163 167; /* #D9A3A7 */
+  --c-orange: 233 183 123; /* #E9B77B */
+  --c-blue: 142 172 200; /* #8EACC8 */
+  --c-danger: 224 138 126; /* #E08A7E */
   --font-scale: 1;
   color-scheme: dark;
 }

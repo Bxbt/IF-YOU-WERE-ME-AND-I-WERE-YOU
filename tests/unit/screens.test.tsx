@@ -47,13 +47,26 @@ describe('S1 Title', () => {
 });
 
 describe('S2 Mode Selection', () => {
-  it('every mode that is not built is disabled and says why', () => {
-    renderAt('/mode');
-    for (const name of [/เล่นคนเดียว/, /เล่นด้วยกัน/, /เล่นระยะไกล/]) {
+  it('together and remote stay disabled with a reason; solo opens character creation', async () => {
+    const router = renderAt('/mode');
+    for (const name of [/เล่นด้วยกัน/, /เล่นระยะไกล/]) {
       const card = screen.getByRole('button', { name });
       expect(card).toBeDisabled();
       expect(card).toHaveAccessibleDescription();
     }
+    await userEvent.click(screen.getByRole('button', { name: /เล่นคนเดียว/ }));
+    expect(router.state.location.pathname).toBe('/players/new');
+    expect(router.state.location.search).toBe('?mode=solo');
+  });
+
+  it('TC-RES-09: an active journey is only archived after confirmation', async () => {
+    useGame.setState({ save: sampleSave() });
+    const router = renderAt('/mode');
+    await userEvent.click(screen.getByRole('button', { name: /เล่นคนเดียว/ }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'ยกเลิก' }));
+    expect(router.state.location.pathname).toBe('/mode');
+    expect(useGame.getState().save.journeys.jr_journey001!.status).toBe('active');
   });
 });
 

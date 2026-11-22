@@ -30,7 +30,8 @@ export function PixelCanvas({ draw, label, fps = 10, className = '', fit = 'cont
         // anchor to the bottom and let the container's sky colour fill above.
         setScale(height > width ? width / 165 : Math.ceil(Math.max(width / W, height / H)));
       } else {
-        const s = Math.min(width / W, height / H || Infinity);
+        // Width decides the scale; height follows from the 16:9 canvas (docs/06 §1.5).
+        const s = width / W;
         setScale(s >= 1 ? Math.floor(s) : s);
       }
     });

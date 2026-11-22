@@ -52,7 +52,7 @@ export function ScreenHeader({ title, backTo = '/' }: { title: string; backTo?: 
           {ui.back}
         </Link>
       </div>
-      <h1 className="m-0 text-2xl font-semibold">{title}</h1>
+      {title && <h1 className="m-0 text-2xl font-semibold">{title}</h1>}
     </header>
   );
 }
