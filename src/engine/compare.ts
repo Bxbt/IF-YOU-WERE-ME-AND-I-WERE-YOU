@@ -6,6 +6,7 @@
 import type { PersonalityAnswer, SaveRoot, GameSession } from '../persistence/schema';
 import type { QuestionContent } from '../content/types';
 import { MIRRORS, QUESTIONS } from '../content/th/questions';
+import { revealPairs } from './reveal';
 
 export type Category = 'similar' | 'different' | 'ask' | 'excluded';
 export type AskReason = 'unsure' | 'missing' | 'own_words' | 'solo_unknown';
@@ -47,12 +48,18 @@ export interface Comparison {
 const ORDER = [...QUESTIONS, ...MIRRORS];
 const dimOf = (q: QuestionContent) => q.dimension ?? 'D99';
 
-/** Answer pairs for Play Alone: A.self ↔ A.perceived(imagined), for Q01–Q36 and M01–M07. */
+/**
+ * The owner's own pairs: owner.self ↔ owner.perceived(partner), for Q01–Q36 and M01–M07.
+ * Only the owner's data is read, so this is safe for either player in Play Together (R1).
+ * `selfId` defaults to the solo player (playerIds[0]).
+ */
 export function soloPairs(
   save: SaveRoot,
   j: GameSession,
+  selfId: string = j.playerIds[0],
 ): { q: QuestionContent; x?: PersonalityAnswer; y?: PersonalityAnswer }[] {
-  const [self, partner] = j.playerIds;
+  const self = selfId;
+  const partner = j.playerIds.find((p) => p !== selfId) ?? j.playerIds[1];
   const selfAnswers = save.profiles[`${self}:self`]?.answers ?? {};
   const perceived = save.profiles[`${self}:perceived:${partner}`]?.answers ?? {};
   return ORDER.map((q) => {
@@ -65,8 +72,8 @@ export function soloPairs(
   });
 }
 
-export function compareSolo(save: SaveRoot, j: GameSession): Comparison {
-  const pairs = soloPairs(save, j).filter((p) => p.x || p.y);
+export function compareSolo(save: SaveRoot, j: GameSession, selfId: string = j.playerIds[0]): Comparison {
+  const pairs = soloPairs(save, j, selfId).filter((p) => p.x || p.y);
   const out: Comparison = { comparable: pairs.some((p) => p.x && p.y), similar: [], different: [], ask: [] };
   for (const { q, x, y } of pairs) {
     const category = categorize(x, y);
@@ -100,4 +107,59 @@ export function sharedTexts(q: QuestionContent, x: PersonalityAnswer, y: Persona
     q,
     x.selected.filter((id) => y.selected.includes(id)),
   );
+}
+
+// ---------- Play Together (docs/04 §7.1, M10) ----------
+
+export type TogetherView = 'a_view' | 'b_view' | 'direct';
+
+export interface TogetherItem {
+  question: QuestionContent;
+  dimension: string;
+  category: Exclude<Category, 'excluded'>;
+  view: TogetherView;
+  /** x belongs to xOwner (their self answer); y is the other player's guess (views) or self (direct). */
+  xOwner: string;
+  yOwner: string;
+  x?: PersonalityAnswer;
+  y?: PersonalityAnswer;
+}
+
+export interface TogetherComparison {
+  comparable: boolean;
+  similar: TogetherItem[];
+  different: TogetherItem[];
+  ask: TogetherItem[];
+  /** Mirror questions both answered but not opened yet — question ids only, never answers. */
+  pending: string[];
+}
+
+/**
+ * Together: only revealed mirror items (M01–M07, context 'self') — `revealPairs` returns nothing
+ * unrevealed, so this can never leak a private answer (R1). W3 (context 'role') is never used.
+ * Profile Q01–Q36 reveal is not part of M10 (documented follow-up).
+ */
+export function compareTogether(j: GameSession): TogetherComparison {
+  const [a, b] = j.playerIds;
+  const out: TogetherComparison = { comparable: false, similar: [], different: [], ask: [], pending: [] };
+  for (const q of MIRRORS) {
+    const item = j.mirrorItems[q.id];
+    if (!item || item.kind !== 'mirror' || item.context !== 'self') continue;
+    if (item.state === 'awaiting_consent') out.pending.push(q.id);
+    for (const p of revealPairs(item, a, b)) {
+      const ti: TogetherItem = {
+        question: q,
+        dimension: dimOf(q),
+        category: p.category,
+        view: p.kind,
+        xOwner: p.xOwner,
+        yOwner: p.yOwner,
+        x: p.x,
+        y: p.y,
+      };
+      if (p.x && p.y) out.comparable = true;
+      out[p.category].push(ti);
+    }
+  }
+  return out;
 }

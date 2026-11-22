@@ -7,6 +7,7 @@ import type { GameSession, SaveRoot } from '../persistence/schema';
 import type { StoryState, TokenContext } from '../engine/dialogue';
 import type { AnswerInput } from './actions';
 import { nowIso } from '../lib/ids';
+import { setGroupConsent, submitEntry } from '../engine/reveal';
 import { useGame } from './game';
 
 type Progress = GameSession['chapterProgress'][string];
@@ -504,4 +505,103 @@ export function dropDrafts(save: SaveRoot, playerId: string): SaveRoot {
     Object.entries(save.drafts).filter(([k]) => !k.startsWith(`${playerId}:`)),
   );
   return Object.keys(drafts).length === Object.keys(save.drafts).length ? save : { ...save, drafts };
+}
+
+// ---------- Consent-based reveal (Phase 2, docs/04 §6, M10) ----------
+
+/**
+ * Together: a mirror answer goes through the reveal engine (state machine R1–R7) instead of the
+ * solo 'open' item. Revision per layer increases on every save, like the solo version.
+ */
+export function submitTogetherMirror(
+  save: SaveRoot,
+  jid: string,
+  questionId: string,
+  context: 'self' | 'role',
+  playerId: string,
+  layer: 'self' | 'perceived',
+  input: AnswerInput,
+): SaveRoot {
+  return withJourney(save, jid, (j, t) => {
+    const prev = j.mirrorItems[questionId];
+    const old = prev?.entries[playerId]?.[layer];
+    const freeText = input.freeText.trim();
+    const answer: PAnswer = {
+      questionId,
+      layer,
+      selected: input.meta ? [] : input.selected,
+      meta: input.meta,
+      ...(freeText && input.meta !== 'skipped' ? { freeText } : {}),
+      status: input.meta === 'skipped' ? 'skipped' : 'answered',
+      revision: (old?.revision ?? 0) + 1,
+      answeredAt: old?.answeredAt ?? t,
+      updatedAt: t,
+    };
+    const item = submitEntry(
+      prev,
+      questionId,
+      { questionId, kind: 'mirror', context },
+      j.playerIds,
+      playerId,
+      layer === 'self' ? { self: answer } : { perceived: answer },
+      t,
+    );
+    return { ...j, mirrorItems: { ...j.mirrorItems, [questionId]: item } };
+  });
+}
+
+/** Together: Ch5 statement through the reveal engine (docs/04 §6.3.1). */
+export function submitTogetherStatement(
+  save: SaveRoot,
+  jid: string,
+  playerId: string,
+  id: string,
+  input: StatementInput,
+): SaveRoot {
+  return withJourney(save, jid, (j, t) => {
+    const text = input.skipped ? '' : input.text.trim().slice(0, 280);
+    const item = submitEntry(
+      j.mirrorItems[id],
+      id,
+      { questionId: id, kind: 'statement', context: 'self' },
+      j.playerIds,
+      playerId,
+      {
+        statement: {
+          text,
+          ...(input.starterId && !input.skipped ? { starterId: input.starterId } : {}),
+          meta: input.skipped ? 'skipped' : null,
+        },
+        shareIntent: !input.skipped && input.shareIntent,
+      },
+      t,
+    );
+    return { ...j, mirrorItems: { ...j.mirrorItems, [id]: item } };
+  });
+}
+
+/** One player consents (or withdraws) for a set of items, except `exclude` (R2, R3, TC-REV-07). */
+export function consentItems(
+  save: SaveRoot,
+  jid: string,
+  keys: readonly string[],
+  playerId: string,
+  consent: boolean,
+  exclude: readonly string[] = [],
+): SaveRoot {
+  return withJourney(save, jid, (j, t) => {
+    const subset = Object.fromEntries(keys.filter((k) => j.mirrorItems[k]).map((k) => [k, j.mirrorItems[k]!]));
+    const updated = setGroupConsent(subset, playerId, consent, exclude, t);
+    return { ...j, mirrorItems: { ...j.mirrorItems, ...updated } };
+  });
+}
+
+/** Ch4 "เปิดทีละข้อ / เปิดทีเดียวตอนจบบท" (docs/02 Ch4, R2). */
+export function setRevealMode(
+  save: SaveRoot,
+  jid: string,
+  ch: ChapterId,
+  mode: 'per_question' | 'end_of_chapter',
+): SaveRoot {
+  return withProgress(save, jid, ch, (p) => ({ ...p, revealMode: mode }));
 }

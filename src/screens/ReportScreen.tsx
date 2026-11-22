@@ -38,7 +38,7 @@ export function ReportScreen() {
   const journey = save.journeys[journeyId];
   const owner = save.players[playerId];
   const sections = useMemo(
-    () => (journey && owner ? buildReport(save, journey, playerId, compareSolo(save, journey)) : []),
+    () => (journey && owner ? buildReport(save, journey, playerId, compareSolo(save, journey, playerId)) : []),
     [save, journey, owner, playerId],
   );
   const items = useMemo(() => allItems(sections), [sections]);

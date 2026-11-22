@@ -35,6 +35,21 @@ export const templates = {
     youSaid: 'คุณบอก',
     youThink: (other: string) => `คุณคิดว่า ${other}`,
     addToNext: 'เพิ่มลงคำถามครั้งหน้า',
+    togetherIntro: 'หน้านี้แสดงเฉพาะคำตอบที่ทั้งคู่ยินยอมเปิดแล้ว',
+    views: { all: 'ทุกมุม', a_view: (a: string) => `มุมของ ${a}`, b_view: (b: string) => `มุมของ ${b}`, direct: 'เทียบตรง' },
+    togetherSimilar: (dim: string, shared: string, owner: string, viewer: string, view: string) =>
+      view === 'direct'
+        ? `เรื่อง${dim} — คุณสองคนเลือก ${shared}`
+        : `เรื่อง${dim} — ${owner} บอกว่า ${shared} และ ${viewer} ก็คิดแบบนั้น`,
+    togetherDifferent: (dim: string, xs: string, ys: string, owner: string, other: string, view: string) =>
+      view === 'direct'
+        ? `เรื่อง${dim} — ${owner} เลือก ${xs} ส่วน ${other} เลือก ${ys} · ความต่างนี้ไม่ได้แปลว่าใครถูก`
+        : `เรื่อง${dim} — ${owner} บอกว่า ${xs} ส่วนที่ ${other} คิดคือ ${ys} · ความต่างนี้ไม่ได้แปลว่าใครถูก`,
+    pendingTitle: 'ข้อที่ยังรอเปิด',
+    pendingBody: 'ทั้งคู่ตอบแล้ว แต่ยังไม่ได้ยินยอมเปิด',
+    pendingOpen: 'เปิดคำตอบที่นี่',
+    emptyTogether: 'ยังไม่มีคำตอบที่เปิดแล้ว',
+    emptyTogetherBody: 'เล่นบทที่ 4 แล้วเปิดคำตอบเมื่อทั้งคู่พร้อม',
     added: 'เพิ่มแล้ว',
   },
   report: {
@@ -52,6 +67,10 @@ export const templates = {
     uUnsure: 'สิ่งที่ฉันยังไม่เข้าใจ',
     uUnsureEmpty: 'คุณตอบได้ทุกข้อ — แต่อย่าลืมว่าทุกข้อยังเป็นสิ่งที่คุณคิด',
     differences: 'ความต่างของเรา',
+    differencesRevealed: 'จากคำตอบที่ทั้งคู่เปิดแล้ว',
+    differencesNone: 'ยังไม่มีความต่างจากคำตอบที่เปิดแล้ว',
+    differenceLine: (q: string, x: string, xs: string, y: string, ys: string) =>
+      `${q} — ${x}: ${xs} · ${y}: ${ys} (ความต่างนี้ไม่ได้แปลว่าใครถูก)`,
     differencesSolo: (other: string) =>
       `ต้องให้ ${other} มาเล่นด้วยก่อน ส่วนนี้ถึงจะมีข้อมูล (การเล่นด้วยกันจะเปิดในเวอร์ชันถัดไป)`,
     next: 'บทสนทนาครั้งหน้า',
@@ -67,6 +86,7 @@ export const templates = {
       perceived: 'คุณคิด',
       statement: 'คุณเขียน',
       conversation: 'คำถามครั้งหน้า',
+      partner_revealed: 'มีคำตอบของอีกคน (เปิดแล้วทั้งคู่)',
     },
     fileFooter: (date: string) => `${date} · สร้างจาก IF YOU WERE ME, AND I WERE YOU`,
   },

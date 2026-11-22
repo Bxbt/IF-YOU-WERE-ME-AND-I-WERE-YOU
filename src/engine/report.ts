@@ -7,9 +7,10 @@ import type { QuestionContent } from '../content/types';
 import { MIRRORS, QUESTIONS } from '../content/th/questions';
 import { templates } from '../content/th/templates';
 import { ui } from '../content/th/ui';
-import { optionTexts, soloPairs, type Comparison } from './compare';
+import { compareTogether, optionTexts, soloPairs, type Comparison } from './compare';
 
-export type ReportSource = 'self' | 'perceived' | 'statement' | 'conversation';
+/** partner_revealed = something the partner agreed to open (docs/07 §8); never preselected for export. */
+export type ReportSource = 'self' | 'perceived' | 'statement' | 'conversation' | 'partner_revealed';
 
 export interface ReportItem {
   id: string;
@@ -55,9 +56,10 @@ export function buildReport(
   ownerId: string,
   comparison: Comparison,
 ): ReportSection[] {
-  const [, partnerId] = j.playerIds;
+  // The report's owner is whoever opened it — never playerIds[0] by default (Play Together, R1).
+  const partnerId = j.playerIds.find((p) => p !== ownerId) ?? j.playerIds[1];
   const other = save.players[partnerId]?.nickname ?? '';
-  const pairs = new Map(soloPairs(save, j).map((p) => [p.q.id, p]));
+  const pairs = new Map(soloPairs(save, j, ownerId).map((p) => [p.q.id, p]));
   const t = templates.report;
   const selfQuick = `/profile/${ownerId}/self?set=quick`;
   const perceivedQuick = `/profile/${ownerId}/perceived/${partnerId}?set=quick`;
@@ -189,12 +191,40 @@ export function buildReport(
     ],
   };
 
-  const differences: ReportSection = {
-    id: 'differences',
-    title: t.differences,
-    groups: [],
-    note: t.differencesSolo(other),
-  };
+  // Together: only differences both players agreed to open (M10). Solo: the partner must play first.
+  const differences: ReportSection =
+    j.mode === 'together'
+      ? {
+          id: 'differences',
+          title: t.differences,
+          groups: [
+            {
+              id: 'd-revealed',
+              title: t.differencesRevealed,
+              items: compareTogether(j)
+                .different.filter((d) => d.xOwner === ownerId || d.yOwner === ownerId)
+                .filter((d) => d.x && d.y)
+                .map((d) => {
+                  const who = (id: string) => save.players[id]?.nickname ?? '';
+                  return {
+                    id: `diff:${d.question.id}:${d.view}`,
+                    text: t.differenceLine(
+                      d.question.self,
+                      who(d.xOwner),
+                      optionTexts(d.question, d.x!.selected),
+                      who(d.yOwner),
+                      optionTexts(d.question, d.y!.selected),
+                    ),
+                    source: 'partner_revealed' as const,
+                    questionId: d.question.id,
+                    dimension: d.dimension,
+                  };
+                }),
+              emptyText: t.differencesNone,
+            },
+          ],
+        }
+      : { id: 'differences', title: t.differences, groups: [], note: t.differencesSolo(other) };
 
   // Questions to talk about: comparison "ask" prompts + what the player saved in Our Next Conversation.
   const seen = new Set<string>();

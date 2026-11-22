@@ -90,3 +90,53 @@ test('TC-PRIV-02 + resume (audit M-2): leaving mid private step resumes at the h
   await expect(page.getByRole('heading', { name: 'ส่งเครื่องให้ เมฆ' })).toBeVisible(); // never straight back into the answers
   void A;
 });
+
+test('M10: Ch4 mirror — both answer privately, consent on the shared screen, then see both views', async ({
+  page,
+}) => {
+  const progress = {
+    ch4: {
+      chapterId: 'ch4',
+      status: 'in_progress',
+      currentSceneId: 'ch4_mirrors',
+      lineIndex: 0,
+      flags: {},
+      choiceLog: [],
+      skippedScenes: [],
+      playCount: 1,
+      startedAt: T,
+      revealMode: 'per_question',
+    },
+  };
+  await seedSave(page, seed({ scenario: 'me', together: true, progress }));
+  await page.goto(`/#/j/${J}/play/ch4`);
+  await playThrough(page, () => page.getByTestId('handoff').isVisible());
+
+  for (const [who, self, guess] of [
+    ['ดาว', 'อ้อมกอด', 'คนที่ฟัง'],
+    ['เมฆ', 'เวลาเงียบ ๆ', 'อ้อมกอด'],
+  ] as const) {
+    await page.getByRole('button', { name: `ฉันคือ ${who} — พร้อมแล้ว` }).click();
+    await tap(page.getByRole('group', { name: /หลังเจอเรื่องน่ากลัว/ }).getByRole('button', { name: self }));
+    await tap(page.getByRole('button', { name: 'ถัดไป', exact: true }).last());
+    await tap(page.getByRole('group', { name: /หลังเจอเรื่องน่ากลัว/ }).getByRole('button', { name: guess }));
+    await tap(page.getByRole('button', { name: 'ถัดไป', exact: true }).last());
+  }
+
+  await page.getByRole('button', { name: 'ได้รับเครื่องแล้ว' }).click();
+  const panel = page.getByTestId('reveal-panel');
+  await expect(panel).toBeVisible();
+  // Nothing of either answer is on the page before consent (R1).
+  expect(await panel.innerText()).not.toContain('เวลาเงียบ');
+  await noSeriousA11y(page);
+  await tap(page.getByRole('button', { name: 'ดาว: เปิดได้' }));
+  await tap(page.getByRole('button', { name: 'เมฆ: เปิดได้' }));
+  const result = page.getByTestId('reveal-result-M01');
+  await expect(result).toContainText('สิ่งที่ เมฆ คิดว่า ดาว ตอบ');
+  await expect(result).toContainText('เวลาเงียบ');
+  await noSeriousA11y(page);
+  await tap(page.getByRole('button', { name: 'ถัดไป', exact: true }));
+  await expect(page.getByTestId('reveal-panel')).toHaveCount(0);
+  void A;
+  void B;
+});

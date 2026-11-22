@@ -27,6 +27,7 @@ import {
 } from '../components/StorySteps';
 import { Handoff } from '../components/Handoff';
 import { PlayerGate } from '../components/PlayerGate';
+import { RevealPanel } from '../components/Reveal';
 import { useSession } from '../store/session';
 import { MIRRORS } from '../content/th/questions';
 import { SceneCanvas } from '../scene/SceneCanvas';
@@ -39,6 +40,8 @@ import {
   saveInterpretation,
   saveMirrorAnswer,
   saveStatement,
+  submitTogetherMirror,
+  submitTogetherStatement,
   apply,
   buildStoryState,
   buildTokenContext,
@@ -254,6 +257,8 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   const partnerOfAnswering = journey.playerIds.find((x) => x !== answeringId) ?? journey.playerIds[1];
   const [privatePhase, setPrivatePhase] = useState<'handoff' | 'answer'>('handoff');
   const [showReturn, setShowReturn] = useState(false);
+  /** Shared-screen reveal after both players answered a mirror / statements step (M10). */
+  const [reveal, setReveal] = useState<{ keys: string[]; mode: 'single' | 'group' | 'statements' } | null>(null);
   const [handedOff, setHandedOff] = useState<string[]>([]);
   useEffect(() => setPrivatePhase('handoff'), [stepKey, answeringId]);
 
@@ -349,9 +354,21 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     if (rest.length === 0) {
       useSession.getState().lock(); // back to the shared screen: nobody is unlocked any more
       setShowReturn(true);
+      // Both answered: offer the consent-based reveal on the shared screen (docs/04 §6, M10).
+      // The story moves on first, so a reload never asks the players to answer again; anything
+      // left unrevealed stays awaiting consent and can be opened later from S8.
+      if (step?.kind === 'mirror') {
+        const qid = step.questionId;
+        const mode = progress.revealMode;
+        if (ch !== 'ch4' || mode !== 'end_of_chapter') setReveal({ keys: [qid], mode: 'single' });
+        else if (qid === MIRRORS[MIRRORS.length - 1]!.id)
+          setReveal({ keys: MIRRORS.map((m) => m.id), mode: 'group' });
+      } else if (step?.kind === 'statements') {
+        setReveal({ keys: (content.statements ?? []).map((x) => x.id), mode: 'statements' });
+      }
       next();
     } else setPrivatePhase('handoff');
-  }, [together, view, next, remaining, answeringId, journey.id, ch, stepKey]);
+  }, [together, view, next, remaining, answeringId, journey.id, ch, stepKey, step, progress.revealMode, content.statements]);
 
   const choose = useCallback(
     (optionId: string) => {
@@ -531,7 +548,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     scene.controller !== 'narrator'
       ? controllerFor(journey, ch, scene.controller)
       : null;
-  const privateHandoff = together && !view && isPrivate && privatePhase === 'handoff';
+  const privateHandoff = together && !view && isPrivate && privatePhase === 'handoff' && !reveal;
 
   let body: React.ReactNode = null;
   if (ended) {
@@ -736,7 +753,11 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
           initial={{ self: toDraft(entry?.self), perceived: toDraft(entry?.perceived) }}
           onSave={(layer, d) => {
             checkSupportKeywords(d.freeText);
-            apply((s) => saveMirrorAnswer(s, journey.id, q.id, q.context ?? 'self', answeringId, layer, d));
+            apply((s) =>
+              together
+                ? submitTogetherMirror(s, journey.id, q.id, q.context ?? 'self', answeringId, layer, d)
+                : saveMirrorAnswer(s, journey.id, q.id, q.context ?? 'self', answeringId, layer, d),
+            );
           }}
           onAddConversation={
             q.reflectionPrompt
@@ -787,7 +808,11 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         startAt={firstOpen < 0 ? 0 : firstOpen}
         onSave={(id, v) => {
           checkSupportKeywords(v.text);
-          apply((s) => saveStatement(s, journey.id, answeringId, id, v));
+          apply((s) =>
+            together
+              ? submitTogetherStatement(s, journey.id, answeringId, id, v)
+              : saveStatement(s, journey.id, answeringId, id, v),
+          );
         }}
         onDone={finishPrivate}
         shareLabels={
@@ -882,7 +907,21 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         )}
         <SafetyNotes notes={notes} onClose={(t) => setClosedNotes((c) => [...c, t])} />
         {/* While handing over, the next player's form is not even rendered (TC-PRIV-01). */}
-        {privateHandoff ? null : together && isPrivate && !view ? (
+        {privateHandoff ? null : reveal && together && !view ? (
+          <RevealPanel
+            key={reveal.keys.join(',')}
+            journey={journey}
+            ch={ch}
+            keys={reveal.keys}
+            mode={reveal.mode}
+            names={Object.fromEntries(journey.playerIds.map((id) => [id, nick(id)]))}
+            questionFor={(k) =>
+              MIRRORS.find((m) => m.id === k) ?? content.mirrorQuestions?.find((m) => m.id === k)
+            }
+            askMode={ch === 'ch4' && reveal.mode === 'single' && progress.revealMode === undefined}
+            onDone={() => setReveal(null)}
+          />
+        ) : together && isPrivate && !view ? (
           <PlayerGate playerId={answeringId} onCancel={() => setPrivatePhase('handoff')}>
             {body}
           </PlayerGate>
