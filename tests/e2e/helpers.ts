@@ -1,6 +1,23 @@
 /** Shared E2E helpers for story specs. Fictional names only (TC-SAFE-07). */
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+
+/**
+ * Click that survives a Linux WebKit mobile-emulation quirk: Playwright sometimes reports a visible,
+ * enabled button as "outside of the viewport" even after scrolling (macOS WebKit and Chromium are
+ * fine). Try a real click first; only then scroll it into view ourselves and click via the DOM.
+ */
+export async function tap(target: Locator) {
+  try {
+    await target.click({ timeout: 4000 });
+  } catch (e) {
+    if (!(await target.isVisible()) || !(await target.isEnabled())) throw e;
+    await target.evaluate((el) => {
+      el.scrollIntoView({ block: 'center' });
+      (el as HTMLElement).click();
+    });
+  }
+}
 
 export const T = '2026-11-22T10:00:00.000Z';
 export const J = 'jr_journey001';
@@ -144,55 +161,52 @@ export async function playThrough(
         const t = (await b.textContent()) ?? '';
         if (prefer.some((r) => r.test(t))) target = b;
       }
-      await target.click();
+      await tap(target);
       continue;
     }
     const skipReflection = page.getByRole('button', { name: 'ข้ามคำถามท้ายบท' });
     if (await skipReflection.isVisible()) {
       await once('reflection');
-      await skipReflection.click();
+      await tap(skipReflection);
       continue;
     }
     const skipStatement = page.getByRole('button', { name: 'ข้ามประโยคนี้' });
     if (await skipStatement.isVisible()) {
       await once('statements');
-      await skipStatement.click();
+      await tap(skipStatement);
       continue;
     }
     const mirrorResult = page.getByTestId('mirror-result');
     if (await mirrorResult.isVisible()) {
       await once('mirror-result');
-      await mirrorResult.getByRole('button', { name: 'ถัดไป' }).click();
+      await tap(mirrorResult.getByRole('button', { name: 'ถัดไป' }));
       continue;
     }
     const meta = page.getByRole('group', { name: 'ตัวเลือกอื่น' });
     if (await meta.isVisible()) {
       await once('mirror');
-      await meta.getByRole('button', { name: 'ข้าม' }).click();
-      await page.getByRole('button', { name: 'ถัดไป', exact: true }).last().click();
+      await tap(meta.getByRole('button', { name: 'ข้าม' }));
+      await tap(page.getByRole('button', { name: 'ถัดไป', exact: true }).last());
       continue;
     }
     const goOn = page.getByRole('button', { name: 'ไปต่อ', exact: true });
     if (await goOn.isVisible()) {
       await once((await page.getByRole('heading', { level: 2 }).first().textContent()) ?? 'continue');
-      await goOn.click();
+      await tap(goOn);
       continue;
     }
     const nextChapter = page.getByRole('button', { name: /^ไปบทที่ \d$/ });
     if ((await nextChapter.isVisible()) && (await nextChapter.isEnabled())) {
       await once('transition');
-      await nextChapter.click();
+      await tap(nextChapter);
       continue;
     }
     const toEnding = page.getByRole('button', { name: 'ไปตอนจบ' });
     if (await toEnding.isVisible()) {
-      await toEnding.click();
+      await tap(toEnding);
       continue;
     }
-    await page
-      .getByRole('button', { name: /^(ถัดไป|แสดงข้อความทั้งหมด)$/ })
-      .first()
-      .click();
+    await tap(page.getByRole('button', { name: /^(ถัดไป|แสดงข้อความทั้งหมด)$/ }).first());
   }
   const where = await page.evaluate(() => ({
     url: location.hash,
