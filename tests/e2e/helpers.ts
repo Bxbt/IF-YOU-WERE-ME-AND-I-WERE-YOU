@@ -30,6 +30,8 @@ export function seed(
     progress?: Record<string, unknown>;
     storyAnswers?: Record<string, unknown>;
     textSpeed?: string;
+    /** Phase 2: both players real, mode 'together'. */
+    together?: boolean;
   } = {},
 ) {
   const appearance = {
@@ -64,8 +66,8 @@ export function seed(
       },
       [B]: {
         id: B,
-        kind: 'imagined',
-        createdBy: A,
+        kind: opts.together ? 'real' : 'imagined',
+        createdBy: opts.together ? null : A,
         nickname: 'เมฆ',
         sentenceEnding: '',
         addressStyle: 'name',
@@ -78,7 +80,7 @@ export function seed(
     journeys: {
       [J]: {
         id: J,
-        mode: 'solo',
+        mode: opts.together ? 'together' : 'solo',
         playerIds: [A, B],
         status: 'active',
         ...(opts.scenario

@@ -33,9 +33,12 @@ export function PrivacyBadge({ state, otherName = '' }: { state: PrivacyState; o
 export function PerspectiveBanner({
   name,
   variant,
+  text,
 }: {
   name: string;
   variant: 'own' | 'partner' | 'partner-imagined';
+  /** Together: whose turn it is ("ตาของ …" / "… กำลังเล่นเป็น …"). */
+  text?: string;
 }) {
   return (
     <div role="note" className="flex items-start gap-2 rounded-btn bg-indigo/90 px-3 py-2 text-sm">
@@ -45,7 +48,7 @@ export function PerspectiveBanner({
           <span>{ui.labels.imaginedBanner(name)}</span>
         </>
       ) : (
-        <span>{ui.labels.playingAs(name)}</span>
+        <span>{text ?? ui.labels.playingAs(name)}</span>
       )}
     </div>
   );

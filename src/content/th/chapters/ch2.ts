@@ -34,6 +34,7 @@ export const ch2: ChapterContent = {
     // ---------- Part A — มุมมองคนในลิฟต์ ----------
     {
       id: 'ch2_a1',
+      handoffBefore: true,
       background: 'bg_elevator_emergency',
       ariaLabel: 'ในลิฟต์ที่ค้างอยู่ มีแต่แสงไฟฉุกเฉินสีส้ม อากาศเริ่มอบ',
       controller: 'insider',
@@ -199,6 +200,7 @@ export const ch2: ChapterContent = {
     // ---------- Part B — มุมมองคนที่รอ ----------
     {
       id: 'ch2_b1',
+      handoffBefore: true,
       background: 'bg_apartment_kitchen',
       ariaLabel: 'ครัวในห้องชั้นแปด ฝนตกหนักนอกหน้าต่าง',
       controller: 'waiter',

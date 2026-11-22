@@ -156,10 +156,13 @@ type Verdict = 'yes' | 'no' | 'unsure';
 export function InterpretationCheck({
   sets,
   partnerName,
+  imagined = true,
   onDone,
 }: {
   sets: InterpretationView[];
   partnerName: string;
+  /** Solo: guesses about the partner are imagined; Together: they are what you think. */
+  imagined?: boolean;
   onDone: (
     answers: Record<string, { answers: Record<string, Verdict>; noneMatch: boolean; freeText: string }>,
   ) => void;
@@ -197,7 +200,7 @@ export function InterpretationCheck({
             </legend>
             <div className="flex flex-wrap items-center gap-2 text-[13px] text-lavender">
               {s.own ? ui.play.interpretOwn : ui.play.interpretOther(partnerName)}
-              {!s.own && <AssumptionTag kind="imagined" />}
+              {!s.own && <AssumptionTag kind={imagined ? 'imagined' : 'assumption'} />}
             </div>
             {s.feelings.map((f) => (
               <div
@@ -266,6 +269,8 @@ export interface MirrorProps {
   onAddConversation?: () => void;
   conversationAdded: boolean;
   onNext: () => void;
+  /** Together: no result card here — the answers are revealed later, with consent (docs/04 §6.2). */
+  skipResult?: boolean;
 }
 
 /** docs/06 S7 Solo: self → perceived → result (no waiting, no consent — TC-REV-09). */
@@ -278,9 +283,15 @@ export function MirrorStep({
   onAddConversation,
   conversationAdded,
   onNext,
+  skipResult = false,
 }: MirrorProps) {
   const known = useRef({ ...initial });
-  const startPhase = initial.self && initial.perceived ? 'result' : initial.self ? 'perceived' : 'self';
+  const startPhase =
+    initial.self && initial.perceived && !skipResult
+      ? 'result'
+      : initial.self && !initial.perceived
+        ? 'perceived'
+        : 'self';
   const [phase, setPhase] = useState<'self' | 'perceived' | 'result'>(startPhase);
   const [draft, setDraft] = useState<AnswerDraft>(() =>
     startPhase === 'perceived' ? (initial.perceived ?? emptyDraft()) : (initial.self ?? emptyDraft()),
@@ -296,7 +307,8 @@ export function MirrorStep({
     if (phase === 'self') {
       setPhase('perceived');
       setDraft(known.current.perceived ?? emptyDraft());
-    } else setPhase('result');
+    } else if (skipResult) onNext();
+    else setPhase('result');
   }
 
   if (phase === 'result') {
@@ -402,7 +414,9 @@ export function Statements({
   startAt,
   onSave,
   onDone,
+  shareLabels,
 }: {
+  shareLabels?: { keep: string; share: string };
   items: StatementView[];
   startAt: number;
   onSave: (
@@ -488,7 +502,7 @@ export function Statements({
             onClick={() => setShare(v)}
             className={`min-h-[44px] rounded-btn border-2 px-3 text-sm ${share === v ? 'border-orange bg-orange/15' : 'border-lavender/40 bg-navy'}`}
           >
-            {v ? ui.play.statementCard : ui.play.statementKeep}
+            {v ? (shareLabels?.share ?? ui.play.statementCard) : (shareLabels?.keep ?? ui.play.statementKeep)}
           </button>
         ))}
       </div>

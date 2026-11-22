@@ -64,7 +64,7 @@ export function currentJourney(save: SaveRoot): GameSession | undefined {
 }
 
 /** MVP: one active journey (A-23). Any existing active journey is archived first. */
-export function createSoloJourney(selfId: string, imaginedId: string): string {
+function createJourney(mode: 'solo' | 'together', aId: string, bId: string): string {
   const id = newJourneyId();
   const t = nowIso();
   useGame.getState().update((s) => {
@@ -76,8 +76,8 @@ export function createSoloJourney(selfId: string, imaginedId: string): string {
     );
     journeys[id] = {
       id,
-      mode: 'solo',
-      playerIds: [selfId, imaginedId],
+      mode,
+      playerIds: [aId, bId],
       status: 'active',
       chapterProgress: {},
       storyAnswers: {},
@@ -93,6 +93,12 @@ export function createSoloJourney(selfId: string, imaginedId: string): string {
   });
   return id;
 }
+
+export const createSoloJourney = (selfId: string, imaginedId: string) =>
+  createJourney('solo', selfId, imaginedId);
+
+/** Phase 2: two real players on one device (docs/05 §4). */
+export const createTogetherJourney = (aId: string, bId: string) => createJourney('together', aId, bId);
 
 export function profileKey(ownerId: string, layer: 'self' | 'perceived', aboutId?: string): string {
   return layer === 'self' ? `${ownerId}:self` : `${ownerId}:perceived:${aboutId}`;

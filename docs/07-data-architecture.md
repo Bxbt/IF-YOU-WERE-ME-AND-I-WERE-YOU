@@ -185,6 +185,7 @@ interface SceneContent {
   controller: 'insider' | 'waiter' | 'A' | 'B' | 'both' | 'narrator';
   lines: LineContent[];
   next: string | NextRule[] | null;     // null = ฉากสุดท้ายของบท
+  handoffBefore?: boolean;              // Together: หน้าส่งเครื่อง (ไม่ลับ) ให้ผู้ควบคุมฉากก่อนเริ่ม (Ch2 Part A/B)
 }
 
 interface NextRule { when?: Condition; to: string }   // กฎแรกที่ผ่านชนะ · ไม่มี when = ค่าเริ่มต้น

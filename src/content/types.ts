@@ -103,6 +103,8 @@ export interface SceneContent {
   controller: RoleId | 'narrator';
   lines: LineContent[];
   next: string | NextRule[] | null;
+  /** Together: show the (non-private) handoff screen to this scene's controller first (docs/02 Ch2 parts). */
+  handoffBefore?: boolean;
 }
 
 export interface ChapterContent {

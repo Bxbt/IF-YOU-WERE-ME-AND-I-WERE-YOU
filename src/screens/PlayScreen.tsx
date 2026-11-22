@@ -25,6 +25,7 @@ import {
   Statements,
   Timeline,
 } from '../components/StorySteps';
+import { Handoff } from '../components/Handoff';
 import { MIRRORS } from '../content/th/questions';
 import { SceneCanvas } from '../scene/SceneCanvas';
 import { PortraitView } from '../scene/CharacterCanvas';
@@ -51,6 +52,10 @@ import {
   skipChapter,
   startChapter,
   storyAnswerKey,
+  controllerFor,
+  dropDrafts,
+  roleOf,
+  setPendingPrivate,
 } from '../store/story';
 import {
   evalCondition,
@@ -234,6 +239,22 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   const steps = useMemo(() => (scene ? expandScene(scene, state) : []), [scene, state]);
   const step: Step | undefined = pos ? steps[pos.lineIndex] : undefined;
 
+  // ----- Play Together (docs/05 §4): private steps are answered one player at a time -----
+  const together = journey.mode === 'together';
+  const stepKey = pos ? `${pos.sceneId}:${pos.lineIndex}` : '';
+  const isPrivate =
+    !!step && ['cards', 'reflection', 'interpretation', 'mirror', 'statements'].includes(step.kind);
+  const pendingEntry = progress.pendingPrivateSteps?.find((x) => x.itemId === stepKey);
+  const remaining = together && isPrivate ? (pendingEntry?.playerIds ?? [...journey.playerIds]) : [];
+  const answeringId = together && isPrivate ? (remaining[0] ?? selfId) : selfId;
+  const answeringRole = together ? roleOf(journey, answeringId) : mySelfRole;
+  const answeringSpeaker = answeringRole === 'insider' ? 'in' : 'out';
+  const partnerOfAnswering = journey.playerIds.find((x) => x !== answeringId) ?? journey.playerIds[1];
+  const [privatePhase, setPrivatePhase] = useState<'handoff' | 'answer'>('handoff');
+  const [showReturn, setShowReturn] = useState(false);
+  const [handedOff, setHandedOff] = useState<string[]>([]);
+  useEffect(() => setPrivatePhase('handoff'), [stepKey, answeringId]);
+
   // Tokens from flags (Part C fragments) and from what was said (Ch3 rewrites).
   const ctx = useMemo(
     () => ({
@@ -243,16 +264,29 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         ...Object.fromEntries(
           Object.entries(fragmentTokens(content, state)).map(([k, v]) => [k, resolveTokens(v, baseCtx)]),
         ),
-        ...rewriteTokens(
-          content,
-          state,
-          (item) => journey.storyAnswers[storyAnswerKey(selfId, item)]?.freeText,
+        ...rewriteTokens(content, state, (item) =>
+          journey.playerIds
+            .map((pid) => journey.storyAnswers[storyAnswerKey(pid, item)]?.freeText)
+            .find(Boolean),
         ),
       },
     }),
     [baseCtx, content, state, journey.storyAnswers, selfId],
   );
   const selfSpeaker = mySelfRole === 'insider' ? 'in' : 'out';
+  // {me}/{other} in private questions always mean the person answering right now.
+  const answerCtx = useMemo(
+    () => ({
+      ...ctx,
+      names: {
+        ...ctx.names,
+        me: save.players[answeringId]?.nickname ?? ctx.names.me,
+        other: save.players[partnerOfAnswering]?.nickname ?? ctx.names.other,
+      },
+    }),
+    [ctx, save.players, answeringId, partnerOfAnswering],
+  );
+  void selfSpeaker;
 
   // Safety notes stay until closed or until the scene changes (docs/06 S6).
   const [closedNotes, setClosedNotes] = useState<string[]>([]);
@@ -301,6 +335,21 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     if (pos) moveTo(advance(content, pos, state), pos, state);
   }, [pos, content, state, moveTo]);
 
+  /**
+   * A private step is done for the answering player. Solo: move on. Together: drop that player's
+   * drafts (handoff away, TC-PRIV-11), hand to the next player, or — when both are done — move on and
+   * ask for the device back (docs/05 §4.2).
+   */
+  const finishPrivate = useCallback(() => {
+    if (!together || view) return next();
+    const rest = remaining.filter((x) => x !== answeringId);
+    apply((s) => setPendingPrivate(dropDrafts(s, answeringId), journey.id, ch, stepKey, rest));
+    if (rest.length === 0) {
+      setShowReturn(true);
+      next();
+    } else setPrivatePhase('handoff');
+  }, [together, view, next, remaining, answeringId, journey.id, ch, stepKey]);
+
   const choose = useCallback(
     (optionId: string) => {
       if (!pos || step?.kind !== 'choice') return;
@@ -315,7 +364,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         choiceId: step.line.id,
         optionId: opt.id,
         setFlags: opt.setFlags,
-        byPlayerId: selfId,
+        byPlayerId: controllerFor(journey, ch, step.line.owner),
         asRole: step.line.owner,
       };
       moveTo(advance(content, pos, st), pos, st, (s) => recordChoice(s, journey.id, ch, choice));
@@ -338,7 +387,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         choiceId: step.line.id,
         optionId: 'custom',
         setFlags: custom.setFlags,
-        byPlayerId: selfId,
+        byPlayerId: controllerFor(journey, ch, step.line.owner),
         asRole: step.line.owner,
       };
       moveTo(advance(content, pos, st), pos, st, (s) =>
@@ -462,6 +511,25 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       : 0.55;
 
   // ----- steps that are not dialogue -----
+  const nick = (id: string) => save.players[id]?.nickname ?? '';
+  const controllerId = role ? controllerFor(journey, ch, role) : null;
+  const bannerText =
+    role && controllerId && rolePlayer
+      ? controllerId === rolePlayer.id
+        ? ui.labels.turnOf(rolePlayer.nickname)
+        : ui.labels.playsAs(nick(controllerId), rolePlayer.nickname)
+      : undefined;
+  // Open handoff before scenes marked handoffBefore (Ch2 parts) — not secret, so no PIN (docs/02 Ch2).
+  const sceneHandoffTo =
+    together &&
+    !view &&
+    scene?.handoffBefore &&
+    !handedOff.includes(scene.id) &&
+    scene.controller !== 'narrator'
+      ? controllerFor(journey, ch, scene.controller)
+      : null;
+  const privateHandoff = together && !view && isPrivate && privatePhase === 'handoff';
+
   let body: React.ReactNode = null;
   if (ended) {
     const [first, ...rest] = content.transition.lines;
@@ -499,7 +567,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       />
     );
   } else if (step?.kind === 'cards' && content.emotionCards) {
-    const key = storyAnswerKey(selfId, `ec_${ch}`);
+    const key = storyAnswerKey(answeringId, `ec_${ch}`);
     body = view ? (
       <ViewOnlySkip onNext={next} />
     ) : (
@@ -508,34 +576,36 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         groups={content.emotionCards.groups.map((g) => ({
           label:
             (g.period ? `${g.period} · ` : '') +
-            (g.role === 'insider' ? ui.play.cardsInsider(ctx.names.in) : ui.play.cardsWaiter(ctx.names.out)),
+            (g.role === 'insider'
+              ? ui.play.cardsInsider(answerCtx.names.in)
+              : ui.play.cardsWaiter(answerCtx.names.out)),
           cards: g.cards,
         }))}
         initial={journey.storyAnswers[key]?.selected ?? []}
         onDone={(selected) => {
           apply((s) =>
             selected.length
-              ? saveStoryAnswer(s, journey.id, selfId, `ec_${ch}`, 'emotion_card', {
+              ? saveStoryAnswer(s, journey.id, answeringId, `ec_${ch}`, 'emotion_card', {
                   selected,
                   meta: null,
                   freeText: '',
                 })
-              : removeStoryAnswer(s, journey.id, selfId, `ec_${ch}`),
+              : removeStoryAnswer(s, journey.id, answeringId, `ec_${ch}`),
           );
-          next();
+          finishPrivate();
         }}
       />
     );
   } else if (step?.kind === 'reflection') {
     const initial: Record<string, AnswerDraft> = {};
     for (const q of content.reflection) {
-      const a = journey.storyAnswers[storyAnswerKey(selfId, q.id)];
-      const d = save.drafts[storyAnswerKey(selfId, q.id)]?.text;
+      const a = journey.storyAnswers[storyAnswerKey(answeringId, q.id)];
+      const d = save.drafts[storyAnswerKey(answeringId, q.id)]?.text;
       if (a) initial[q.id] = { selected: [...a.selected], meta: a.meta, freeText: a.freeText ?? '' };
       else if (d) initial[q.id] = { selected: [], meta: null, freeText: d };
     }
     const firstOpen = content.reflection.findIndex(
-      (q) => !journey.storyAnswers[storyAnswerKey(selfId, q.id)],
+      (q) => !journey.storyAnswers[storyAnswerKey(answeringId, q.id)],
     );
     body = view ? (
       <ViewOnlySkip onNext={next} />
@@ -548,21 +618,23 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         onAnswer={(qid, d) =>
           apply((s) => {
             checkSupportKeywords(d.freeText);
-            let out = saveStoryAnswer(s, journey.id, selfId, qid, 'reflection', d);
+            let out = saveStoryAnswer(s, journey.id, answeringId, qid, 'reflection', d);
             const q = content.reflection.find((x) => x.id === qid);
             if (q?.toNextConversation && !d.meta) {
               const texts = [
-                ...q.options.filter((o) => d.selected.includes(o.id)).map((o) => resolveTokens(o.text, ctx)),
+                ...q.options
+                  .filter((o) => d.selected.includes(o.id))
+                  .map((o) => resolveTokens(o.text, answerCtx)),
                 d.freeText.trim(),
               ];
               for (const t of texts)
-                if (t) out = addNextConversation(out, journey.id, selfId, t, 'reflection', qid);
+                if (t) out = addNextConversation(out, journey.id, answeringId, t, 'reflection', qid);
             }
             return out;
           })
         }
-        onDraft={(qid, text) => saveDraft(selfId, storyAnswerKey(selfId, qid), text)}
-        onFinish={next}
+        onDraft={(qid, text) => saveDraft(answeringId, storyAnswerKey(answeringId, qid), text)}
+        onFinish={finishPrivate}
       />
     );
   } else if (step?.kind === 'timeline') {
@@ -585,19 +657,20 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     ) : (
       <InterpretationCheck
         key={`ic-${pos?.sceneId}`}
-        partnerName={ctx.names.other}
+        partnerName={answerCtx.names.other}
+        imagined={!together}
         sets={sets.map((x) => {
           const sp = x.role === 'insider' ? 'in' : 'out';
           const quote = x.quoteByCondition?.find((v) => evalCondition(v.when, state))?.text ?? x.quote;
-          const a = journey.storyAnswers[storyAnswerKey(selfId, x.id)];
+          const a = journey.storyAnswers[storyAnswerKey(answeringId, x.id)];
           return {
             id: x.id,
-            own: x.role === mySelfRole,
-            speakerName: sp === 'in' ? ctx.names.in : ctx.names.out,
+            own: x.role === answeringRole,
+            speakerName: sp === 'in' ? answerCtx.names.in : answerCtx.names.out,
             quote: resolveTokens(quote, ctx, sp),
             feelings: x.feelings
               .filter((f) => evalCondition(f.when, state))
-              .map((f) => ({ id: f.id, text: resolveTokens(f.text, ctx) })),
+              .map((f) => ({ id: f.id, text: resolveTokens(f.text, answerCtx) })),
             initial: a
               ? {
                   answers: a.interpretation ?? {},
@@ -615,15 +688,15 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
                 saveInterpretation(
                   s,
                   journey.id,
-                  selfId,
+                  answeringId,
                   x.id,
-                  x.role === mySelfRole ? 'self' : 'perceived',
+                  x.role === answeringRole ? 'self' : 'perceived',
                   answers[x.id]!,
                 ),
               s0,
             ),
           );
-          next();
+          finishPrivate();
         }}
       />
     );
@@ -631,7 +704,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     const q =
       MIRRORS.find((m) => m.id === step.questionId) ??
       content.mirrorQuestions?.find((m) => m.id === step.questionId);
-    const entry = journey.mirrorItems[step.questionId]?.entries[selfId];
+    const entry = journey.mirrorItems[step.questionId]?.entries[answeringId];
     const toDraft = (a?: {
       selected: string[];
       meta: AnswerDraft['meta'];
@@ -646,10 +719,10 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
           key={`mirror-${q.id}`}
           question={{
             ...q,
-            self: resolveTokens(q.self, ctx),
-            perceived: q.perceived ? resolveTokens(q.perceived, ctx) : undefined,
+            self: resolveTokens(q.self, answerCtx),
+            perceived: q.perceived ? resolveTokens(q.perceived, answerCtx) : undefined,
           }}
-          otherName={ctx.names.other}
+          otherName={answerCtx.names.other}
           describe={(d) => {
             if (!d) return ui.play.noAnswer;
             if (d.meta) return ui.answer.meta[d.meta];
@@ -660,7 +733,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
           initial={{ self: toDraft(entry?.self), perceived: toDraft(entry?.perceived) }}
           onSave={(layer, d) => {
             checkSupportKeywords(d.freeText);
-            apply((s) => saveMirrorAnswer(s, journey.id, q.id, q.context ?? 'self', selfId, layer, d));
+            apply((s) => saveMirrorAnswer(s, journey.id, q.id, q.context ?? 'self', answeringId, layer, d));
           }}
           onAddConversation={
             q.reflectionPrompt
@@ -669,8 +742,8 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
                     addNextConversation(
                       s,
                       journey.id,
-                      selfId,
-                      resolveTokens(q.reflectionPrompt!, ctx),
+                      answeringId,
+                      resolveTokens(q.reflectionPrompt!, answerCtx),
                       'mirror',
                       q.id,
                     ),
@@ -680,16 +753,17 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
           conversationAdded={journey.nextConversation.some(
             (n) => n.source === 'mirror' && n.sourceRef === q.id,
           )}
-          onNext={next}
+          onNext={finishPrivate}
+          skipResult={together}
         />
       );
   } else if (step?.kind === 'statements') {
     const items = (content.statements ?? []).map((st) => {
-      const e = journey.mirrorItems[st.id]?.entries[selfId];
+      const e = journey.mirrorItems[st.id]?.entries[answeringId];
       return {
         id: st.id,
-        stem: resolveTokens(st.stem, ctx, selfSpeaker),
-        starters: st.starters.map((x) => ({ id: x.id, text: resolveTokens(x.text, ctx, selfSpeaker) })),
+        stem: resolveTokens(st.stem, ctx, answeringSpeaker),
+        starters: st.starters.map((x) => ({ id: x.id, text: resolveTokens(x.text, ctx, answeringSpeaker) })),
         initial: e?.statement
           ? {
               text: e.statement.text,
@@ -710,9 +784,14 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         startAt={firstOpen < 0 ? 0 : firstOpen}
         onSave={(id, v) => {
           checkSupportKeywords(v.text);
-          apply((s) => saveStatement(s, journey.id, selfId, id, v));
+          apply((s) => saveStatement(s, journey.id, answeringId, id, v));
         }}
-        onDone={next}
+        onDone={finishPrivate}
+        shareLabels={
+          together
+            ? { keep: ui.play.statementKeepSelf, share: ui.play.statementShare(answerCtx.names.other) }
+            : undefined
+        }
       />
     );
   } else if (step?.kind === 'choice') {
@@ -794,13 +873,34 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         {!ended && role && rolePlayer && (
           <PerspectiveBanner
             name={rolePlayer.nickname}
-            variant={role === mySelfRole ? 'own' : 'partner-imagined'}
+            variant={together || role === mySelfRole ? 'own' : 'partner-imagined'}
+            text={together ? bannerText : undefined}
           />
         )}
         <SafetyNotes notes={notes} onClose={(t) => setClosedNotes((c) => [...c, t])} />
-        {body}
+        {/* While handing over, the next player's form is not even rendered (TC-PRIV-01). */}
+        {privateHandoff ? null : body}
       </section>
 
+      {privateHandoff && (
+        <Handoff
+          kind="to"
+          name={nick(answeringId)}
+          privateNote
+          onReady={() => setPrivatePhase('answer')}
+          onCancel={() => navigate(chaptersHref)}
+        />
+      )}
+      {!privateHandoff && showReturn && (
+        <Handoff kind="return" name={ui.handoff.together} onReady={() => setShowReturn(false)} />
+      )}
+      {!privateHandoff && !showReturn && sceneHandoffTo && (
+        <Handoff
+          kind="to"
+          name={nick(sceneHandoffTo)}
+          onReady={() => setHandedOff((h) => [...h, scene!.id])}
+        />
+      )}
       <PauseMenu
         open={paused}
         onResume={() => setPaused(false)}

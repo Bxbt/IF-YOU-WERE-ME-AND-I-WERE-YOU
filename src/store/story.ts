@@ -465,3 +465,43 @@ export function recordReportExport(
     },
   };
 }
+
+// ---------- Play Together (Phase 2, docs/05 §4) ----------
+
+/**
+ * Who makes the choices of a role. Together: the role's owner, except Ch2 where the players swap
+ * (Part A — the insider's scenes — is played by Ch1's waiter, and the other way round; docs/02 Ch2).
+ * Solo: always the player.
+ */
+export function controllerFor(j: GameSession, ch: ChapterId, role: RoleId): string {
+  if (j.mode !== 'together') return j.playerIds[0];
+  const r: RoleId = ch === 'ch2' ? (role === 'insider' ? 'waiter' : 'insider') : role;
+  return playerForRole(j, r);
+}
+
+export function roleOf(j: GameSession, playerId: string): RoleId {
+  return playerForRole(j, 'insider') === playerId ? 'insider' : 'waiter';
+}
+
+/** Who still has to answer a private step (docs/07 §6 pendingPrivateSteps, audit M-2). Empty list removes the entry. */
+export function setPendingPrivate(
+  save: SaveRoot,
+  jid: string,
+  ch: ChapterId,
+  itemId: string,
+  playerIds: string[],
+): SaveRoot {
+  return withProgress(save, jid, ch, (p) => {
+    const rest = (p.pendingPrivateSteps ?? []).filter((x) => x.itemId !== itemId);
+    const pendingPrivateSteps = playerIds.length ? [...rest, { itemId, playerIds }] : rest;
+    return { ...p, pendingPrivateSteps };
+  });
+}
+
+/** Handoff away from a player removes that player's drafts so the next player never sees them (docs/07 §9, TC-PRIV-11). */
+export function dropDrafts(save: SaveRoot, playerId: string): SaveRoot {
+  const drafts = Object.fromEntries(
+    Object.entries(save.drafts).filter(([k]) => !k.startsWith(`${playerId}:`)),
+  );
+  return Object.keys(drafts).length === Object.keys(save.drafts).length ? save : { ...save, drafts };
+}

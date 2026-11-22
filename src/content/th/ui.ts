@@ -175,6 +175,8 @@ export const ui = {
     consented: 'ยินยอมแล้ว',
     revealed: 'เปิดแล้ว',
     playingAs: (name: string) => `คุณกำลังเล่นเป็น ${name}`,
+    turnOf: (name: string) => `ตาของ ${name}`,
+    playsAs: (who: string, role: string) => `${who} กำลังเล่นเป็น ${role}`,
     imaginedBanner: (name: string) =>
       `นี่คือสิ่งที่คุณจินตนาการว่า ${name} อาจรู้สึก — ไม่ใช่สิ่งที่ ${name} บอก`,
     progress: (cur: number, total: number) => `ตำแหน่ง ${cur} จาก ${total}`,
@@ -197,6 +199,10 @@ export const ui = {
   player: {
     createSelfHeading: 'สร้างตัวตนของคุณ',
     pickSelfHeading: 'คุณคือใครในการเดินทางนี้',
+    pickAHeading: 'ผู้เล่นคนแรกคือใคร',
+    pickBHeading: (a: string) => `แล้วใครจะเล่นกับ ${a}`,
+    createAHeading: 'ผู้เล่นคนแรก สร้างตัวตนของคุณ',
+    createBHeading: (a: string) => `ส่งเครื่องให้อีกคน แล้วสร้างตัวตนของคนที่เล่นกับ ${a}`,
     pickSelfBody: 'ใช้ตัวตนเดิมได้ คำตอบเกี่ยวกับตัวคุณที่ตอบไว้จะใช้ต่อได้เลย',
     useSelf: 'ใช้ตัวตนนี้',
     newSelf: 'สร้างตัวตนใหม่',
@@ -404,6 +410,8 @@ export const ui = {
     statementsPosition: (i: number, n: number) => `ประโยค ${i} จาก ${n}`,
     statementsStarters: 'ตัวช่วยเริ่มประโยค',
     statementKeep: 'เก็บไว้',
+    statementKeepSelf: 'เก็บไว้กับตัว',
+    statementShare: (name: string) => `แชร์กับ ${name}`,
     statementCard: 'ใส่ในการ์ดที่จะส่งออก',
     statementSkip: 'ข้ามประโยคนี้',
     statementsNote: 'เขียนด้วยคำพูดของคุณ หรือแตะตัวช่วยแล้วแก้ต่อก็ได้',
@@ -438,6 +446,16 @@ export const ui = {
     nextEmpty: 'ยังไม่มีรายการ เพิ่มได้จากหน้าเปรียบเทียบ ท้ายบท หรือพิมพ์เองด้านล่าง',
     notFound: 'ไม่พบรายงานนี้',
     toCompare: 'ไปหน้าเปรียบเทียบ',
+  },
+
+  handoff: {
+    to: (name: string) => `ส่งเครื่องให้ ${name}`,
+    back: (name: string) => `เสร็จแล้ว ส่งเครื่องคืนให้ ${name}`,
+    ready: (name: string) => `ฉันคือ ${name} — พร้อมแล้ว`,
+    readyBack: 'ได้รับเครื่องแล้ว',
+    privateNote: (name: string) => `ส่วนต่อไปเป็นของ ${name} คนเดียว อีกคนจะไม่เห็นคำตอบ จนกว่าทั้งสองคนจะยินยอมเปิด`,
+    cancel: 'ยกเลิก กลับไปเลือกบท',
+    together: 'ทั้งสองคน',
   },
 
   ending: {
