@@ -8,3 +8,5 @@ coverage/
 .DS_Store
 # PII denylist for TC-SAFE-07 — never commit
 pii-denylist.txt
+test-results/
+playwright-report/

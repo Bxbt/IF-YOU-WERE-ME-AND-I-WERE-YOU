@@ -3,12 +3,71 @@ export const ui = {
   title1: 'IF YOU WERE ME',
   title2: 'AND I WERE YOU',
   tagline: 'Two hearts. Two perspectives. One story.',
-  devNotice: 'เวอร์ชันพัฒนา (M1) — ตอนนี้ยังเล่นเนื้อเรื่องไม่ได้ มีเฉพาะระบบจัดการข้อมูล',
-  continue: 'เล่นต่อ',
-  continueDisabledHint: 'ยังไม่มีการเดินทางที่บันทึกไว้',
-  myData: 'ข้อมูลของฉัน',
   back: 'กลับ',
   home: 'กลับหน้าแรก',
+  close: 'ปิด',
+  cancel: 'ยกเลิก',
+  comingSoon: 'เร็ว ๆ นี้',
+  inDevelopment: 'กำลังพัฒนา',
+  version: (v: string) => `เวอร์ชัน ${v}`,
+
+  title: {
+    start: 'เริ่มการเดินทางใหม่',
+    continue: 'เล่นต่อ',
+    continueNoSave: 'ยังไม่มีการเดินทางที่บันทึกไว้',
+    continueNotReady: 'เล่นต่อได้เมื่อระบบเนื้อเรื่องพร้อม',
+    createSelf: 'สร้างตัวตนของฉัน',
+    createSelfNotReady: 'ระบบสร้างตัวละครกำลังพัฒนา',
+    about: 'เกี่ยวกับเกมนี้',
+    settings: 'ตั้งค่า',
+    sceneLabel: 'ท้องฟ้ากลางคืนเต็มไปด้วยดาว ตัวละครสองคนยืนห่างกัน มีทางเรืองแสงเชื่อมระหว่างกัน',
+  },
+
+  intro: {
+    heading: 'ก่อนเริ่มเดินทาง',
+    cards: [
+      { title: 'ไม่มีคะแนน ไม่มีใครผิด', body: 'เกมนี้ไม่วัดว่าใครรักมากกว่า หรือใครเข้าใจถูก' },
+      { title: 'ข้ามหรือหยุดได้ทุกเมื่อ', body: 'ทุกคำถามข้ามได้ ทุกฉากหยุดได้ กลับมาได้เสมอ' },
+      { title: 'คำตอบเป็นของคุณ', body: 'คุณเลือกเองว่าจะให้ใครเห็นอะไร' },
+    ],
+    contentNote: 'เรื่องนี้มีฉากติดอยู่ในที่แคบ ความกลัว และการทะเลาะกัน',
+    readMore: 'อ่านเพิ่มเติม',
+    accept: 'เข้าใจแล้ว เริ่มเลย',
+  },
+
+  mode: {
+    heading: 'เลือกวิธีเล่น',
+    solo: { title: 'เล่นคนเดียว', body: 'สำรวจตัวเอง และสิ่งที่คุณคิดเกี่ยวกับคู่', needs: 'ไม่ต้องใช้อินเทอร์เน็ต' },
+    together: { title: 'เล่นด้วยกัน', body: 'สองคน เครื่องเดียว ผลัดกันตอบแบบส่วนตัว', needs: 'เครื่องเดียว สองคน' },
+    remote: { title: 'เล่นระยะไกล', body: 'คนละเครื่อง ตอบแยก เปิดพร้อมกัน', needs: 'ต้องส่งไฟล์หรือใช้อินเทอร์เน็ต' },
+    soloNotReady: 'ระบบสร้างตัวละครกำลังพัฒนา',
+  },
+
+  settings: {
+    heading: 'ตั้งค่า',
+    display: 'การแสดงผล',
+    fontScale: 'ขนาดตัวอักษร',
+    fontScaleOptions: [
+      { value: 1, label: 'ปกติ' },
+      { value: 1.15, label: 'ใหญ่' },
+      { value: 1.3, label: 'ใหญ่มาก' },
+    ],
+    textSpeed: 'ความเร็วข้อความ',
+    textSpeedOptions: [
+      { value: 'slow', label: 'ช้า' },
+      { value: 'normal', label: 'ปกติ' },
+      { value: 'fast', label: 'เร็ว' },
+      { value: 'instant', label: 'ทันที' },
+    ],
+    reducedMotion: 'ลดการเคลื่อนไหว',
+    reducedMotionOptions: [
+      { value: 'system', label: 'ตามเครื่อง' },
+      { value: 'on', label: 'เปิด' },
+      { value: 'off', label: 'ปิด' },
+    ],
+    about: 'เกี่ยวกับ',
+    schema: (v: string) => `รูปแบบข้อมูล ${v}`,
+  },
 
   banner: {
     unavailable:
@@ -35,7 +94,6 @@ export const ui = {
       `ไฟล์นี้มีผู้เล่น ${players} คน และการเดินทาง ${journeys} รายการ`,
     importReplaceWarn: 'การนำเข้าจะแทนที่ข้อมูลทั้งหมดในเครื่องนี้',
     importConfirm: 'แทนที่ข้อมูลทั้งหมด',
-    importCancel: 'ยกเลิก',
     importDone: 'นำเข้าแล้ว',
     importFailed: 'นำเข้าไม่สำเร็จ ข้อมูลเดิมยังอยู่',
     deleteHeading: 'ลบข้อมูลทั้งหมด',
@@ -45,6 +103,65 @@ export const ui = {
     deleteWord: 'ลบทั้งหมด',
     deleteButton: 'ลบข้อมูลทั้งหมด',
     deleteDone: 'ลบข้อมูลทั้งหมดแล้ว',
+  },
+
+  about: {
+    heading: 'เกี่ยวกับเกมนี้',
+    what: 'เกมเล่าเรื่องเล็ก ๆ สำหรับสองคนที่อยากเข้าใจกันมากขึ้น ผ่านเหตุการณ์สมมติที่ได้ลองมองจากทั้งสองมุม',
+    notTitle: 'เกมนี้ไม่ใช่',
+    notList: ['แบบทดสอบความเข้ากันได้', 'การวินิจฉัยทางจิตวิทยา', 'การบำบัด', 'เครื่องมือตัดสินว่าใครผิด'],
+    principlesTitle: 'หลักของเกม',
+    principles: [
+      'Understanding doesn’t mean agreeing.',
+      'Loving someone doesn’t mean thinking alike.',
+      'Sometimes, we simply need to see the world through another person’s eyes.',
+    ],
+    safetyTitle: 'ถ้าความสัมพันธ์ทำให้คุณรู้สึกไม่ปลอดภัย',
+    safetyBody: 'คุณไม่จำเป็นต้องรับมือคนเดียว ติดต่อหน่วยงานเหล่านี้ได้',
+    safetyVerify: 'ข้อมูลหน่วยงานอาจเปลี่ยนแปลง โปรดตรวจสอบกับแหล่งทางการ',
+    dataTitle: 'ข้อมูลของคุณ',
+    dataBody: 'เก็บในเบราว์เซอร์ของเครื่องนี้เท่านั้น ไม่มีการส่งข้อมูลหรือติดตามการใช้งาน',
+    creditsTitle: 'เครดิต',
+    credits: ['ฟอนต์ Silkscreen — SIL Open Font License 1.1', 'ฟอนต์ IBM Plex Sans Thai — SIL Open Font License 1.1', 'ไอคอน Lucide — ISC License'],
+  },
+
+  pause: {
+    heading: 'หยุดพัก',
+    resume: 'เล่นต่อ',
+    skipScene: 'ข้ามฉากนี้',
+    skipChapter: 'ข้ามบทนี้',
+    chapters: 'กลับไปเลือกบท',
+    settings: 'ตั้งค่า',
+    exit: 'ออกไปหน้าแรก',
+    saved: (t: string) => `ความคืบหน้าบันทึกแล้ว · ${t}`,
+    skipNote: 'ข้ามได้เสมอ กลับมาได้ทุกเมื่อ',
+  },
+
+  answer: {
+    meta: {
+      depends: 'ขึ้นอยู่กับสถานการณ์',
+      not_sure: 'ไม่แน่ใจ',
+      prefer_not: 'ไม่สะดวกตอบ',
+      skipped: 'ข้าม',
+    },
+    maxReached: (n: number) => `เลือกได้สูงสุด ${n} ข้อ`,
+    freeTextToggle: 'เพิ่มคำอธิบาย',
+    freeTextPlaceholder: 'เขียนด้วยคำพูดของคุณ (ไม่บังคับ)',
+    counter: (n: number, max: number) => `${n}/${max}`,
+  },
+
+  labels: {
+    assumption: 'สิ่งที่คุณคิด',
+    imagined: 'สิ่งที่คุณจินตนาการ',
+    private: 'ส่วนตัว',
+    waiting: (name: string) => `รอ ${name}`,
+    consented: 'ยินยอมแล้ว',
+    revealed: 'เปิดแล้ว',
+    playingAs: (name: string) => `คุณกำลังเล่นเป็น ${name}`,
+    imaginedBanner: (name: string) => `นี่คือสิ่งที่คุณจินตนาการว่า ${name} อาจรู้สึก — ไม่ใช่สิ่งที่ ${name} บอก`,
+    progress: (cur: number, total: number) => `ตำแหน่ง ${cur} จาก ${total}`,
+    pause: 'หยุดพัก',
+    next: 'ถัดไป',
   },
 
   recovery: {
@@ -57,7 +174,6 @@ export const ui = {
     startFresh: 'เริ่มใหม่ (ลบข้อมูลที่อ่านไม่ได้)',
     startFreshConfirm: 'ยืนยัน: ลบข้อมูลที่อ่านไม่ได้ แล้วเริ่มใหม่',
     startFreshWarn: 'ข้อมูลเดิมจะถูกลบและกู้คืนไม่ได้ แนะนำให้ดาวน์โหลดเก็บไว้ก่อน',
-    importInstead: 'นำเข้าไฟล์สำรองแทน',
   },
 
   notFound: { heading: 'ไม่พบหน้านี้', body: 'หน้าที่คุณเปิดไม่มีอยู่' },

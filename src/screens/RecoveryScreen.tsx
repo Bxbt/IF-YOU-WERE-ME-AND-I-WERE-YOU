@@ -41,7 +41,7 @@ export function RecoveryScreen() {
               {ui.recovery.startFreshConfirm}
             </button>
             <button type="button" className="btn btn-ghost" onClick={() => setConfirming(false)}>
-              {ui.data.importCancel}
+              {ui.cancel}
             </button>
           </div>
         </div>

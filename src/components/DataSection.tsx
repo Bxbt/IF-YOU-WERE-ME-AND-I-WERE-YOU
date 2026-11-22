@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Download, Trash2, Upload } from 'lucide-react';
+import { Download, Trash2, Upload } from 'lucide-react';
 import { useGame } from '../store/game';
 import { ui } from '../content/th/ui';
 import { byteSize, downloadText } from '../lib/download';
@@ -14,8 +13,8 @@ import {
 
 type Pending = Extract<ImportResult, { ok: true }>;
 
-/** Data section of S10 (docs/06 S10 "ข้อมูล"). Full Settings arrive in M2. */
-export function DataScreen() {
+/** Data section of S10 (docs/06 S10 "ข้อมูล"). */
+export function DataSection() {
   const save = useGame((s) => s.save);
   const lastSavedAt = useGame((s) => s.lastSavedAt);
   const [message, setMessage] = useState<string | null>(null);
@@ -63,14 +62,8 @@ export function DataScreen() {
   }
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8">
-      <div>
-        <Link to="/" className="btn btn-ghost no-underline">
-          <ArrowLeft aria-hidden className="h-5 w-5" />
-          {ui.back}
-        </Link>
-      </div>
-      <h1 className="m-0 text-2xl font-semibold">{ui.data.heading}</h1>
+    <div className="flex flex-col gap-6">
+      <h2 className="m-0 text-xl font-semibold">{ui.data.heading}</h2>
 
       <section className="panel text-sm text-lavender" aria-label="ที่เก็บข้อมูล">
         <p className="m-0">{ui.data.whereStored}</p>
@@ -86,7 +79,7 @@ export function DataScreen() {
       )}
 
       <section className="panel flex flex-col gap-3" aria-labelledby="export-h">
-        <h2 id="export-h" className="m-0 text-lg font-semibold">{ui.data.exportHeading}</h2>
+        <h3 id="export-h" className="m-0 text-lg font-semibold">{ui.data.exportHeading}</h3>
         <p className="m-0 text-sm text-lavender">{ui.data.exportNote}</p>
         <button type="button" className="btn btn-primary self-start" onClick={onExport}>
           <Download aria-hidden className="h-5 w-5" />
@@ -95,7 +88,7 @@ export function DataScreen() {
       </section>
 
       <section className="panel flex flex-col gap-3" aria-labelledby="import-h">
-        <h2 id="import-h" className="m-0 text-lg font-semibold">{ui.data.importHeading}</h2>
+        <h3 id="import-h" className="m-0 text-lg font-semibold">{ui.data.importHeading}</h3>
         <label className="btn btn-ghost cursor-pointer self-start">
           <Upload aria-hidden className="h-5 w-5" />
           {ui.data.importPick}
@@ -110,7 +103,7 @@ export function DataScreen() {
                 {ui.data.importConfirm}
               </button>
               <button type="button" className="btn btn-ghost" onClick={() => setPending(null)}>
-                {ui.data.importCancel}
+                {ui.cancel}
               </button>
             </div>
           </div>
@@ -118,7 +111,7 @@ export function DataScreen() {
       </section>
 
       <section className="panel flex flex-col gap-3" aria-labelledby="delete-h">
-        <h2 id="delete-h" className="m-0 text-lg font-semibold">{ui.data.deleteHeading}</h2>
+        <h3 id="delete-h" className="m-0 text-lg font-semibold">{ui.data.deleteHeading}</h3>
         <p className="m-0 text-sm text-lavender">{ui.data.deleteWarn}</p>
         <label className="flex flex-col gap-1 text-sm">
           {ui.data.deleteTypeHint}
@@ -140,6 +133,6 @@ export function DataScreen() {
           {ui.data.deleteButton}
         </button>
       </section>
-    </main>
+    </div>
   );
 }
