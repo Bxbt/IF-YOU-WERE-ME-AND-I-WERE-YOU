@@ -5,6 +5,8 @@ export default defineConfig({
   testDir: 'tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
+  // Long play-through tests on CI WebKit (Linux) need more than the 30 s default.
+  timeout: process.env.CI ? 120_000 : 30_000,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: { baseURL: 'http://localhost:4173', trace: 'retain-on-failure' },

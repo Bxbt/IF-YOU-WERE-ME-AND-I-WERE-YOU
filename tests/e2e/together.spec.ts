@@ -58,7 +58,7 @@ test('TC-PRIV-01/08/11: reflection is answered privately; B never sees A’s ans
   await expect(
     page.getByRole('group', { name: /ถ้าคุณคือคนในลิฟต์/ }).getByRole('button', { name: 'กลัว' }),
   ).toHaveAttribute('aria-pressed', 'false');
-  await page.getByRole('button', { name: 'ข้ามคำถามท้ายบท' }).click();
+  await tap(page.getByRole('button', { name: 'ข้ามคำถามท้ายบท' }));
   await expect(page.getByRole('heading', { name: /ส่งเครื่องคืนให้ ทั้งสองคน/ })).toBeVisible();
   await page.getByRole('button', { name: 'ได้รับเครื่องแล้ว' }).click();
   await expect(page.getByText('บางครั้ง สิ่งที่แยกเราออกจากกัน ไม่ใช่ระยะทาง').first()).toBeVisible();
