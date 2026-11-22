@@ -241,3 +241,29 @@ export function imaginedWithThoughts(save: SaveRoot, ownerId: string): Player[] 
       Object.keys(save.profiles[`${ownerId}:perceived:${p.id}`]?.answers ?? {}).length > 0,
   );
 }
+
+/** Observed pattern feedback (docs/04 §5.3): confirm / not quite / hide / show again. */
+export function setObservedFeedback(
+  save: SaveRoot,
+  playerId: string,
+  key: string,
+  action: 'confirm' | 'reject' | 'hide' | 'unhide',
+): SaveRoot {
+  const pk = `${playerId}:self`;
+  const t = nowIso();
+  const prev = save.profiles[pk];
+  const base =
+    prev && 'hiddenObservedCards' in prev
+      ? prev
+      : { key: pk, ownerId: playerId, answers: {}, hiddenObservedCards: [] as string[], confirmedObserved: {} as Record<string, boolean>, updatedAt: t };
+  const hidden = new Set(base.hiddenObservedCards);
+  const confirmed = { ...base.confirmedObserved };
+  if (action === 'confirm') confirmed[key] = true;
+  if (action === 'reject') confirmed[key] = false;
+  if (action === 'hide') hidden.add(key);
+  if (action === 'unhide') hidden.delete(key);
+  return {
+    ...save,
+    profiles: { ...save.profiles, [pk]: { ...base, hiddenObservedCards: [...hidden], confirmedObserved: confirmed, updatedAt: t } },
+  };
+}

@@ -7,6 +7,7 @@ import { PixelButton } from '../components/PixelButton';
 import { SpriteView } from '../scene/CharacterCanvas';
 import { useGame } from '../store/game';
 import { PinSetup } from '../components/PinSetup';
+import { ObservedSection } from '../components/ObservedSection';
 import { recordPinAttempt, removePin, setPin } from '../store/pinActions';
 import { currentJourney, getAnswers, profileKey } from '../store/actions';
 import { FULL_SET, progress } from '../engine/personality';
@@ -157,6 +158,7 @@ export function ProfileHubScreen() {
             <Link to={`/memories/${p.id}`} className="btn btn-ghost self-start text-sm no-underline">
               {ui.memories.hubLink}
             </Link>
+            <ObservedSection playerId={p.id} />
             {partner && (
               <QuestionBlock
                 title={ui.hub.perceivedTitle(partner.nickname)}

@@ -51,7 +51,7 @@
 | **M10 Reveal** ✅ | Reveal engine (R1–R7) · UI Waiting/Consent/Reveal ใน S7, Ch3, Ch4, Ch5 · Comparison (Together rules) | TC-REV-01–08, 10 · TC-PRIV-09 | 4–5 วัน |
 | **M10b Profile reveal** ✅ | เปิดคำตอบ Profile Q01–Q36 ต่อ Journey ([04](04-personality-system.md) §6.3.0) จาก S8 — engine รองรับแล้ว (`kind: 'profile'`) ยังไม่มี UI · ต้องรวมคำตอบ Perceived ด้วย | Test ใหม่ (เพิ่มใน 11 ก่อนเริ่ม) | 2–3 วัน |
 | **M11 Memory Scenes** ✅ | S16 · MemoryScene schema · Template conversion · Reveal สำหรับความทรงจำ | Test ใหม่ TC-MEM-* (เพิ่มใน 11 ก่อนเริ่ม) | 3–4 วัน |
-| **M11b Deferred from MVP** | ~~Journey List (S1b) + Import แบบรวม~~ (ทำแล้ว 2026-11-23) · Observed patterns · ~~เสียง~~ (ทำแล้ว 2026-11-23) · ~~Link imagined → real~~ (ทำแล้ว 2026-11-23) | TC-RES-05, TC-EXP-05, TC-PROF-07/08 | 4–5 วัน |
+| **M11b Deferred from MVP** | ~~Journey List (S1b) + Import แบบรวม~~ (ทำแล้ว 2026-11-23) · ~~Observed patterns~~ (ทำแล้ว 2026-11-23) · ~~เสียง~~ (ทำแล้ว 2026-11-23) · ~~Link imagined → real~~ (ทำแล้ว 2026-11-23) | TC-RES-05, TC-EXP-05, TC-PROF-07/08 | 4–5 วัน |
 
 **รวม Phase 2 ≈ 13–17 วัน**
 

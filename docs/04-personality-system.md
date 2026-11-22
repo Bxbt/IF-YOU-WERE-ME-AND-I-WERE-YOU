@@ -105,6 +105,8 @@ for each dimension D:
 
 > **ย้ายออกจาก MVP** (audit M-7): ต่อการเล่นหนึ่งรอบมีจุดเลือกราว 14 จุด มิติส่วนใหญ่ไม่ถึงเกณฑ์ 3 สัญญาณ ฟีเจอร์จึงแทบไม่แสดงผลใน MVP · MVP **ไม่เก็บ** ObservedSignal (PR4: ไม่เก็บข้อมูลที่ไม่ได้ใช้) · Content ยังใส่ `tag` ไว้ได้เพื่อใช้ใน Phase 2 · Phase 2 ต้องเพิ่ม tag ให้มิติที่มีน้อยกว่า 3 ก่อนเปิดใช้
 > เก็บเฉพาะ `layer = self` — ไม่มี `observed.perceived` (ไม่มีหน้าจอใดใช้)
+>
+> **ทำแล้ว (M11b, 2026-11-23):** คำนวณสดจาก `choiceLog` ที่บันทึกอยู่แล้ว + `tag` ใน Content (`src/engine/observed.ts`) — **ไม่เก็บ** ObservedSignal เพิ่ม · นับเฉพาะตัวเลือกที่ผู้เล่นเลือกในบทบาทของตัวเอง (`asRole = self` หรือ role ที่ map เป็นผู้เล่นคนนั้น) · หนึ่งสัญญาณต่อ choice ต่อ journey (รอบล่าสุด) · เก็บเฉพาะ feedback ของผู้เล่น (`confirmedObserved`, `hiddenObservedCards` ใน profile `X:self`) · หน้า Profile Hub แสดงหลัง PIN · การ์ดที่ซ่อนกู้คืนได้จากปุ่ม "แสดงการ์ดที่ซ่อนไว้" ในส่วนเดียวกัน
 
 ### 5.1 การเก็บสัญญาณ
 
@@ -300,6 +302,6 @@ Report เป็นของผู้เล่นหนึ่งคนในห�
 | Our Next Conversation: คำถาม | หมวด `ask` + r4_3 + r5_2 + รายการที่ผู้เล่นเพิ่มเอง | — |
 | Our Next Conversation: สิ่งที่ควรขอบคุณ | self ของ Q34 ของอีกฝ่าย (Revealed) | — |
 | Our Next Conversation: วิธีดูแลกัน | Q26, Q13 ของอีกฝ่าย (Revealed) หรือ perceived (Solo, มีป้าย) | — |
-| รูปแบบที่คุณยืนยัน (Phase 2) | Observed ที่ `confirmed = true` | ไม่แสดงส่วนนี้ (MVP ไม่มีส่วนนี้) |
+| รูปแบบที่คุณยืนยัน (Phase 2) | Observed ที่ `confirmed = true` | ไม่แสดงส่วนนี้ (ทำแล้ว M11b — แสดงเมื่อมีอย่างน้อย 1 รายการ) |
 
 Report เป็นของผู้เล่นแต่ละคน ไม่มี Report รวมที่แสดงข้อมูลส่วนตัวของอีกฝ่ายโดยไม่ได้ Reveal — **Shared Reflection** ใน Ch5 แสดงเฉพาะ Statements ที่ทั้งสองแชร์ และ MirrorItem ที่ Revealed เท่านั้น

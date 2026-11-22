@@ -7,10 +7,11 @@ import type { QuestionContent } from '../content/types';
 import { MIRRORS, QUESTIONS } from '../content/th/questions';
 import { templates } from '../content/th/templates';
 import { ui } from '../content/th/ui';
+import { SIGNALS } from '../content/th/signals';
 import { compareTogether, optionTexts, soloPairs, type Comparison } from './compare';
 
 /** partner_revealed = something the partner agreed to open (docs/07 §8); never preselected for export. */
-export type ReportSource = 'self' | 'perceived' | 'statement' | 'conversation' | 'partner_revealed';
+export type ReportSource = 'self' | 'perceived' | 'statement' | 'conversation' | 'partner_revealed' | 'observed';
 
 export interface ReportItem {
   id: string;
@@ -139,11 +140,27 @@ export function buildReport(
         emptyCta: needsCta,
       },
       {
+        // Observed patterns the player confirmed (docs/04 §5.3, §8) — never ones they rejected or hid.
+        id: 'me-observed',
+        title: t.meObserved,
+        items: Object.entries(
+          (save.profiles[`${ownerId}:self`] as { confirmedObserved?: Record<string, boolean> } | undefined)
+            ?.confirmedObserved ?? {},
+        )
+          .filter(([, v]) => v)
+          .map(([key]) => ({
+            id: `observed:${key}`,
+            text: t.observedLine(SIGNALS[key] ?? key),
+            source: 'observed' as const,
+            dimension: key.split(':')[0],
+          })),
+      },
+      {
         id: 'me-statements',
         title: t.meStatements,
         items: ['cs1', 'cs2', 'cs3', 'cs5'].flatMap(statement),
       },
-    ].filter((g) => g.id !== 'me-statements' || g.items.length > 0),
+    ].filter((g) => (g.id !== 'me-statements' && g.id !== 'me-observed') || g.items.length > 0),
   };
 
   const allPerceived = [...QUESTIONS, ...MIRRORS]

@@ -78,7 +78,7 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-PROF-04 | MVP | E | แก้คำตอบ Q13 หลังจบเกม → S8 | Comparison อัปเดตทันที · `revision` เพิ่ม |
 | TC-PROF-05 | MVP | E | ลบคำตอบข้อเดียว → Undo | คำตอบกลับมา |
 | TC-PROF-06 | MVP | E | เปลี่ยนรูปลักษณ์ | Sprite และ Portrait ในฉากอัปเดต |
-| TC-PROF-07 | P2 | E | การ์ด Observed → "ซ่อน" → Settings กู้คืน | การ์ดกลับมา |
+| TC-PROF-07 | P2 | U | การ์ด Observed → "ซ่อน" → "แสดงการ์ดที่ซ่อนไว้" → "เลิกซ่อน" (Profile Hub) · ตัวเลือกที่เล่นในบทบาทของอีกฝ่ายไม่นับ | การ์ดกลับมา · นับเฉพาะบทบาทตัวเอง |
 | TC-PROF-08 | P2 | U | Observed: สัญญาณ D09 2 ครั้ง | ไม่แสดงการ์ด · 3 ครั้งพร้อม signal ซ้ำ ≥2 → แสดง |
 
 ## 6. Private Answers (Phase 2)

@@ -67,6 +67,8 @@ export const templates = {
     uUnsure: 'สิ่งที่ฉันยังไม่เข้าใจ',
     uUnsureEmpty: 'คุณตอบได้ทุกข้อ — แต่อย่าลืมว่าทุกข้อยังเป็นสิ่งที่คุณคิด',
     differences: 'ความต่างของเรา',
+    meObserved: 'รูปแบบที่คุณยืนยัน',
+    observedLine: (text: string) => `ในเนื้อเรื่อง คุณมัก${text}`,
     differencesRevealed: 'จากคำตอบที่ทั้งคู่เปิดแล้ว',
     differencesNone: 'ยังไม่มีความต่างจากคำตอบที่เปิดแล้ว',
     differenceLine: (q: string, x: string, xs: string, y: string, ys: string) =>
@@ -87,6 +89,7 @@ export const templates = {
       statement: 'คุณเขียน',
       conversation: 'คำถามครั้งหน้า',
       partner_revealed: 'มีคำตอบของอีกคน (เปิดแล้วทั้งคู่)',
+      observed: 'เกมสังเกต (คุณยืนยัน)',
     },
     fileFooter: (date: string) => `${date} · สร้างจาก IF YOU WERE ME, AND I WERE YOU`,
   },
