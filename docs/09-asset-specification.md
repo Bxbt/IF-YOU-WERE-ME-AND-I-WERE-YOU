@@ -168,8 +168,8 @@ Self-host ใน `public/fonts/` · `font-display: swap` · ระบุ License
 | favicon | 32×32, 16×16 | PNG (`public/brand/favicon-*.png`) ✅ | P0 |
 | apple-touch-icon | 180×180 | PNG ✅ | P1 |
 | PWA icons | 192, 512 | PNG ✅ (มีไฟล์แล้ว · manifest ยังไม่ทำ — PWA อยู่ใน Backlog) | P2 |
-| og-image | 1200×628 | JPEG `public/brand/og.jpg` ✅ (ภาพหน้าปก ไม่มีข้อมูลผู้เล่น) | P2 |
-| cover | 1734×907 | JPEG `public/brand/cover.jpg` — พื้นหลัง S1 บนจอกว้าง (อัตราส่วน ≥ 4:3) | P1 |
+| og-image | 1200×630 | JPEG `public/brand/og.jpg` ✅ (v4 ภาพหน้าปก ตัวละครแบบล็อกแล้ว ไม่มีข้อมูลผู้เล่น) | P2 |
+| cover | 2048×1082 | JPEG `public/brand/cover.jpg` (v4 ตัวละครแบบล็อกแล้ว ขยาย 2× แบบ nearest-neighbour) — พื้นหลัง S1 บนจอกว้าง (อัตราส่วน ≥ 4:3) · ตัวละครครึ่งล่างที่ ~32% / 68% ของความกว้าง ครึ่งบนว่างไว้ให้ชื่อเกม | P1 |
 | cover-portrait | 1144×2048 | JPEG `public/brand/cover-portrait.jpg` (v3 ตัวละครแบบล็อกแล้ว ขยาย 2× แบบ nearest-neighbour) — พื้นหลัง S1 บนจอแนวตั้ง (ส่วนบนว่างไว้ให้ชื่อเกม ตัวละครอยู่ ~12% ล่าง ที่ ~14–25% / 73–84% ของความกว้าง) · ฉาก canvas `bg_title` ไม่ได้ใช้ที่ S1 แล้ว | P1 |
 | mode cards | 512×512 | PNG โปร่งใส `public/brand/mode-solo.png`, `mode-together.png`, `mode-remote.png` (v3 ตัวละครแบบล็อกแล้ว ทั้งสามใบ) — S2 การ์ดโหมด · วางบนกล่อง navy #171C2F เสมอ (เส้นเข้มบางส่วนโปร่งใส) · ตกแต่ง (`alt=""`) | P1 |
 | waiting | 512×512 | PNG โปร่งใส `public/brand/waiting.png` — สองคนนั่งหันหลังให้กัน: S17 ขณะรอไฟล์ปิดผนึกของคู่ (Phase Waiting, docs/06 S7) และ EmptyState ของ S8 (ยังไม่มีข้อให้เทียบ) · กล่อง navy · ตกแต่ง | P1 |
