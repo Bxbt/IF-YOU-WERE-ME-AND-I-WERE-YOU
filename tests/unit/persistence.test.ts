@@ -29,7 +29,12 @@ describe('schema', () => {
 
   it('rejects drafts not scoped to a player (audit M-3)', () => {
     const s = sampleSave();
-    s.drafts.bad = { key: 'r1_3', playerId: 'pl_playerA01', text: 'x', updatedAt: '2026-11-22T10:00:00.000Z' };
+    s.drafts.bad = {
+      key: 'r1_3',
+      playerId: 'pl_playerA01',
+      text: 'x',
+      updatedAt: '2026-11-22T10:00:00.000Z',
+    };
     expect(SaveRoot.safeParse(s).success).toBe(false);
   });
 

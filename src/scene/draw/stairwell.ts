@@ -165,7 +165,8 @@ function paintStairwell(c: Ctx) {
   rect(c, wnd.x - 3, wnd.y - 3, wnd.w + 6, wnd.h + 7, '#26223a');
   rect(c, wnd.x - 2, wnd.y - 2, wnd.w + 4, wnd.h + 4, '#4a4462');
   rect(c, wnd.x, wnd.y, wnd.w, wnd.h, '#121831');
-  for (let y = wnd.y + 14; y < wnd.y + wnd.h; y++) for (let x = wnd.x + (y & 1); x < wnd.x + wnd.w; x += 2) rect(c, x, y, 1, 1, '#1a2242');
+  for (let y = wnd.y + 14; y < wnd.y + wnd.h; y++)
+    for (let x = wnd.x + (y & 1); x < wnd.x + wnd.w; x += 2) rect(c, x, y, 1, 1, '#1a2242');
   rect(c, wnd.x + 3, wnd.y + 15, 5, 11, '#0e1326');
   rect(c, wnd.x + 10, wnd.y + 11, 6, 15, '#10162c');
   rect(c, wnd.x + 5, wnd.y + 18, 1, 1, '#e9b77b');

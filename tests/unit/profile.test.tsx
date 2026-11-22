@@ -5,7 +5,14 @@ import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { routes } from '../../src/routes';
 import { useGame } from '../../src/store/game';
 import { SaveRoot, createEmptySave } from '../../src/persistence/schema';
-import { createPlayer, createSoloJourney, getAnswers, profileKey, saveAnswer, activeJourney } from '../../src/store/actions';
+import {
+  createPlayer,
+  createSoloJourney,
+  getAnswers,
+  profileKey,
+  saveAnswer,
+  activeJourney,
+} from '../../src/store/actions';
 import { emptyPlayerInput } from '../../src/components/PlayerForm';
 import { FULL_SET, QUICK_SET, QUESTION_BY_ID, progress, summarize } from '../../src/engine/personality';
 import { QUESTIONS, DIMENSIONS } from '../../src/content/th/questions';
@@ -47,7 +54,17 @@ describe('question bank content (docs/03)', () => {
   });
 
   it('TC-SAFE-01 (questions): no forbidden judging words (docs/04 §4.2)', () => {
-    const forbidden = ['toxic', 'ผิดปกติ', 'ขี้หึง', 'เย็นชา', 'เอาแต่ใจ', 'เก็บกด', 'วุฒิภาวะ', 'คะแนน', '%'];
+    const forbidden = [
+      'toxic',
+      'ผิดปกติ',
+      'ขี้หึง',
+      'เย็นชา',
+      'เอาแต่ใจ',
+      'เก็บกด',
+      'วุฒิภาวะ',
+      'คะแนน',
+      '%',
+    ];
     const text = JSON.stringify(QUESTIONS);
     for (const w of forbidden) expect(text).not.toContain(w);
   });
@@ -83,7 +100,9 @@ describe('store actions', () => {
       saveAnswer(id, 'self', undefined, 'Q13', { selected: ['q13_hug'], meta: null, freeText: '' });
     });
     expect(getAnswers(useGame.getState().save, profileKey(id, 'self')).Q13!.revision).toBe(1);
-    act(() => saveAnswer(id, 'self', undefined, 'Q13', { selected: ['q13_listen'], meta: null, freeText: '' }));
+    act(() =>
+      saveAnswer(id, 'self', undefined, 'Q13', { selected: ['q13_listen'], meta: null, freeText: '' }),
+    );
     expect(getAnswers(useGame.getState().save, profileKey(id, 'self')).Q13!.revision).toBe(2);
     valid();
   });
@@ -93,7 +112,11 @@ describe('store actions', () => {
     act(() => {
       id = createPlayer({ ...emptyPlayerInput(), nickname: 'ผู้เล่น A' });
       saveAnswer(id, 'self', undefined, 'Q01', { selected: [], meta: 'skipped', freeText: 'x' });
-      saveAnswer(id, 'self', undefined, 'Q04', { selected: ['q04_face'], meta: 'depends', freeText: 'ขึ้นกับเรื่อง' });
+      saveAnswer(id, 'self', undefined, 'Q04', {
+        selected: ['q04_face'],
+        meta: 'depends',
+        freeText: 'ขึ้นกับเรื่อง',
+      });
     });
     const a = getAnswers(useGame.getState().save, profileKey(id, 'self'));
     expect(a.Q01).toMatchObject({ status: 'skipped', meta: 'skipped', selected: [] });
@@ -126,7 +149,13 @@ describe('personality engine', () => {
 
   it('summary never includes prefer_not, marks uncertain dimensions, and has no numbers', () => {
     const t = '2026-11-22T10:00:00.000Z';
-    const base = { layer: 'self' as const, revision: 1, answeredAt: t, updatedAt: t, status: 'answered' as const };
+    const base = {
+      layer: 'self' as const,
+      revision: 1,
+      answeredAt: t,
+      updatedAt: t,
+      status: 'answered' as const,
+    };
     const out = summarize(
       {
         Q13: { ...base, questionId: 'Q13', selected: ['q13_listen'], meta: null },
@@ -167,7 +196,10 @@ describe('S3 character creation', () => {
     expect(router.state.location.pathname).toBe('/profile');
     const s = useGame.getState().save;
     const players = Object.values(s.players);
-    expect(players.map((p) => [p.nickname, p.kind])).toEqual([['ผู้เล่น A', 'real'], ['ผู้เล่น B', 'imagined']]);
+    expect(players.map((p) => [p.nickname, p.kind])).toEqual([
+      ['ผู้เล่น A', 'real'],
+      ['ผู้เล่น B', 'imagined'],
+    ]);
     expect(players[0]!.sentenceEnding).toBe('ค่ะ'); // TC-PROF-03 (stored; rendered in dialogue from M4)
     expect(players[1]!.appearance.accessory).toBe('glasses');
     expect(activeJourney(s)?.playerIds).toEqual(players.map((p) => p.id));
@@ -211,7 +243,11 @@ describe('S4 questionnaire', () => {
     await userEvent.type(screen.getByRole('textbox'), 'ตอบเอง');
     expect(next).toBeEnabled();
     await userEvent.click(next);
-    expect(getAnswers(useGame.getState().save, profileKey(id, 'self')).Q01).toMatchObject({ selected: [], meta: null, freeText: 'ตอบเอง' });
+    expect(getAnswers(useGame.getState().save, profileKey(id, 'self')).Q01).toMatchObject({
+      selected: [],
+      meta: null,
+      freeText: 'ตอบเอง',
+    });
     expect(screen.getByText('ข้อ 2 จาก 12')).toBeInTheDocument();
   });
 
@@ -231,7 +267,8 @@ describe('S4 questionnaire', () => {
   it('TC-RES-02: reopening resumes at the first unanswered question', async () => {
     const id = setup();
     act(() => {
-      for (const q of QUICK_SET.slice(0, 6)) saveAnswer(id, 'self', undefined, q, { selected: [], meta: 'not_sure', freeText: '' });
+      for (const q of QUICK_SET.slice(0, 6))
+        saveAnswer(id, 'self', undefined, q, { selected: [], meta: 'not_sure', freeText: '' });
     });
     renderAt(`/profile/${id}/self?set=quick`);
     expect(screen.getByText('ข้อ 7 จาก 12')).toBeInTheDocument();

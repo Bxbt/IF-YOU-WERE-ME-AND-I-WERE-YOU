@@ -3,6 +3,7 @@
  * through useGame.getState().update(...). Shapes follow docs/07.
  */
 import type { GameSession, PersonalityAnswer, Player, SaveRoot } from '../persistence/schema';
+import { checkSupportKeywords } from '../lib/supportCard';
 import { purgeBackup } from '../persistence/persist';
 import { newJourneyId, newPlayerId, nowIso } from '../lib/ids';
 import { useGame } from './game';
@@ -22,7 +23,11 @@ function clean(input: PlayerInput): PlayerInput {
   return out;
 }
 
-export function createPlayer(input: PlayerInput, kind: Player['kind'] = 'real', createdBy: string | null = null): string {
+export function createPlayer(
+  input: PlayerInput,
+  kind: Player['kind'] = 'real',
+  createdBy: string | null = null,
+): string {
   const id = newPlayerId();
   const t = nowIso();
   useGame.getState().update((s) => ({
@@ -64,7 +69,10 @@ export function createSoloJourney(selfId: string, imaginedId: string): string {
   const t = nowIso();
   useGame.getState().update((s) => {
     const journeys = Object.fromEntries(
-      Object.entries(s.journeys).map(([k, j]) => [k, j.status === 'active' ? { ...j, status: 'archived' as const, updatedAt: t } : j]),
+      Object.entries(s.journeys).map(([k, j]) => [
+        k,
+        j.status === 'active' ? { ...j, status: 'archived' as const, updatedAt: t } : j,
+      ]),
     );
     journeys[id] = {
       id,
@@ -90,7 +98,10 @@ export function profileKey(ownerId: string, layer: 'self' | 'perceived', aboutId
   return layer === 'self' ? `${ownerId}:self` : `${ownerId}:perceived:${aboutId}`;
 }
 
-const EMPTY_ANSWERS: Record<string, PersonalityAnswer> = Object.freeze({}) as Record<string, PersonalityAnswer>;
+const EMPTY_ANSWERS: Record<string, PersonalityAnswer> = Object.freeze({}) as Record<
+  string,
+  PersonalityAnswer
+>;
 
 /** Returns a stable empty object so store selectors do not re-render forever. */
 export function getAnswers(save: SaveRoot, key: string): Record<string, PersonalityAnswer> {
@@ -105,14 +116,23 @@ export interface AnswerInput {
 
 function sameAnswer(a: PersonalityAnswer, b: AnswerInput): boolean {
   return (
-    a.meta === b.meta && (a.freeText ?? '') === b.freeText.trim() && a.selected.join('|') === b.selected.join('|')
+    a.meta === b.meta &&
+    (a.freeText ?? '') === b.freeText.trim() &&
+    a.selected.join('|') === b.selected.join('|')
   );
 }
 
 /** Saves one answer; revision increases only when the content changes (TC-PROF-04). */
-export function saveAnswer(ownerId: string, layer: 'self' | 'perceived', aboutId: string | undefined, questionId: string, input: AnswerInput) {
+export function saveAnswer(
+  ownerId: string,
+  layer: 'self' | 'perceived',
+  aboutId: string | undefined,
+  questionId: string,
+  input: AnswerInput,
+) {
   const key = profileKey(ownerId, layer, aboutId);
   const t = nowIso();
+  checkSupportKeywords(input.freeText);
   useGame.getState().update((s) => {
     const existing = s.profiles[key];
     const prev = existing?.answers[questionId];
@@ -139,13 +159,21 @@ export function saveAnswer(ownerId: string, layer: 'self' | 'perceived', aboutId
     return {
       ...s,
       drafts,
-      profiles: { ...s.profiles, [key]: { ...base, answers: { ...base.answers, [questionId]: answer }, updatedAt: t } },
+      profiles: {
+        ...s.profiles,
+        [key]: { ...base, answers: { ...base.answers, [questionId]: answer }, updatedAt: t },
+      },
     };
   });
 }
 
 /** Removes an answer for real and purges the backup so no copy survives (audit H-4). */
-export function deleteAnswer(ownerId: string, layer: 'self' | 'perceived', aboutId: string | undefined, questionId: string) {
+export function deleteAnswer(
+  ownerId: string,
+  layer: 'self' | 'perceived',
+  aboutId: string | undefined,
+  questionId: string,
+) {
   const key = profileKey(ownerId, layer, aboutId);
   useGame.getState().update((s) => {
     const p = s.profiles[key];
@@ -158,7 +186,12 @@ export function deleteAnswer(ownerId: string, layer: 'self' | 'perceived', about
   purgeBackup();
 }
 
-export function draftKey(ownerId: string, layer: 'self' | 'perceived', aboutId: string | undefined, questionId: string) {
+export function draftKey(
+  ownerId: string,
+  layer: 'self' | 'perceived',
+  aboutId: string | undefined,
+  questionId: string,
+) {
   return layer === 'self' ? `${ownerId}:self:${questionId}` : `${ownerId}:perceived:${aboutId}:${questionId}`;
 }
 

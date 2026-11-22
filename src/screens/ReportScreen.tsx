@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { checkSupportKeywords } from '../lib/supportCard';
 import { Link, useParams } from 'react-router-dom';
 import {
   BarChart3,
@@ -269,7 +270,7 @@ function NextChecklist({ journeyId, ownerId }: { journeyId: string; ownerId: str
                   value={editText}
                   maxLength={200}
                   onChange={(e) => setEditText(e.target.value)}
-                  className="min-h-[44px] flex-1 rounded-btn border-2 border-lavender/40 bg-navy px-2 text-cream"
+                  className="min-h-[44px] min-w-0 flex-1 basis-40 rounded-btn border-2 border-lavender/40 bg-navy px-2 text-cream"
                 />
                 <PixelButton
                   className="text-sm"
@@ -332,6 +333,7 @@ function NextChecklist({ journeyId, ownerId }: { journeyId: string; ownerId: str
         onSubmit={(e) => {
           e.preventDefault();
           if (!text.trim()) return;
+          checkSupportKeywords(text);
           apply((s) => addNextConversation(s, journeyId, ownerId, text, 'manual'));
           setText('');
         }}
@@ -345,7 +347,7 @@ function NextChecklist({ journeyId, ownerId }: { journeyId: string; ownerId: str
           maxLength={200}
           placeholder={ui.report.nextAdd}
           onChange={(e) => setText(e.target.value)}
-          className="min-h-[44px] flex-1 rounded-btn border-2 border-lavender/40 bg-navy px-3 text-cream placeholder:text-lavender/70"
+          className="min-h-[44px] min-w-0 flex-1 basis-40 rounded-btn border-2 border-lavender/40 bg-navy px-3 text-cream placeholder:text-lavender/70"
         />
         <PixelButton type="submit" disabled={!text.trim()} icon={<Plus aria-hidden className="h-4 w-4" />}>
           {ui.report.nextAddButton}

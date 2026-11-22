@@ -51,7 +51,8 @@ function paintSky(c: Ctx) {
       const d = x * x + y * y;
       const inMoon = d <= 36 && (x - 3) * (x - 3) + (y + 2) * (y + 2) > 25;
       if (inMoon) rect(c, 267 + x, 21 + y, 1, 1, d > 25 ? '#d9cfe0' : '#f3ebdd');
-      else if (d < 196 && d > 36 && ((x + y) & 1) === 0) rect(c, 267 + x, 21 + y, 1, 1, d < 100 ? 'rgba(243,235,221,0.10)' : 'rgba(243,235,221,0.05)');
+      else if (d < 196 && d > 36 && ((x + y) & 1) === 0)
+        rect(c, 267 + x, 21 + y, 1, 1, d < 100 ? 'rgba(243,235,221,0.10)' : 'rgba(243,235,221,0.05)');
     }
   }
 }
@@ -125,7 +126,12 @@ function paintTree(c: Ctx, x: number) {
   rect(c, x, 128, 14, 12, '#5a4a52');
   rect(c, x, 128, 14, 2, '#6e5a60');
   rect(c, x + 6, 96, 2, 32, '#3a2c36');
-  const blobs = [[x - 6, 78, 26, 12], [x - 2, 72, 18, 8], [x - 8, 88, 30, 8], [x, 68, 12, 6]] as const;
+  const blobs = [
+    [x - 6, 78, 26, 12],
+    [x - 2, 72, 18, 8],
+    [x - 8, 88, 30, 8],
+    [x, 68, 12, 6],
+  ] as const;
   for (const [bx, by, bw, bh] of blobs) rect(c, bx, by, bw, bh, '#2e4a46');
   for (const [bx, by, bw] of blobs) dither(c, bx + 2, by, bw - 4, 2, '#3c5a54');
   dither(c, x - 8, 92, 30, 4, '#223836');
@@ -175,7 +181,11 @@ function paintDeck(c: Ctx) {
     }
   }
   // Rain puddles reflecting the sky
-  for (const [px0, py, pw] of [[118, 160, 34], [196, 146, 22], [240, 168, 26]] as const) {
+  for (const [px0, py, pw] of [
+    [118, 160, 34],
+    [196, 146, 22],
+    [240, 168, 26],
+  ] as const) {
     for (let y = 0; y < 5; y++) {
       const inset = Math.abs(2 - y) * 3;
       rect(c, px0 + inset, py + y, pw - inset * 2, 1, '#2c3252');
@@ -202,7 +212,12 @@ function paintRooftop(c: Ctx) {
   dither(c, 0, H - 8, W, 8, 'rgba(14,17,32,0.4)');
 }
 
-interface Bulb { x: number; y: number; ph: number; warm: boolean }
+interface Bulb {
+  x: number;
+  y: number;
+  ph: number;
+  warm: boolean;
+}
 
 /** Two sagging strings between the poles; bulbs every 9 px. */
 function strings(): { wire: [number, number][]; bulbs: Bulb[] } {

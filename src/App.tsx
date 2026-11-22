@@ -7,6 +7,7 @@ import { installPersistenceListeners, useGame } from './store/game';
 import { router } from './routes';
 import { RecoveryScreen } from './screens/RecoveryScreen';
 import { StorageBanner } from './components/StorageBanner';
+import { SupportCard } from './components/SupportCard';
 
 export function App() {
   const ready = useGame((s) => s.ready);
@@ -36,6 +37,7 @@ export function App() {
       <StorageBanner />
       <RouterProvider router={router} />
       <Toaster />
+      <SupportCard />
     </MotionConfig>
   );
 }

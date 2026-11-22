@@ -24,44 +24,119 @@ function dither(c: Ctx, x: number, y: number, w: number, h: number, col: string,
 }
 
 interface RoomPalette {
-  wall: string; wallD: string; wallL: string; trim: string;
-  floor: string; floorD: string; floorL: string;
-  sky0: string; sky1: string; sky2: string; city: string; cityLit: string;
-  frame: string; curtain: string; curtainD: string;
-  sofa: string; sofaD: string; sofaL: string; cushion: string;
-  wood: string; woodD: string; woodL: string;
-  leaf: string; leafD: string; leafL: string; pot: string;
-  rug: string; rugD: string; rugL: string;
-  mug1: string; mug2: string; book: string[];
-  shade: string; art1: string; art2: string;
+  wall: string;
+  wallD: string;
+  wallL: string;
+  trim: string;
+  floor: string;
+  floorD: string;
+  floorL: string;
+  sky0: string;
+  sky1: string;
+  sky2: string;
+  city: string;
+  cityLit: string;
+  frame: string;
+  curtain: string;
+  curtainD: string;
+  sofa: string;
+  sofaD: string;
+  sofaL: string;
+  cushion: string;
+  wood: string;
+  woodD: string;
+  woodL: string;
+  leaf: string;
+  leafD: string;
+  leafL: string;
+  pot: string;
+  rug: string;
+  rugD: string;
+  rugL: string;
+  mug1: string;
+  mug2: string;
+  book: string[];
+  shade: string;
+  art1: string;
+  art2: string;
   night: boolean;
 }
 
 const MORNING: RoomPalette = {
-  wall: '#6a6390', wallD: '#5a5684', wallL: '#7d76a2', trim: '#4a466e',
-  floor: '#6e5a62', floorD: '#5a4854', floorL: '#826c70',
-  sky0: '#bcd0e2', sky1: '#e8d9c4', sky2: '#f3ebdd', city: '#9aa6c4', cityLit: '#f3ebdd',
-  frame: '#f3ebdd', curtain: '#e5c7b8', curtainD: '#c9a3a2',
-  sofa: '#8eacc8', sofaD: '#6f8cab', sofaL: '#b0c6da', cushion: '#d9a3a7',
-  wood: '#8a6a5c', woodD: '#6a5050', woodL: '#a8846c',
-  leaf: '#6e9a7c', leafD: '#4e7462', leafL: '#9cc09a', pot: '#d98e72',
-  rug: '#c49aa6', rugD: '#a87e90', rugL: '#dcb6b8',
-  mug1: '#f3ebdd', mug2: '#e9b77b', book: ['#d9a3a7', '#8eacc8', '#e9b77b', '#a49bcb', '#f3ebdd'],
-  shade: '#f3ebdd', art1: '#e9b77b', art2: '#8eacc8',
+  wall: '#6a6390',
+  wallD: '#5a5684',
+  wallL: '#7d76a2',
+  trim: '#4a466e',
+  floor: '#6e5a62',
+  floorD: '#5a4854',
+  floorL: '#826c70',
+  sky0: '#bcd0e2',
+  sky1: '#e8d9c4',
+  sky2: '#f3ebdd',
+  city: '#9aa6c4',
+  cityLit: '#f3ebdd',
+  frame: '#f3ebdd',
+  curtain: '#e5c7b8',
+  curtainD: '#c9a3a2',
+  sofa: '#8eacc8',
+  sofaD: '#6f8cab',
+  sofaL: '#b0c6da',
+  cushion: '#d9a3a7',
+  wood: '#8a6a5c',
+  woodD: '#6a5050',
+  woodL: '#a8846c',
+  leaf: '#6e9a7c',
+  leafD: '#4e7462',
+  leafL: '#9cc09a',
+  pot: '#d98e72',
+  rug: '#c49aa6',
+  rugD: '#a87e90',
+  rugL: '#dcb6b8',
+  mug1: '#f3ebdd',
+  mug2: '#e9b77b',
+  book: ['#d9a3a7', '#8eacc8', '#e9b77b', '#a49bcb', '#f3ebdd'],
+  shade: '#f3ebdd',
+  art1: '#e9b77b',
+  art2: '#8eacc8',
   night: false,
 };
 
 const NIGHT: RoomPalette = {
-  wall: '#2c2d4a', wallD: '#24253f', wallL: '#363858', trim: '#1c1d33',
-  floor: '#2a2436', floorD: '#211c2e', floorL: '#342c40',
-  sky0: '#0e1120', sky1: '#171c2f', sky2: '#202440', city: '#1d2238', cityLit: '#e9b77b',
-  frame: '#4a4a6e', curtain: '#5a4a64', curtainD: '#423852',
-  sofa: '#3c4e6c', sofaD: '#2e3c56', sofaL: '#4e6280', cushion: '#7a5a6a',
-  wood: '#3e3240', woodD: '#2e2634', woodL: '#4e3e4c',
-  leaf: '#2e4a46', leafD: '#223836', leafL: '#3e5e56', pot: '#6a4a4a',
-  rug: '#5a4458', rugD: '#4a384a', rugL: '#6a5066',
-  mug1: '#a49bcb', mug2: '#8a6a5c', book: ['#6a4a5a', '#3c4e6c', '#6a5240', '#4e4a70', '#6a6478'],
-  shade: '#d9c4a4', art1: '#7a6050', art2: '#3c4e6c',
+  wall: '#2c2d4a',
+  wallD: '#24253f',
+  wallL: '#363858',
+  trim: '#1c1d33',
+  floor: '#2a2436',
+  floorD: '#211c2e',
+  floorL: '#342c40',
+  sky0: '#0e1120',
+  sky1: '#171c2f',
+  sky2: '#202440',
+  city: '#1d2238',
+  cityLit: '#e9b77b',
+  frame: '#4a4a6e',
+  curtain: '#5a4a64',
+  curtainD: '#423852',
+  sofa: '#3c4e6c',
+  sofaD: '#2e3c56',
+  sofaL: '#4e6280',
+  cushion: '#7a5a6a',
+  wood: '#3e3240',
+  woodD: '#2e2634',
+  woodL: '#4e3e4c',
+  leaf: '#2e4a46',
+  leafD: '#223836',
+  leafL: '#3e5e56',
+  pot: '#6a4a4a',
+  rug: '#5a4458',
+  rugD: '#4a384a',
+  rugL: '#6a5066',
+  mug1: '#a49bcb',
+  mug2: '#8a6a5c',
+  book: ['#6a4a5a', '#3c4e6c', '#6a5240', '#4e4a70', '#6a6478'],
+  shade: '#d9c4a4',
+  art1: '#7a6050',
+  art2: '#3c4e6c',
   night: true,
 };
 
@@ -78,11 +153,20 @@ function paintWindow(c: Ctx, p: RoomPalette) {
   dither(c, x, y + 38, w, 4, p.sky2);
   const rnd = mulberry32(44);
   if (p.night) {
-    for (let i = 0; i < 14; i++) rect(c, x + Math.floor(rnd() * w), y + Math.floor(rnd() * 30), 1, 1, rnd() < 0.3 ? '#e9b77b' : '#a49bcb');
+    for (let i = 0; i < 14; i++)
+      rect(
+        c,
+        x + Math.floor(rnd() * w),
+        y + Math.floor(rnd() * 30),
+        1,
+        1,
+        rnd() < 0.3 ? '#e9b77b' : '#a49bcb',
+      );
     // small moon
     for (let my = -3; my <= 3; my++) {
       for (let mx = -3; mx <= 3; mx++) {
-        if (mx * mx + my * my <= 10 && (mx - 2) * (mx - 2) + (my + 1) * (my + 1) > 6) rect(c, x + 54 + mx, y + 10 + my, 1, 1, '#f3ebdd');
+        if (mx * mx + my * my <= 10 && (mx - 2) * (mx - 2) + (my + 1) * (my + 1) > 6)
+          rect(c, x + 54 + mx, y + 10 + my, 1, 1, '#f3ebdd');
       }
     }
   } else {
@@ -121,7 +205,10 @@ function paintWindow(c: Ctx, p: RoomPalette) {
   rect(c, x + 10, y + h - 11, 2, 6, p.leafL);
   rect(c, x + 5, y + h - 8, 2, 2, p.leafD);
   // Curtains, gathered
-  for (const [cx, dir] of [[x - 10, 1], [x + w + 2, -1]] as const) {
+  for (const [cx, dir] of [
+    [x - 10, 1],
+    [x + w + 2, -1],
+  ] as const) {
     rect(c, cx, y - 6, 9, h + 18, p.curtain);
     for (let k = 1; k < 9; k += 3) rect(c, cx + k, y - 4, 1, h + 16, p.curtainD);
     rect(c, dir > 0 ? cx + 8 : cx, y - 6, 1, h + 18, p.curtainD);
@@ -237,8 +324,17 @@ function paintBigPlant(c: Ctx, p: RoomPalette) {
   rect(c, 194, 100, 14, 2, '#f3ebdd');
   rect(c, 196, 112, 10, 2, p.woodD);
   const leaves = [
-    [200, 70, 3, 30], [192, 76, 6, 4], [186, 80, 6, 4], [204, 74, 6, 4], [208, 78, 6, 4],
-    [196, 64, 6, 4], [190, 88, 6, 4], [206, 88, 6, 4], [200, 60, 4, 6], [194, 70, 3, 10], [206, 66, 3, 12],
+    [200, 70, 3, 30],
+    [192, 76, 6, 4],
+    [186, 80, 6, 4],
+    [204, 74, 6, 4],
+    [208, 78, 6, 4],
+    [196, 64, 6, 4],
+    [190, 88, 6, 4],
+    [206, 88, 6, 4],
+    [200, 60, 4, 6],
+    [194, 70, 3, 10],
+    [206, 66, 3, 12],
   ] as const;
   for (const [lx, ly, lw, lh] of leaves) rect(c, lx, ly, lw, lh, p.leaf);
   for (const [lx, ly, lw] of leaves) rect(c, lx, ly, lw, 1, p.leafL);
@@ -255,7 +351,10 @@ function paintTable(c: Ctx, p: RoomPalette) {
   rect(c, x + 58, y + 7, 3, 10, p.woodD);
   dither(c, x, y + 17, 66, 3, 'rgba(14,17,32,0.35)');
   // mugs
-  for (const [mx, col] of [[x + 20, p.mug1], [x + 34, p.mug2]] as const) {
+  for (const [mx, col] of [
+    [x + 20, p.mug1],
+    [x + 34, p.mug2],
+  ] as const) {
     rect(c, mx, y - 6, 6, 6, col);
     rect(c, mx, y - 6, 6, 1, 'rgba(255,255,255,0.35)');
     rect(c, mx + 6, y - 5, 2, 1, col);
@@ -411,7 +510,12 @@ function lampGlow(): HTMLCanvasElement | null {
 /** Dust motes drifting in the sunbeam; deterministic in t, frozen at t = 0. */
 const MOTES = (() => {
   const rnd = mulberry32(77);
-  return Array.from({ length: 10 }, () => ({ x: rnd() * 60, y: rnd() * 80, s: 0.6 + rnd() * 0.8, ph: rnd() * 6.28 }));
+  return Array.from({ length: 10 }, () => ({
+    x: rnd() * 60,
+    y: rnd() * 80,
+    s: 0.6 + rnd() * 0.8,
+    ph: rnd() * 6.28,
+  }));
 })();
 
 export function drawLivingRoomMorning(c: Ctx, t: number, env: SceneEnv) {

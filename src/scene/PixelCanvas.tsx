@@ -15,7 +15,14 @@ interface PixelCanvasProps {
 }
 
 /** 320×180 logical canvas scaled with crisp pixels. Text never goes inside the canvas. */
-export function PixelCanvas({ draw, label, fps = 10, className = '', fit = 'contain', maxHeightRatio }: PixelCanvasProps) {
+export function PixelCanvas({
+  draw,
+  label,
+  fps = 10,
+  className = '',
+  fit = 'contain',
+  maxHeightRatio,
+}: PixelCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();

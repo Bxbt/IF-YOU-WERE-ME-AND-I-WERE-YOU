@@ -37,7 +37,14 @@ const NIGHT = '#1a2140';
 const RAIN_GLASS = 'rgba(142,172,200,0.6)';
 
 /** Dithered warm glow (like the elevator emergency light), rendered once per key. */
-function glowLayer(key: string, cx: number, cy: number, rings: { r: number; a: number }[], rgb: string, sy = 1.2) {
+function glowLayer(
+  key: string,
+  cx: number,
+  cy: number,
+  rings: { r: number; a: number }[],
+  rgb: string,
+  sy = 1.2,
+) {
   return cachedLayer(key, W, H, (g) => {
     for (const ring of rings) {
       g.fillStyle = `rgba(${rgb},${ring.a})`;
@@ -59,7 +66,8 @@ function paintWall(c: Ctx, floorY: number) {
   for (let x = 0; x < W; x += 8) rect(c, x, 10, 1, floorY - 10, WALL_D);
   // dark ceiling band with a dithered edge
   rect(c, 0, 0, W, 8, TRIM);
-  for (let y = 8; y < 12; y++) for (let x = y & 1; x < W; x += 2) if (y < 10 || (x & 2)) rect(c, x, y, 1, 1, TRIM);
+  for (let y = 8; y < 12; y++)
+    for (let x = y & 1; x < W; x += 2) if (y < 10 || x & 2) rect(c, x, y, 1, 1, TRIM);
   rect(c, 0, 12, W, 1, WALL_L);
   rect(c, 0, floorY - 4, W, 4, TRIM);
   rect(c, 0, floorY - 4, W, 1, WALL_L);
@@ -73,7 +81,8 @@ function paintWoodFloor(c: Ctx, y0: number) {
   for (let y = y0; y < H; y += 7 + Math.floor(row / 2), row++) {
     rect(c, 0, y, W, 1, WOOD_D);
     rect(c, 0, y + 1, W, 1, WOOD_L);
-    for (let x = Math.floor(rnd() * 40); x < W; x += 48 + Math.floor(rnd() * 30)) rect(c, x, y + 1, 1, 6 + Math.floor(row / 2), WOOD_D);
+    for (let x = Math.floor(rnd() * 40); x < W; x += 48 + Math.floor(rnd() * 30))
+      rect(c, x, y + 1, 1, 6 + Math.floor(row / 2), WOOD_D);
   }
 }
 
@@ -145,7 +154,8 @@ function paintEvening(c: Ctx) {
   }
   rect(c, 46, 40, 1, 4, STEEL);
   rect(c, 52, 40, 1, 4, STEEL);
-  for (let y = 58; y < 88; y += 5) for (let x = 22; x < 76; x += 6) rect(c, x, y, 5, 4, ((x + y) & 4) ? '#4d4865' : '#48435f'); // tiles
+  for (let y = 58; y < 88; y += 5)
+    for (let x = 22; x < 76; x += 6) rect(c, x, y, 5, 4, (x + y) & 4 ? '#4d4865' : '#48435f'); // tiles
   rect(c, 20, 88, 58, 4, CREAM_D); // counter top
   rect(c, 20, 88, 58, 1, CREAM);
   rect(c, 22, 92, 54, 24, CAB);
@@ -224,12 +234,18 @@ function paintEvening(c: Ctx) {
 function drawLamp(c: Ctx, t: number, on: boolean, cx: number, shadeY: number, key: string) {
   if (on) {
     const breathe = 0.9 + 0.06 * Math.sin(t * 0.8) + 0.04 * Math.sin(t * 2.3);
-    const glow = glowLayer(key, cx, shadeY + 6, [
-      { r: 14, a: 0.45 },
-      { r: 34, a: 0.26 },
-      { r: 70, a: 0.14 },
-      { r: 130, a: 0.07 },
-    ], '233,183,123');
+    const glow = glowLayer(
+      key,
+      cx,
+      shadeY + 6,
+      [
+        { r: 14, a: 0.45 },
+        { r: 34, a: 0.26 },
+        { r: 70, a: 0.14 },
+        { r: 130, a: 0.07 },
+      ],
+      '233,183,123',
+    );
     if (glow) {
       c.save();
       c.globalAlpha = breathe;
@@ -240,7 +256,8 @@ function drawLamp(c: Ctx, t: number, on: boolean, cx: number, shadeY: number, ke
   // shade (trapezoid)
   const top = on ? '#f3d9a8' : '#5a4a54';
   const side = on ? '#e9b77b' : '#4a3c48';
-  for (let i = 0; i < 12; i++) rect(c, cx - 5 - Math.floor(i / 3), shadeY + i, 10 + 2 * Math.floor(i / 3), 1, i < 2 ? top : side);
+  for (let i = 0; i < 12; i++)
+    rect(c, cx - 5 - Math.floor(i / 3), shadeY + i, 10 + 2 * Math.floor(i / 3), 1, i < 2 ? top : side);
   if (on) rect(c, cx - 7, shadeY + 12, 14, 1, '#fff4d6');
 }
 
@@ -290,7 +307,7 @@ function paintKitchen(c: Ctx) {
   for (let y = 50; y < 92; y += 6) {
     for (let x = 0; x < W; x += 8) {
       if (x >= 104 && x < 200) continue;
-      rect(c, x, y, 7, 5, ((x + y) & 8) ? '#4d4865' : '#48435f');
+      rect(c, x, y, 7, 5, (x + y) & 8 ? '#4d4865' : '#48435f');
     }
   }
 
@@ -402,12 +419,19 @@ export function drawApartmentKitchen(c: Ctx, t: number, env: SceneEnv) {
   if (!on) drawDim(c, 0.4);
   // range-hood light: warm pool over the stove
   if (on) {
-    const glow = glowLayer('bg_apartment_kitchen_glow', 57, 46, [
-      { r: 12, a: 0.4 },
-      { r: 30, a: 0.24 },
-      { r: 62, a: 0.13 },
-      { r: 120, a: 0.06 },
-    ], '233,183,123', 1.6);
+    const glow = glowLayer(
+      'bg_apartment_kitchen_glow',
+      57,
+      46,
+      [
+        { r: 12, a: 0.4 },
+        { r: 30, a: 0.24 },
+        { r: 62, a: 0.13 },
+        { r: 120, a: 0.06 },
+      ],
+      '233,183,123',
+      1.6,
+    );
     if (glow) c.drawImage(glow, 0, 0);
     rect(c, 34, 46, 46, 1, '#fff4d6');
     c.fillStyle = 'rgba(233,183,123,0.05)';

@@ -9,7 +9,11 @@ html {
   scroll-padding-bottom: 6rem;
   scroll-padding-top: 1rem;
 }
-@media (min-width: 1024px) { html { font-size: calc(19px * var(--font-scale)); } }
+@media (min-width: 1024px) {
+  html {
+    font-size: calc(19px * var(--font-scale));
+  }
+}
 
 body {
   margin: 0;
@@ -20,7 +24,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-:focus-visible { outline: 3px solid rgb(var(--c-orange)); outline-offset: 2px; }
+:focus-visible {
+  outline: 3px solid rgb(var(--c-orange));
+  outline-offset: 2px;
+}
 
 @layer components {
   .panel {
@@ -32,11 +39,23 @@ body {
     @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-btn px-5 py-2 font-medium transition-transform;
     border: 2px solid rgb(var(--c-lavender) / 0.4);
   }
-  .btn:active:not([aria-disabled='true']):not(:disabled) { transform: translateY(1px); }
-  .btn:disabled, .btn[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
-  .btn-primary { @apply bg-orange text-navy; }
-  .btn-ghost { @apply bg-transparent text-cream; }
-  .btn-danger { @apply bg-danger text-navy; }
+  .btn:active:not([aria-disabled='true']):not(:disabled) {
+    transform: translateY(1px);
+  }
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    @apply bg-orange text-navy;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-cream;
+  }
+  .btn-danger {
+    @apply bg-danger text-navy;
+  }
 }
 
 html[data-reduced-motion='true'] *,

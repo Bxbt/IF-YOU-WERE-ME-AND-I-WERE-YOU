@@ -1,7 +1,13 @@
 /** bg_title (docs/09 §2): two figures apart under stars, a glowing path between them. */
 import { H, W, ditherBands, mulberry32, px } from '../palette';
 
-export interface Star { x: number; y: number; c: number; phase: number; big: boolean }
+export interface Star {
+  x: number;
+  y: number;
+  c: number;
+  phase: number;
+  big: boolean;
+}
 
 export function makeStars(): Star[] {
   const rnd = mulberry32(20261122);

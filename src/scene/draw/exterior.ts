@@ -30,12 +30,21 @@ function blend(c: Ctx, y0: number, y1: number, a: string, b: string) {
   for (let y = y0; y < y1; y++) {
     const p = (y - y0) / n;
     for (let x = y & 1; x < W; x += 2) {
-      if (p > 0.66 || (p > 0.33 && (x & 2)) || (p > 0.15 && (x & 6) === 0)) rect(c, x, y, 1, 1, b);
+      if (p > 0.66 || (p > 0.33 && x & 2) || (p > 0.15 && (x & 6) === 0)) rect(c, x, y, 1, 1, b);
     }
   }
 }
 
-function skyline(c: Ctx, seed: number, minH: number, maxH: number, col: string, lit: string, litP: number, skip?: [number, number]) {
+function skyline(
+  c: Ctx,
+  seed: number,
+  minH: number,
+  maxH: number,
+  col: string,
+  lit: string,
+  litP: number,
+  skip?: [number, number],
+) {
   const rnd = mulberry32(seed);
   let x = -4;
   while (x < W) {
@@ -126,11 +135,13 @@ function paintExterior(c: Ctx) {
 
   // ── wet street ──
   rect(c, 0, GROUND, W, H - GROUND, '#141829');
-  for (let y = GROUND; y < H; y += 3) for (let x = (y * 7) % 11; x < W; x += 11) rect(c, x, y, 3, 1, '#1b2036');
+  for (let y = GROUND; y < H; y += 3)
+    for (let x = (y * 7) % 11; x < W; x += 11) rect(c, x, y, 3, 1, '#1b2036');
   rect(c, 0, GROUND, W, 1, '#2a2c48');
   // reflections of lit things (broken vertical streaks)
   const reflect = (x: number, w: number, col: string, len: number) => {
-    for (let y = GROUND + 2; y < Math.min(H, GROUND + 2 + len); y += 2) rect(c, x + ((y >> 1) & 1), y, w, 1, col);
+    for (let y = GROUND + 2; y < Math.min(H, GROUND + 2 + len); y += 2)
+      rect(c, x + ((y >> 1) & 1), y, w, 1, col);
   };
   reflect(149, 22, '#8a6a4a', 16);
   reflect(HOME.x, 4, '#6a5444', 10);
@@ -159,9 +170,38 @@ function glowLayer() {
         }
       }
     };
-    halo(HOME.x + 2, HOME.y + 2, [{ r: 5, a: 0.35 }, { r: 10, a: 0.18 }], '255,207,138');
-    halo(160, GROUND - 6, [{ r: 14, a: 0.3 }, { r: 30, a: 0.14 }, { r: 50, a: 0.06 }], '233,183,123', 1.4);
-    for (const lx of [68, 250]) halo(lx, GROUND - 30, [{ r: 8, a: 0.3 }, { r: 18, a: 0.14 }, { r: 32, a: 0.06 }], '233,183,123', 0.8);
+    halo(
+      HOME.x + 2,
+      HOME.y + 2,
+      [
+        { r: 5, a: 0.35 },
+        { r: 10, a: 0.18 },
+      ],
+      '255,207,138',
+    );
+    halo(
+      160,
+      GROUND - 6,
+      [
+        { r: 14, a: 0.3 },
+        { r: 30, a: 0.14 },
+        { r: 50, a: 0.06 },
+      ],
+      '233,183,123',
+      1.4,
+    );
+    for (const lx of [68, 250])
+      halo(
+        lx,
+        GROUND - 30,
+        [
+          { r: 8, a: 0.3 },
+          { r: 18, a: 0.14 },
+          { r: 32, a: 0.06 },
+        ],
+        '233,183,123',
+        0.8,
+      );
   });
 }
 

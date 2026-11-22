@@ -4,7 +4,11 @@
  */
 import { SCHEMA_VERSION } from './schema';
 
-export type Migration = { from: string; to: string; up: (data: Record<string, unknown>) => Record<string, unknown> };
+export type Migration = {
+  from: string;
+  to: string;
+  up: (data: Record<string, unknown>) => Record<string, unknown>;
+};
 
 export const migrations: Migration[] = [];
 

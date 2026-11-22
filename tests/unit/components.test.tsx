@@ -51,7 +51,10 @@ describe('ChoiceList + MetaOptions', () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: /กอด/ }));
     await userEvent.click(screen.getByRole('button', { name: 'ไม่แน่ใจ' }));
-    expect(JSON.parse(screen.getByTestId('state').textContent!)).toMatchObject({ selected: [], meta: 'not_sure' });
+    expect(JSON.parse(screen.getByTestId('state').textContent!)).toMatchObject({
+      selected: [],
+      meta: 'not_sure',
+    });
     expect(screen.getByRole('button', { name: 'เพิ่มคำอธิบาย' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'ข้าม' }));
     expect(screen.queryByRole('button', { name: 'เพิ่มคำอธิบาย' })).not.toBeInTheDocument();
@@ -71,7 +74,15 @@ describe('ConfirmDialog (AX-6)', () => {
     const onCancel = vi.fn();
     const onConfirm = vi.fn();
     render(
-      <ConfirmDialog open title="ลบ?" confirmLabel="ลบเลย" destructive typedWord="ลบทั้งหมด" onCancel={onCancel} onConfirm={onConfirm} />,
+      <ConfirmDialog
+        open
+        title="ลบ?"
+        confirmLabel="ลบเลย"
+        destructive
+        typedWord="ลบทั้งหมด"
+        onCancel={onCancel}
+        onConfirm={onConfirm}
+      />,
     );
     expect(screen.getByRole('dialog')).toContainElement(document.activeElement as HTMLElement);
     const confirm = screen.getByRole('button', { name: 'ลบเลย' });

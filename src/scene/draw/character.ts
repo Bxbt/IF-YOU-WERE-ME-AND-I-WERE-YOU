@@ -7,14 +7,27 @@ import type { Player } from '../../persistence/schema';
 export type Appearance = Player['appearance'];
 export type Expression = 'neutral' | 'happy' | 'sad' | 'worried' | 'relieved';
 /** P1 expressions fall back to MVP ones (docs/09 §3.2). */
-export const EXPRESSION_FALLBACK: Record<string, Expression> = { angry: 'worried', scared: 'worried', thinking: 'neutral' };
+export const EXPRESSION_FALLBACK: Record<string, Expression> = {
+  angry: 'worried',
+  scared: 'worried',
+  thinking: 'neutral',
+};
 
 const OUTLINE = '#171c2f';
 const EYE = '#1d1a26';
 
 export const SKIN = ['#f6d7c3', '#eac2a0', '#d9a57f', '#b9805c', '#8f5e41', '#6b432e'];
 export const HAIR = ['#2a2430', '#4a3328', '#7a5236', '#9a4a3a', '#d9b26a', '#a49bcb', '#d9a3a7', '#8eacc8'];
-export const OUTFIT = ['#f3ebdd', '#d9a3a7', '#e9b77b', '#8eacc8', '#a49bcb', '#4b4f7a', '#9fb89a', '#3c3f52'];
+export const OUTFIT = [
+  '#f3ebdd',
+  '#d9a3a7',
+  '#e9b77b',
+  '#8eacc8',
+  '#a49bcb',
+  '#4b4f7a',
+  '#9fb89a',
+  '#3c3f52',
+];
 export const HAIR_STYLE_NAMES = ['สั้น', 'บ็อบ', 'ยาว', 'มัดจุก'];
 export const OUTFIT_NAMES = ['เสื้อยืด', 'ฮู้ดดี้', 'คาร์ดิแกน'];
 
@@ -82,7 +95,14 @@ function colors(a: Appearance): Colors {
 // ---------------------------------------------------------------- sprite 32×48
 
 /** Draws one 32×48 idle frame at (ox, oy). frame 1 = breathing (upper body 1px lower). */
-export function drawSprite(c: Ctx, a: Appearance, ox = 0, oy = 0, frame = 0, expression: Expression = 'neutral') {
+export function drawSprite(
+  c: Ctx,
+  a: Appearance,
+  ox = 0,
+  oy = 0,
+  frame = 0,
+  expression: Expression = 'neutral',
+) {
   const k = colors(a);
   const b = frame === 1 ? 1 : 0;
   const X = (x: number) => ox + x;

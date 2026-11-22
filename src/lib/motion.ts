@@ -4,7 +4,11 @@ import { useGame } from '../store/game';
 const QUERY = '(prefers-reduced-motion: reduce)';
 
 function systemPrefersReduced(): boolean {
-  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia(QUERY).matches;
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia(QUERY).matches
+  );
 }
 
 /** Combines the OS setting with the in-game override (docs/06 §1.3). */

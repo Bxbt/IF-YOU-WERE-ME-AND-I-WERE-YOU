@@ -5,7 +5,13 @@
 import { create } from 'zustand';
 import { deleteAnswer } from './actions';
 
-interface Pending { ownerId: string; layer: 'self' | 'perceived'; aboutId?: string; questionId: string; timer: ReturnType<typeof setTimeout> }
+interface Pending {
+  ownerId: string;
+  layer: 'self' | 'perceived';
+  aboutId?: string;
+  questionId: string;
+  timer: ReturnType<typeof setTimeout>;
+}
 
 export const usePendingDeletes = create<{ items: Record<string, Pending> }>()(() => ({ items: {} }));
 
@@ -22,10 +28,18 @@ function run(key: string) {
   usePendingDeletes.setState({ items });
 }
 
-export function scheduleDelete(ownerId: string, layer: 'self' | 'perceived', aboutId: string | undefined, questionId: string, ms = 5000) {
+export function scheduleDelete(
+  ownerId: string,
+  layer: 'self' | 'perceived',
+  aboutId: string | undefined,
+  questionId: string,
+  ms = 5000,
+) {
   const key = pendingKey(ownerId, layer, aboutId, questionId);
   const timer = setTimeout(() => run(key), ms);
-  usePendingDeletes.setState((s) => ({ items: { ...s.items, [key]: { ownerId, layer, aboutId, questionId, timer } } }));
+  usePendingDeletes.setState((s) => ({
+    items: { ...s.items, [key]: { ownerId, layer, aboutId, questionId, timer } },
+  }));
   return key;
 }
 
@@ -44,5 +58,8 @@ export function flushPendingDeletes() {
 
 if (typeof window !== 'undefined') {
   window.addEventListener('pagehide', flushPendingDeletes);
-  document.addEventListener('visibilitychange', () => document.visibilityState === 'hidden' && flushPendingDeletes());
+  document.addEventListener(
+    'visibilitychange',
+    () => document.visibilityState === 'hidden' && flushPendingDeletes(),
+  );
 }

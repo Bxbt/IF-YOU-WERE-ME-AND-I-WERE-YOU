@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { checkSupportKeywords } from '../lib/supportCard';
 import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Eye, ScrollText } from 'lucide-react';
 import { ui } from '../content/th/ui';
@@ -327,6 +328,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     (text: string) => {
       if (!pos || step?.kind !== 'choice' || !step.line.custom) return;
       const custom = step.line.custom;
+      checkSupportKeywords(text);
       const st: StoryState = {
         ...state,
         flags: { ...state.flags, ...custom.setFlags },
@@ -545,6 +547,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         startAt={firstOpen < 0 ? 0 : firstOpen}
         onAnswer={(qid, d) =>
           apply((s) => {
+            checkSupportKeywords(d.freeText);
             let out = saveStoryAnswer(s, journey.id, selfId, qid, 'reflection', d);
             const q = content.reflection.find((x) => x.id === qid);
             if (q?.toNextConversation && !d.meta) {
@@ -605,6 +608,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
           };
         })}
         onDone={(answers) => {
+          Object.values(answers).forEach((a) => checkSupportKeywords(a.freeText));
           apply((s0) =>
             sets.reduce(
               (s, x) =>
@@ -654,9 +658,10 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
             return [...picked, free].filter(Boolean).join(' · ') || ui.play.noAnswer;
           }}
           initial={{ self: toDraft(entry?.self), perceived: toDraft(entry?.perceived) }}
-          onSave={(layer, d) =>
-            apply((s) => saveMirrorAnswer(s, journey.id, q.id, q.context ?? 'self', selfId, layer, d))
-          }
+          onSave={(layer, d) => {
+            checkSupportKeywords(d.freeText);
+            apply((s) => saveMirrorAnswer(s, journey.id, q.id, q.context ?? 'self', selfId, layer, d));
+          }}
           onAddConversation={
             q.reflectionPrompt
               ? () =>
@@ -703,7 +708,10 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         key={`st-${pos?.sceneId}`}
         items={items}
         startAt={firstOpen < 0 ? 0 : firstOpen}
-        onSave={(id, v) => apply((s) => saveStatement(s, journey.id, selfId, id, v))}
+        onSave={(id, v) => {
+          checkSupportKeywords(v.text);
+          apply((s) => saveStatement(s, journey.id, selfId, id, v));
+        }}
         onDone={next}
       />
     );

@@ -12,7 +12,18 @@ const playerId = z.string().regex(/^pl_[A-Za-z0-9_-]{6,}$/);
 const journeyId = z.string().regex(/^jr_[A-Za-z0-9_-]{6,}$/);
 
 export const DimensionId = z.enum([
-  'D01', 'D02', 'D03', 'D04', 'D05', 'D06', 'D07', 'D08', 'D09', 'D10', 'D11', 'D12',
+  'D01',
+  'D02',
+  'D03',
+  'D04',
+  'D05',
+  'D06',
+  'D07',
+  'D08',
+  'D09',
+  'D10',
+  'D11',
+  'D12',
 ]);
 export const ChapterId = z.enum(['ch1', 'ch2', 'ch3', 'ch4', 'ch5']);
 export const Role = z.enum(['insider', 'waiter']);
@@ -150,9 +161,7 @@ export const StoryAnswer = z.object({
 const SharedEntry = z.object({
   self: PersonalityAnswer.optional(),
   perceived: PersonalityAnswer.optional(),
-  statement: z
-    .object({ text: z.string().max(280), starterId: z.string().optional(), meta: Meta })
-    .optional(),
+  statement: z.object({ text: z.string().max(280), starterId: z.string().optional(), meta: Meta }).optional(),
   shareIntent: z.boolean().optional(),
   submittedAt: isoDate.optional(),
   consent: z.boolean(),
@@ -279,15 +288,21 @@ export const SaveRoot = z
       ctx.addIssue({ code: 'custom', message: 'only one active journey is allowed', path: ['journeys'] });
     }
     for (const [id, j] of Object.entries(root.journeys)) {
-      if (j.id !== id) ctx.addIssue({ code: 'custom', message: 'journey key mismatch', path: ['journeys', id] });
+      if (j.id !== id)
+        ctx.addIssue({ code: 'custom', message: 'journey key mismatch', path: ['journeys', id] });
       for (const pid of j.playerIds) {
         if (!root.players[pid]) {
-          ctx.addIssue({ code: 'custom', message: `unknown player ${pid}`, path: ['journeys', id, 'playerIds'] });
+          ctx.addIssue({
+            code: 'custom',
+            message: `unknown player ${pid}`,
+            path: ['journeys', id, 'playerIds'],
+          });
         }
       }
     }
     for (const [id, p] of Object.entries(root.players)) {
-      if (p.id !== id) ctx.addIssue({ code: 'custom', message: 'player key mismatch', path: ['players', id] });
+      if (p.id !== id)
+        ctx.addIssue({ code: 'custom', message: 'player key mismatch', path: ['players', id] });
     }
   });
 

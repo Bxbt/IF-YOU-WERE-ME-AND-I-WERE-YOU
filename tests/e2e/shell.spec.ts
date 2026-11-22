@@ -34,7 +34,8 @@ test('main flow: title → intro → mode, and back links work', async ({ page }
 test('settings persist across reload', async ({ page }) => {
   await page.goto('/#/settings');
   await page.getByRole('button', { name: 'ใหญ่มาก' }).click();
-  await page.waitForFunction(() => localStorage.getItem('iywm:save')?.includes('"fontScale":1.3'));
+  // expect.poll + evaluate: waitForFunction needs eval, which the production CSP forbids (docs/08 §10).
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('iywm:save')?.includes('"fontScale":1.3'))).toBe(true);
   await page.reload();
   await expect(page.getByRole('button', { name: 'ใหญ่มาก' })).toHaveAttribute('aria-pressed', 'true');
 });

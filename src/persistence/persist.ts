@@ -46,7 +46,12 @@ export function loadSave(): LoadResult {
     try {
       candidate = migrate(record);
     } catch (e) {
-      return { status: 'corrupt', data: createEmptySave(), raw, reason: `ปรับเวอร์ชันข้อมูลไม่สำเร็จ: ${String(e)}` };
+      return {
+        status: 'corrupt',
+        data: createEmptySave(),
+        raw,
+        reason: `ปรับเวอร์ชันข้อมูลไม่สำเร็จ: ${String(e)}`,
+      };
     }
   }
 

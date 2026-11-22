@@ -37,9 +37,21 @@ export const ui = {
 
   mode: {
     heading: 'เลือกวิธีเล่น',
-    solo: { title: 'เล่นคนเดียว', body: 'สำรวจตัวเอง และสิ่งที่คุณคิดเกี่ยวกับคู่', needs: 'ไม่ต้องใช้อินเทอร์เน็ต' },
-    together: { title: 'เล่นด้วยกัน', body: 'สองคน เครื่องเดียว ผลัดกันตอบแบบส่วนตัว', needs: 'เครื่องเดียว สองคน' },
-    remote: { title: 'เล่นระยะไกล', body: 'คนละเครื่อง ตอบแยก เปิดพร้อมกัน', needs: 'ต้องส่งไฟล์หรือใช้อินเทอร์เน็ต' },
+    solo: {
+      title: 'เล่นคนเดียว',
+      body: 'สำรวจตัวเอง และสิ่งที่คุณคิดเกี่ยวกับคู่',
+      needs: 'ไม่ต้องใช้อินเทอร์เน็ต',
+    },
+    together: {
+      title: 'เล่นด้วยกัน',
+      body: 'สองคน เครื่องเดียว ผลัดกันตอบแบบส่วนตัว',
+      needs: 'เครื่องเดียว สองคน',
+    },
+    remote: {
+      title: 'เล่นระยะไกล',
+      body: 'คนละเครื่อง ตอบแยก เปิดพร้อมกัน',
+      needs: 'ต้องส่งไฟล์หรือใช้อินเทอร์เน็ต',
+    },
     soloNotReady: 'ระบบสร้างตัวละครกำลังพัฒนา',
   },
 
@@ -123,7 +135,11 @@ export const ui = {
     dataTitle: 'ข้อมูลของคุณ',
     dataBody: 'เก็บในเบราว์เซอร์ของเครื่องนี้เท่านั้น ไม่มีการส่งข้อมูลหรือติดตามการใช้งาน',
     creditsTitle: 'เครดิต',
-    credits: ['ฟอนต์ Silkscreen — SIL Open Font License 1.1', 'ฟอนต์ IBM Plex Sans Thai — SIL Open Font License 1.1', 'ไอคอน Lucide — ISC License'],
+    credits: [
+      'ฟอนต์ Silkscreen — SIL Open Font License 1.1',
+      'ฟอนต์ IBM Plex Sans Thai — SIL Open Font License 1.1',
+      'ไอคอน Lucide — ISC License',
+    ],
   },
 
   pause: {
@@ -159,7 +175,8 @@ export const ui = {
     consented: 'ยินยอมแล้ว',
     revealed: 'เปิดแล้ว',
     playingAs: (name: string) => `คุณกำลังเล่นเป็น ${name}`,
-    imaginedBanner: (name: string) => `นี่คือสิ่งที่คุณจินตนาการว่า ${name} อาจรู้สึก — ไม่ใช่สิ่งที่ ${name} บอก`,
+    imaginedBanner: (name: string) =>
+      `นี่คือสิ่งที่คุณจินตนาการว่า ${name} อาจรู้สึก — ไม่ใช่สิ่งที่ ${name} บอก`,
     progress: (cur: number, total: number) => `ตำแหน่ง ${cur} จาก ${total}`,
     pause: 'หยุดพัก',
     next: 'ถัดไป',
@@ -223,7 +240,8 @@ export const ui = {
     saved: 'บันทึกแล้ว',
     sameNameWarn: 'ชื่อเดียวกับอีกคน ใช้ได้ แต่อาจสับสนตอนอ่านบทพูด',
     activeExists: 'มีการเดินทางที่ยังไม่จบอยู่',
-    activeExistsBody: 'ถ้าเริ่มใหม่ การเดินทางเดิมจะถูกเก็บไว้ (ไม่ถูกลบ) คุณส่งออกเป็นไฟล์ไว้ก่อนได้ในหน้าตั้งค่า',
+    activeExistsBody:
+      'ถ้าเริ่มใหม่ การเดินทางเดิมจะถูกเก็บไว้ (ไม่ถูกลบ) คุณส่งออกเป็นไฟล์ไว้ก่อนได้ในหน้าตั้งค่า',
     activeExistsConfirm: 'เก็บอันเดิม แล้วเริ่มใหม่',
   },
 
@@ -300,7 +318,8 @@ export const ui = {
     skipTitle: 'ข้ามบทนี้?',
     skipBody: 'ข้ามได้เสมอ บทถัดไปยังเล่นได้ และกลับมาเล่นบทนี้ได้ทุกเมื่อ',
     scenario: 'ฉากของเรื่อง',
-    scenarioText: (insider: string, warned: boolean) => `${insider} ติดลิฟต์ · ${warned ? 'มีการเตือนก่อนหน้า' : 'ไม่มีการเตือนก่อนหน้า'}`,
+    scenarioText: (insider: string, warned: boolean) =>
+      `${insider} ติดลิฟต์ · ${warned ? 'มีการเตือนก่อนหน้า' : 'ไม่มีการเตือนก่อนหน้า'}`,
     scenarioNone: 'ยังไม่ได้ตั้งค่า (ตั้งตอนเริ่มบทที่ 1–3)',
     scenarioChange: 'เปลี่ยน',
     profile: 'โปรไฟล์',
@@ -376,7 +395,8 @@ export const ui = {
     mirrorTheySaid: (name: string) => `สิ่งที่ ${name} บอก`,
     mirrorUnknown: 'ยังไม่รู้',
     mirrorAsk: (name: string) => `ลองถาม ${name} ดู`,
-    mirrorSoloNote: (name: string) => `นี่คือสิ่งที่คุณคิดว่า ${name} ต้องการ ลองเก็บเป็นคำถามไว้ถาม ${name} ดู`,
+    mirrorSoloNote: (name: string) =>
+      `นี่คือสิ่งที่คุณคิดว่า ${name} ต้องการ ลองเก็บเป็นคำถามไว้ถาม ${name} ดู`,
     mirrorAdd: 'เพิ่มเป็นคำถามที่อยากถาม',
     mirrorAdded: 'เพิ่มแล้ว',
     noAnswer: 'ยังไม่ได้ตอบ',

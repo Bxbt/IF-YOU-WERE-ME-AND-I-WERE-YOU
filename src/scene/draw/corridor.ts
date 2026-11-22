@@ -21,7 +21,12 @@ const Z_BACK = 1 / 0.35;
 const sideX = (z: number, side: -1 | 1) => VX + (side * 160) / z;
 const ceilY = (z: number) => VY - VY / z;
 const floorY = (z: number) => VY + (H - VY) / z;
-const BACK = { x0: Math.round(sideX(Z_BACK, -1)), x1: Math.round(sideX(Z_BACK, 1)), y0: Math.round(ceilY(Z_BACK)), y1: Math.round(floorY(Z_BACK)) };
+const BACK = {
+  x0: Math.round(sideX(Z_BACK, -1)),
+  x1: Math.round(sideX(Z_BACK, 1)),
+  y0: Math.round(ceilY(Z_BACK)),
+  y1: Math.round(floorY(Z_BACK)),
+};
 const WINDOW: Rect = { x: 145, y: 60, w: 30, h: 30 };
 
 const WALL = '#3a3c5c';
@@ -36,7 +41,13 @@ const STEEL_D = '#44465f';
 const colZ = (x: number) => 160 / Math.abs(x - VX);
 
 /** Fills a vertical feature on a side wall between columns xa..xb, between two fractions of the wall height (measured up from the floor). */
-function wallFeature(xa: number, xb: number, topFrac: number, botFrac: number, paint: (x: number, top: number, bot: number, u: number) => void) {
+function wallFeature(
+  xa: number,
+  xb: number,
+  topFrac: number,
+  botFrac: number,
+  paint: (x: number, top: number, bot: number, u: number) => void,
+) {
   const lo = Math.min(xa, xb);
   const hi = Math.max(xa, xb);
   for (let x = lo; x < hi; x++) {
@@ -55,7 +66,7 @@ function paintCorridor(c: Ctx) {
     if (y < BACK.y0) {
       const z = VY / (VY - y);
       const hw = 160 / z;
-      rect(c, Math.round(VX - hw), y, Math.round(hw * 2), 1, (y & 1) && y > 30 ? '#1c1e33' : CEIL);
+      rect(c, Math.round(VX - hw), y, Math.round(hw * 2), 1, y & 1 && y > 30 ? '#1c1e33' : CEIL);
     } else if (y >= BACK.y1) {
       const z = (H - VY) / (y - VY);
       const hw = 160 / z;
@@ -65,7 +76,9 @@ function paintCorridor(c: Ctx) {
         const wx = ((x - VX) * z) / 160;
         const ti = Math.floor(wx * 3 + 10) + Math.floor(z * 3);
         const far = z > 2 ? 1 : 0;
-        const grout = Math.abs(wx * 3 - Math.round(wx * 3)) < 0.012 * z || Math.abs(z * 3 - Math.round(z * 3)) < 0.03 * z * z;
+        const grout =
+          Math.abs(wx * 3 - Math.round(wx * 3)) < 0.012 * z ||
+          Math.abs(z * 3 - Math.round(z * 3)) < 0.03 * z * z;
         const col = grout ? '#26283c' : ti & 1 ? (far ? '#2f2e46' : '#3a3852') : far ? '#29283e' : '#322f48';
         rect(c, x, y, 1, 1, col);
       }
@@ -93,12 +106,20 @@ function paintCorridor(c: Ctx) {
   rect(c, WINDOW.x - 3, WINDOW.y - 3, WINDOW.w + 6, WINDOW.h + 6, STEEL_D);
   rect(c, WINDOW.x - 2, WINDOW.y - 2, WINDOW.w + 4, WINDOW.h + 4, STEEL);
   rect(c, WINDOW.x, WINDOW.y, WINDOW.w, WINDOW.h, '#1a2140');
-  for (let y = WINDOW.y + 14; y < WINDOW.y + WINDOW.h; y++) for (let x = WINDOW.x + (y & 1); x < WINDOW.x + WINDOW.w; x += 2) rect(c, x, y, 1, 1, '#26305a');
+  for (let y = WINDOW.y + 14; y < WINDOW.y + WINDOW.h; y++)
+    for (let x = WINDOW.x + (y & 1); x < WINDOW.x + WINDOW.w; x += 2) rect(c, x, y, 1, 1, '#26305a');
   // distant towers through the window
   rect(c, WINDOW.x + 2, WINDOW.y + 16, 7, 14, '#141a30');
   rect(c, WINDOW.x + 12, WINDOW.y + 11, 6, 19, '#181f38');
   rect(c, WINDOW.x + 21, WINDOW.y + 19, 8, 11, '#141a30');
-  for (const [wx, wy] of [[4, 19], [14, 14], [16, 20], [23, 22], [6, 25]] as const) rect(c, WINDOW.x + wx, WINDOW.y + wy, 1, 1, '#e9b77b');
+  for (const [wx, wy] of [
+    [4, 19],
+    [14, 14],
+    [16, 20],
+    [23, 22],
+    [6, 25],
+  ] as const)
+    rect(c, WINDOW.x + wx, WINDOW.y + wy, 1, 1, '#e9b77b');
   rect(c, VX - 1, WINDOW.y, 2, WINDOW.h, STEEL_D); // mullion
   rect(c, WINDOW.x - 4, WINDOW.y + WINDOW.h + 3, WINDOW.w + 8, 2, STEEL);
   // potted plant in the far corner
@@ -108,15 +129,34 @@ function paintCorridor(c: Ctx) {
   rect(c, 116, 92, 3, 8, '#5f7f6a');
 
   // apartment doors on the left wall (warm wood, blank number plates)
-  for (const [za, zb] of [[2.5, 2.05], [1.55, 1.2]] as const) {
+  for (const [za, zb] of [
+    [2.5, 2.05],
+    [1.55, 1.2],
+  ] as const) {
     const xa = Math.round(sideX(za, -1));
     const xb = Math.round(sideX(zb, -1));
     wallFeature(xb, xa, 0.68, 0.04, (x, top, bot, u) => {
       const edge = u < 0.08 || u > 0.92;
       rect(c, x, top, 1, bot - top, edge ? '#2a2236' : '#5a4458');
       rect(c, x, top, 1, 1, '#2a2236');
-      if (!edge && Math.abs(u - 0.5) < 0.18) rect(c, x, Math.round(top + (bot - top) * 0.18), 1, Math.max(1, Math.round((bot - top) * 0.06)), '#cfc0ad');
-      if (u > 0.78 && u < 0.86) rect(c, x, Math.round(top + (bot - top) * 0.55), 1, Math.max(1, Math.round((bot - top) * 0.04)), '#e9b77b');
+      if (!edge && Math.abs(u - 0.5) < 0.18)
+        rect(
+          c,
+          x,
+          Math.round(top + (bot - top) * 0.18),
+          1,
+          Math.max(1, Math.round((bot - top) * 0.06)),
+          '#cfc0ad',
+        );
+      if (u > 0.78 && u < 0.86)
+        rect(
+          c,
+          x,
+          Math.round(top + (bot - top) * 0.55),
+          1,
+          Math.max(1, Math.round((bot - top) * 0.04)),
+          '#e9b77b',
+        );
     });
     // doormat
     const mz = (za + zb) / 2;
@@ -127,7 +167,10 @@ function paintCorridor(c: Ctx) {
   }
 
   // elevators on the right wall: far (left as you face them) = closed for repair, near = in service
-  const elevators = [[2.35, 1.9], [1.62, 1.3]] as const;
+  const elevators = [
+    [2.35, 1.9],
+    [1.62, 1.3],
+  ] as const;
   for (const [za, zb] of elevators) {
     const xa = Math.round(sideX(za, 1));
     const xb = Math.round(sideX(zb, 1));
@@ -136,7 +179,14 @@ function paintCorridor(c: Ctx) {
       rect(c, x, top, 1, bot - top, frame ? STEEL_D : u < 0.5 ? STEEL : '#525472');
       if (!frame) rect(c, x, top + 1, 1, 1, STEEL_L);
       if (Math.abs(u - 0.5) < 0.04) rect(c, x, top, 1, bot - top, '#2a2c44'); // seam
-      rect(c, x, top - Math.max(2, Math.round((bot - top) * 0.1)), 1, Math.max(2, Math.round((bot - top) * 0.07)), u > 0.3 && u < 0.7 ? '#101220' : WALL_D); // indicator
+      rect(
+        c,
+        x,
+        top - Math.max(2, Math.round((bot - top) * 0.1)),
+        1,
+        Math.max(2, Math.round((bot - top) * 0.07)),
+        u > 0.3 && u < 0.7 ? '#101220' : WALL_D,
+      ); // indicator
     });
   }
   // call buttons between the elevators

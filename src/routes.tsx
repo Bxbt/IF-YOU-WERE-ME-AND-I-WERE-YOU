@@ -1,6 +1,6 @@
 /**
  * Hash router (docs/10 §1). Journey-scoped screens will live under /j/:journeyId (docs/05 §1).
- * Only screens that exist are registered.
+ * Only screens that exist are registered. S8/S9/S15 and the art preview load as separate chunks (docs/10 §6).
  */
 import { createHashRouter } from 'react-router-dom';
 import { TitleScreen } from './screens/TitleScreen';
@@ -13,13 +13,9 @@ import { EditPlayerScreen } from './screens/EditPlayerScreen';
 import { ProfileHubScreen } from './screens/ProfileHubScreen';
 import { QuestionnaireScreen } from './screens/QuestionnaireScreen';
 import { AnswersScreen } from './screens/AnswersScreen';
-import { ArtPreviewScreen } from './screens/ArtPreviewScreen';
 import { ChaptersScreen } from './screens/ChaptersScreen';
 import { ScenarioScreen } from './screens/ScenarioScreen';
 import { PlayScreen } from './screens/PlayScreen';
-import { EndingScreen } from './screens/EndingScreen';
-import { CompareScreen } from './screens/CompareScreen';
-import { ReportScreen } from './screens/ReportScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { ErrorScreen } from './screens/ErrorScreen';
 
@@ -36,15 +32,39 @@ export const routes = [
   { path: '/profile', element: <ProfileHubScreen />, errorElement },
   { path: '/profile/:playerId/self', element: <QuestionnaireScreen layer="self" />, errorElement },
   { path: '/profile/:playerId/self/answers', element: <AnswersScreen layer="self" />, errorElement },
-  { path: '/profile/:playerId/perceived/:aboutId', element: <QuestionnaireScreen layer="perceived" />, errorElement },
-  { path: '/profile/:playerId/perceived/:aboutId/answers', element: <AnswersScreen layer="perceived" />, errorElement },
+  {
+    path: '/profile/:playerId/perceived/:aboutId',
+    element: <QuestionnaireScreen layer="perceived" />,
+    errorElement,
+  },
+  {
+    path: '/profile/:playerId/perceived/:aboutId/answers',
+    element: <AnswersScreen layer="perceived" />,
+    errorElement,
+  },
   { path: '/j/:journeyId/chapters', element: <ChaptersScreen />, errorElement },
   { path: '/j/:journeyId/scenario', element: <ScenarioScreen />, errorElement },
   { path: '/j/:journeyId/play/:chapterId', element: <PlayScreen />, errorElement },
-  { path: '/j/:journeyId/compare', element: <CompareScreen />, errorElement },
-  { path: '/j/:journeyId/report/:playerId', element: <ReportScreen />, errorElement },
-  { path: '/j/:journeyId/ending', element: <EndingScreen />, errorElement },
-  { path: '/art-preview', element: <ArtPreviewScreen />, errorElement },
+  {
+    path: '/j/:journeyId/compare',
+    lazy: () => import('./screens/CompareScreen').then((m) => ({ Component: m.CompareScreen })),
+    errorElement,
+  },
+  {
+    path: '/j/:journeyId/report/:playerId',
+    lazy: () => import('./screens/ReportScreen').then((m) => ({ Component: m.ReportScreen })),
+    errorElement,
+  },
+  {
+    path: '/j/:journeyId/ending',
+    lazy: () => import('./screens/EndingScreen').then((m) => ({ Component: m.EndingScreen })),
+    errorElement,
+  },
+  {
+    path: '/art-preview',
+    lazy: () => import('./screens/ArtPreviewScreen').then((m) => ({ Component: m.ArtPreviewScreen })),
+    errorElement,
+  },
   { path: '*', element: <NotFoundScreen /> },
 ];
 

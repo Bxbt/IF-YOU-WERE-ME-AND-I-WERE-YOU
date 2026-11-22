@@ -27,7 +27,7 @@
 | **M4 Dialogue Engine & Scene** ✅ | Content model · Dialogue interpreter · Conditions/Tokens/Flags · SceneCanvas · Effects (rain, stars, emergency light, haze) · Backgrounds P0 · S5, S5a, S6 · Autosave/Resume · Content lint | Ch1 เล่นจบได้ · TC-PLAY-04/06 · TC-RES-01–04 | 6–8 วัน |
 | **M5 Chapters 2–5** ✅ | Content ch2–ch5 · Part C Timeline · Interpretation Check · Safety notes · Solo Mirror (S7) · Ch5 statements · S15 Ending | TC-PLAY-01–10 · TC-REV-09 | 6–8 วัน |
 | **M6 Insight** ✅ | Comparison engine + S8 · Report engine + S9 · Next Conversation · Export TXT/PNG | TC-SKIP-09–14 · TC-EXP-06–10 | 5–6 วัน |
-| **M7 Polish & QA** | Responsive ทุกหน้าจอ · Reduced motion · Keyboard · Safety keyword card · Asset P1 (ถ้าทัน) · Lighthouse · Manual QA · Content review | MVP Acceptance Criteria ([11](11-testing-and-acceptance-criteria.md) §15) ครบ | 4–5 วัน |
+| **M7 Polish & QA** ✅ (อัตโนมัติ — ที่เหลือต้องให้คนตรวจ: [reviews/mvp-qa-2026-11-22.md](../reviews/mvp-qa-2026-11-22.md)) | Responsive ทุกหน้าจอ · Reduced motion · Keyboard · Safety keyword card · Asset P1 (ถ้าทัน) · Lighthouse · Manual QA · Content review | MVP Acceptance Criteria ([11](11-testing-and-acceptance-criteria.md) §15) ครบ | 4–5 วัน |
 
 **รวม MVP ≈ 31–40 วันทำงาน**
 

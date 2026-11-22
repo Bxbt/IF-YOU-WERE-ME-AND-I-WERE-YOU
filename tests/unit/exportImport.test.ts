@@ -42,7 +42,10 @@ describe('export / import (docs/07 §11)', () => {
 
   it('TC-EXP-04: non-JSON, wrong format, unsupported scope and oversize files are rejected', async () => {
     expect(await parseImport('not json')).toEqual({ ok: false, error: 'not_json' });
-    expect(await parseImport(JSON.stringify({ format: 'other' }))).toEqual({ ok: false, error: 'wrong_format' });
+    expect(await parseImport(JSON.stringify({ format: 'other' }))).toEqual({
+      ok: false,
+      error: 'wrong_format',
+    });
     const env = { ...(await buildFullExport(sampleSave())), scope: 'journey' };
     expect(await parseImport(JSON.stringify(env))).toEqual({ ok: false, error: 'unsupported_scope' });
     expect((await parseImport('x'.repeat(MAX_IMPORT_BYTES + 1))).ok).toBe(false);

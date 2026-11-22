@@ -9,7 +9,13 @@ import { App } from '../../src/App';
 import { sampleSave } from '../fixtures/factory';
 
 function resetStore() {
-  useGame.setState({ ready: false, save: createEmptySave(), health: 'ok', recovery: null, lastSavedAt: null });
+  useGame.setState({
+    ready: false,
+    save: createEmptySave(),
+    health: 'ok',
+    recovery: null,
+    lastSavedAt: null,
+  });
 }
 
 describe('game store', () => {
@@ -67,7 +73,9 @@ describe('App screens', () => {
   it('TC-ERR-03: corrupt save shows Recovery and keeps the data until the player chooses', async () => {
     localStorage.setItem(KEYS.save, '{broken');
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'พบปัญหาในการอ่านข้อมูลที่บันทึกไว้' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'พบปัญหาในการอ่านข้อมูลที่บันทึกไว้' }),
+    ).toBeInTheDocument();
     expect(localStorage.getItem(KEYS.save)).toBe('{broken');
 
     await userEvent.click(screen.getByRole('button', { name: /เริ่มใหม่/ }));
