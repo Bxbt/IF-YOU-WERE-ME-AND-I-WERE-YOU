@@ -1,12 +1,9 @@
-import { useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Info, Play, Settings as SettingsIcon, Sparkles, UserPlus } from 'lucide-react';
 import { ui } from '../content/th/ui';
 import { useAmbient } from '../audio/useSound';
 import { PixelButton } from '../components/PixelButton';
 import { SoundToggle } from '../components/Misc';
-import { PixelCanvas } from '../scene/PixelCanvas';
-import { drawStars, drawTitleBase, drawTitleForeground, makeStars } from '../scene/draw/title';
 import { useGame } from '../store/game';
 import { FEATURES } from '../lib/features';
 import { APP_VERSION } from '../persistence/exportImport';
@@ -23,33 +20,21 @@ export function TitleScreen() {
   const hasActive = !!journey;
   const journeyCount = useGame((s) => Object.keys(s.save.journeys).length);
   const hasPlayers = useGame((s) => Object.values(s.save.players).some((p) => p.kind === 'real'));
-  const stars = useMemo(makeStars, []);
-  const draw = useCallback(
-    (ctx: CanvasRenderingContext2D, t: number) => {
-      drawTitleBase(ctx);
-      drawStars(ctx, stars, t);
-      drawTitleForeground(ctx, t);
-    },
-    [stars],
-  );
 
   const continueReason = !hasActive ? ui.title.continueNoSave : null;
   const createReason = FEATURES.characterCreation ? null : ui.title.createSelfNotReady;
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Portrait: the animated canvas scene (both figures stay in view). Wide screens: the cover painting. */}
-      <PixelCanvas
-        draw={draw}
-        label={ui.title.sceneLabel}
-        fit="cover"
-        className="absolute inset-0 h-full w-full [@media(min-aspect-ratio:4/3)]:hidden"
-      />
-      <img
-        src="./brand/cover.jpg"
-        alt={ui.title.coverLabel}
-        className="absolute inset-0 hidden h-full w-full object-cover object-bottom [@media(min-aspect-ratio:4/3)]:block"
-      />
+      {/* Owner's cover art: portrait version on tall screens, wide version from 4:3 up (docs/09 §7). */}
+      <picture>
+        <source media="(min-aspect-ratio: 4/3)" srcSet="./brand/cover.jpg" />
+        <img
+          src="./brand/cover-portrait.jpg"
+          alt={ui.title.coverLabel}
+          className="absolute inset-0 h-full w-full object-cover object-bottom"
+        />
+      </picture>
       <div
         aria-hidden
         className="absolute inset-0 bg-gradient-to-b from-navy/30 via-transparent to-navy/80"
