@@ -2,7 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 async function noOverflow(page: Page) {
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
   expect(overflow).toBeLessThanOrEqual(0);
 }
 async function noSeriousA11y(page: Page) {
@@ -13,7 +15,9 @@ async function noSeriousA11y(page: Page) {
   expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
 }
 
-test('solo setup: create self + imagined partner, answer quick set, persist across reload', async ({ page }) => {
+test('solo setup: create self + imagined partner, answer quick set, persist across reload', async ({
+  page,
+}) => {
   await page.goto('/#/mode');
   await page.getByRole('button', { name: /เล่นคนเดียว/ }).click();
 
@@ -35,7 +39,11 @@ test('solo setup: create self + imagined partner, answer quick set, persist acro
   await expect(page.getByText('ข้อ 1 จาก 12')).toBeVisible();
   await noOverflow(page);
   await noSeriousA11y(page);
-  await page.getByRole('group', { name: /เวลามีเรื่องอะไรรบกวนใจ/ }).getByRole('button').first().click();
+  await page
+    .getByRole('group', { name: /เวลามีเรื่องอะไรรบกวนใจ/ })
+    .getByRole('button')
+    .first()
+    .click();
   await page.getByRole('button', { name: /ถัดไป/ }).click();
   await page.getByRole('button', { name: 'ไม่แน่ใจ' }).click();
   await page.getByRole('button', { name: /ถัดไป/ }).click();
@@ -54,7 +62,7 @@ test('art preview renders without overflow', async ({ page }) => {
   await page.goto('/#/art-preview');
   await expect(page.getByRole('img', { name: /มีคนยืนอยู่ตรงกลาง/ })).toBeVisible();
   // Every P0 background (+ the Ch1 ending exterior) is in the gallery for owner review.
-  await expect(page.locator('[data-testid^="gallery-"]')).toHaveCount(11);
+  await expect(page.locator('[data-testid^="gallery-"]')).toHaveCount(12);
   await noOverflow(page);
   await noSeriousA11y(page);
 });

@@ -4,12 +4,18 @@ import AxeBuilder from '@axe-core/playwright';
 const SCREENS = ['/', '/intro', '/mode', '/settings', '/about', '/does-not-exist'];
 
 for (const path of SCREENS) {
-  test(`${path}: no horizontal scroll (TC-RWD-01) and no serious a11y violations (TC-A11Y-01)`, async ({ page }) => {
+  test(`${path}: no horizontal scroll (TC-RWD-01) and no serious a11y violations (TC-A11Y-01)`, async ({
+    page,
+  }) => {
     await page.goto(`/#${path}`);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
     expect(overflow).toBeLessThanOrEqual(0);
-    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+      .analyze();
     const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
     expect(serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
   });
@@ -38,7 +44,12 @@ test('TC-A11Y-03 (shell): keyboard reaches and activates the start button', asyn
   await page.goto('/');
   for (let i = 0; i < 6; i++) {
     await page.keyboard.press('Tab');
-    if (await page.getByRole('button', { name: /เริ่มการเดินทางใหม่/ }).evaluate((el) => el === document.activeElement)) break;
+    if (
+      await page
+        .getByRole('button', { name: /เริ่มการเดินทางใหม่/ })
+        .evaluate((el) => el === document.activeElement)
+    )
+      break;
   }
   await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/#\/intro$/);
@@ -55,7 +66,9 @@ test('TC-A11Y-07: 200% font scale keeps screens free of horizontal scroll', asyn
   await page.getByRole('button', { name: 'ใหญ่มาก' }).click();
   for (const path of ['/', '/intro', '/mode', '/about']) {
     await page.goto(`/#${path}`);
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
     expect(overflow, path).toBeLessThanOrEqual(0);
   }
 });

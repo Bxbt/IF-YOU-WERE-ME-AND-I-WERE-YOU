@@ -6,10 +6,12 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { ChapterContent, Condition, LineContent, SceneContent } from '../../src/content/types';
 import { CHAPTERS } from '../../src/content/th/chapters';
 import { SIGNALS } from '../../src/content/th/signals';
+import { MIRRORS } from '../../src/content/th/questions';
 import { BACKGROUNDS } from '../../src/scene/backgrounds';
 import {
   advance,
   expandScene,
+  visibleOptions,
   optionText,
   resolveTokens,
   sceneById,
@@ -82,12 +84,31 @@ function texts(ch: ChapterContent): { text: string; speaker?: string }[] {
       }
     }
   });
-  for (const q of ch.reflection) {
-    out.push({ text: q.self });
+  allLines(ch, (l) => {
+    if (l.type === 'TIMELINE')
+      for (const r of l.rows) out.push({ text: r.label }, { text: r.in }, { text: r.out });
+  });
+  for (const q of [...ch.reflection, ...(ch.mirrorQuestions ?? [])]) {
+    out.push({ text: q.self }, { text: q.perceived ?? '' }, { text: q.reflectionPrompt ?? '' });
     q.options.forEach((o) => out.push({ text: o.text }));
   }
-  for (const o of [...(ch.emotionCards?.insider ?? []), ...(ch.emotionCards?.waiter ?? [])])
-    out.push({ text: o.text });
+  for (const set of ch.interpretations ?? []) {
+    const speaker = set.role === 'insider' ? 'in' : 'out';
+    out.push(
+      { text: set.quote, speaker },
+      ...(set.quoteByCondition ?? []).map((v) => ({ text: v.text, speaker })),
+    );
+    set.feelings.forEach((f) => out.push({ text: f.text }));
+  }
+  // Statements are written by the player about the partner: {you} resolves with the player's role.
+  for (const st of ch.statements ?? []) {
+    out.push({ text: st.stem, speaker: 'in' });
+    st.starters.forEach((x) => out.push({ text: x.text, speaker: 'in' }));
+  }
+  for (const f of Object.values(ch.fragments ?? {}))
+    out.push({ text: f.fallback }, ...Object.values(f.values).map((text) => ({ text })));
+  for (const e of ch.ending ?? []) out.push({ text: e.en }, { text: e.th ?? '' });
+  for (const o of (ch.emotionCards?.groups ?? []).flatMap((g) => g.cards)) out.push({ text: o.text });
   return out;
 }
 
@@ -127,20 +148,30 @@ describe('TC-PLAY-06 content lint (docs/10 §4)', () => {
   it('every flag used in a condition has a setter', () => {
     const setters = new Set<string>();
     for (const ch of chapters)
-      allLines(
-        ch,
-        (l) =>
-          l.type === 'CHOICE' &&
-          l.options.forEach((o) => Object.keys(o.setFlags ?? {}).forEach((f) => setters.add(f))),
-      );
+      allLines(ch, (l) => {
+        if (l.type !== 'CHOICE') return;
+        l.options.forEach((o) => Object.keys(o.setFlags ?? {}).forEach((f) => setters.add(f)));
+        Object.keys(l.custom?.setFlags ?? {}).forEach((f) => setters.add(f));
+      });
     const used: string[] = [];
     for (const ch of chapters) {
       const collect = (c?: Condition) => conditions(c).forEach((x) => 'flag' in x && used.push(x.flag));
       allLines(ch, (l) => {
         if ('when' in l) collect(l.when);
-        if (l.type === 'CHOICE') l.options.forEach((o) => o.textByCondition?.forEach((v) => collect(v.when)));
+        if (l.type === 'CHOICE')
+          l.options.forEach((o) => {
+            collect(o.when);
+            o.textByCondition?.forEach((v) => collect(v.when));
+          });
       });
       for (const s of ch.scenes) if (Array.isArray(s.next)) s.next.forEach((r) => collect(r.when));
+      for (const set of ch.interpretations ?? []) {
+        collect(set.when);
+        set.feelings.forEach((f) => collect(f.when));
+        set.quoteByCondition?.forEach((v) => collect(v.when));
+      }
+      for (const f of Object.values(ch.fragments ?? {})) used.push(f.flag);
+      for (const r of ch.rewrites ?? []) used.push(r.flag);
     }
     expect(used.filter((f) => !setters.has(f))).toEqual([]);
   });
@@ -163,17 +194,15 @@ describe('TC-PLAY-06 content lint (docs/10 §4)', () => {
         choiceIds.push(l.id);
         const ids = l.options.map((o) => o.id);
         expect(new Set(ids).size, l.id).toBe(ids.length);
-        expect(ids.length, l.id).toBeGreaterThanOrEqual(2);
-        expect(ids.length, l.id).toBeLessThanOrEqual(6);
+        // 2–6 shown at once (docs/06 ChoiceList); options with `when` are checked per state in the playthrough.
+        expect(l.options.filter((o) => !o.when).length + (l.custom ? 1 : 0), l.id).toBeLessThanOrEqual(6);
       });
       expect(new Set(choiceIds).size, `${ch.id} choice ids`).toBe(choiceIds.length);
       const qIds = ch.reflection.map((q) => q.id);
       expect(new Set(qIds).size).toBe(qIds.length);
       for (const q of ch.reflection)
         expect(new Set(q.options.map((o) => o.id)).size, q.id).toBe(q.options.length);
-      const cards = [...(ch.emotionCards?.insider ?? []), ...(ch.emotionCards?.waiter ?? [])].map(
-        (o) => o.id,
-      );
+      const cards = (ch.emotionCards?.groups ?? []).flatMap((g) => g.cards).map((o) => o.id);
       expect(new Set(cards).size).toBe(cards.length);
     }
   });
@@ -201,9 +230,27 @@ describe('TC-PLAY-06 content lint (docs/10 §4)', () => {
   it('every token resolves (no "{" left, {you} only in lines spoken by a role)', () => {
     for (const ch of chapters)
       for (const { text, speaker } of texts(ch)) {
-        const out = resolveTokens(text, CTX, speaker);
+        const extra = Object.fromEntries(
+          [...Object.keys(ch.fragments ?? {}), ...(ch.rewrites ?? []).map((r) => r.token)].map((k) => [
+            k,
+            'ข้อความ',
+          ]),
+        );
+        const out = resolveTokens(text, { ...CTX, extra }, speaker);
         expect(out, text).not.toMatch(/[{}]/);
       }
+  });
+
+  it('every MIRROR line names a known question; STATEMENTS/INTERPRETATION have their content', () => {
+    for (const ch of chapters) {
+      const ids = new Set([...MIRRORS, ...(ch.mirrorQuestions ?? [])].map((q) => q.id));
+      allLines(ch, (l) => {
+        if (l.type === 'MIRROR') expect(ids.has(l.questionId), l.questionId).toBe(true);
+        if (l.type === 'STATEMENTS') expect(ch.statements?.length, ch.id).toBeGreaterThan(0);
+        if (l.type === 'INTERPRETATION') expect(ch.interpretations?.length, ch.id).toBeGreaterThan(0);
+        if (l.type === 'EMOTION_CARDS') expect(ch.emotionCards?.groups.length, ch.id).toBeGreaterThan(0);
+      });
+    }
   });
 
   it('every scene describes itself for screen readers (AX-4)', () => {
@@ -223,7 +270,10 @@ describe('TC-PLAY-06 content lint (docs/10 §4)', () => {
             const scene = sceneById(ch, move.pos.sceneId)!;
             const step = expandScene(scene, state)[move.pos.lineIndex]!;
             if (step.kind === 'choice' && !state.chosen[step.line.id]) {
-              for (const o of step.line.options) {
+              const shown = visibleOptions(step.line, state);
+              expect(shown.length + (step.line.custom ? 1 : 0), step.line.id).toBeGreaterThanOrEqual(2);
+              expect(shown.length + (step.line.custom ? 1 : 0), step.line.id).toBeLessThanOrEqual(7);
+              for (const o of shown) {
                 expect(optionText(o, state)).toBeTruthy();
                 play(
                   {
@@ -234,6 +284,15 @@ describe('TC-PLAY-06 content lint (docs/10 §4)', () => {
                   guard + 1,
                 );
               }
+              if (step.line.custom)
+                play(
+                  {
+                    ...state,
+                    flags: { ...state.flags, ...step.line.custom.setFlags },
+                    chosen: { ...state.chosen, [step.line.id]: 'custom' },
+                  },
+                  guard + 1,
+                );
               return;
             }
             move = advance(ch, move.pos, state);

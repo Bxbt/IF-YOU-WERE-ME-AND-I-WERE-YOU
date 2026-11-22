@@ -32,6 +32,7 @@ export const CHAPTERS: ChapterMeta[] = [
     titleTh: 'ลองเดินในรองเท้าของกันและกัน',
     estimatedMinutes: [12, 15],
     needsScenario: true,
+    load: () => import('./ch2').then((m) => m.ch2),
   },
   {
     id: 'ch3',
@@ -40,6 +41,7 @@ export const CHAPTERS: ChapterMeta[] = [
     titleTh: 'สิ่งที่พูดไม่ออก',
     estimatedMinutes: [10, 12],
     needsScenario: true,
+    load: () => import('./ch3').then((m) => m.ch3),
   },
   {
     id: 'ch4',
@@ -48,6 +50,7 @@ export const CHAPTERS: ChapterMeta[] = [
     titleTh: 'สลับบทบาท',
     estimatedMinutes: [10, 15],
     needsScenario: false,
+    load: () => import('./ch4').then((m) => m.ch4),
   },
   {
     id: 'ch5',
@@ -56,6 +59,7 @@ export const CHAPTERS: ChapterMeta[] = [
     titleTh: 'ที่ปลอดภัยของเรา',
     estimatedMinutes: [8, 10],
     needsScenario: false,
+    load: () => import('./ch5').then((m) => m.ch5),
   },
 ];
 

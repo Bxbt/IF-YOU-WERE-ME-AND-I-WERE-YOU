@@ -119,6 +119,11 @@ describe('DialogueBox', () => {
     fireEvent.click(screen.getByRole('button', { name: 'แสดงข้อความทั้งหมด' }));
     expect(onAdvance).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'ถัดไป' })).toBeInTheDocument();
+    // Regression: the typing timer kept running and shrank the line back after the tap.
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.getByRole('button', { name: 'ถัดไป' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'ถัดไป' }));
+    expect(onAdvance).toHaveBeenCalledTimes(1);
     vi.useRealTimers();
   });
 });

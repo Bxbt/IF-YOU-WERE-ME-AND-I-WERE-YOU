@@ -284,22 +284,30 @@ export const ch1: ChapterContent = {
     },
   ],
   emotionCards: {
-    insider: [
-      { id: 'ec_in_shock', text: 'ตกใจ' },
-      { id: 'ec_in_fear', text: 'กลัว' },
-      { id: 'ec_in_helpless', text: 'รู้สึกช่วยตัวเองไม่ได้' },
-      { id: 'ec_in_cramped', text: 'อึดอัด' },
-      { id: 'ec_in_annoyed', text: 'รำคาญ' },
-      { id: 'ec_in_embarrassed', text: 'อาย' },
-      { id: 'ec_in_calm', text: 'ยังสงบอยู่' },
-    ],
-    waiter: [
-      { id: 'ec_out_wonder', text: 'สงสัย' },
-      { id: 'ec_out_worry', text: 'กังวล' },
-      { id: 'ec_out_worst', text: 'คิดไปถึงเรื่องแย่ที่สุด' },
-      { id: 'ec_out_frustrated', text: 'หงุดหงิด' },
-      { id: 'ec_out_helpless', text: 'รู้สึกช่วยอะไรไม่ได้' },
-      { id: 'ec_out_unsure', text: 'ยังไม่แน่ใจว่าเกิดอะไรขึ้น' },
+    groups: [
+      {
+        role: 'insider',
+        cards: [
+          { id: 'ec_in_shock', text: 'ตกใจ' },
+          { id: 'ec_in_fear', text: 'กลัว' },
+          { id: 'ec_in_helpless', text: 'รู้สึกช่วยตัวเองไม่ได้' },
+          { id: 'ec_in_cramped', text: 'อึดอัด' },
+          { id: 'ec_in_annoyed', text: 'รำคาญ' },
+          { id: 'ec_in_embarrassed', text: 'อาย' },
+          { id: 'ec_in_calm', text: 'ยังสงบอยู่' },
+        ],
+      },
+      {
+        role: 'waiter',
+        cards: [
+          { id: 'ec_out_wonder', text: 'สงสัย' },
+          { id: 'ec_out_worry', text: 'กังวล' },
+          { id: 'ec_out_worst', text: 'คิดไปถึงเรื่องแย่ที่สุด' },
+          { id: 'ec_out_frustrated', text: 'หงุดหงิด' },
+          { id: 'ec_out_helpless', text: 'รู้สึกช่วยอะไรไม่ได้' },
+          { id: 'ec_out_unsure', text: 'ยังไม่แน่ใจว่าเกิดอะไรขึ้น' },
+        ],
+      },
     ],
   },
   reflection: [

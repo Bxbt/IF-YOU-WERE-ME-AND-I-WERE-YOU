@@ -18,7 +18,12 @@ export function EmptyState({ title, body, action }: { title: string; body?: stri
 
 export function PauseButton({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" aria-label={ui.labels.pause} onClick={onClick} className="btn btn-ghost min-w-[44px] px-2">
+    <button
+      type="button"
+      aria-label={ui.labels.pause}
+      onClick={onClick}
+      className="btn btn-ghost min-w-[44px] px-2"
+    >
       <Pause aria-hidden className="h-5 w-5" />
     </button>
   );
@@ -35,7 +40,12 @@ export function SoundToggle() {
       aria-pressed={enabled}
       className="btn btn-ghost min-w-[44px] px-2"
       onClick={() =>
-        useGame.getState().update((s) => ({ ...s, settings: { ...s.settings, sound: { ...s.settings.sound, enabled: !enabled } } }))
+        useGame
+          .getState()
+          .update((s) => ({
+            ...s,
+            settings: { ...s.settings, sound: { ...s.settings.sound, enabled: !enabled } },
+          }))
       }
     >
       {enabled ? <Volume2 aria-hidden className="h-5 w-5" /> : <VolumeX aria-hidden className="h-5 w-5" />}

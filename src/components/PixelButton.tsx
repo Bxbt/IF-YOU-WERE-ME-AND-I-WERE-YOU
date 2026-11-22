@@ -12,7 +12,17 @@ export interface PixelButtonProps extends ButtonHTMLAttributes<HTMLButtonElement
 
 /** docs/06 §2 PixelButton — default, hover, focus, active, disabled, loading. */
 export const PixelButton = forwardRef<HTMLButtonElement, PixelButtonProps>(function PixelButton(
-  { variant = 'primary', loading = false, icon, block = false, className = '', children, disabled, type = 'button', ...rest },
+  {
+    variant = 'primary',
+    loading = false,
+    icon,
+    block = false,
+    className = '',
+    children,
+    disabled,
+    type = 'button',
+    ...rest
+  },
   ref,
 ) {
   return (

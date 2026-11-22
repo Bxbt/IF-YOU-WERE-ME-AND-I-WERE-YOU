@@ -1,9 +1,27 @@
 import { Check } from 'lucide-react';
 import { ui } from '../content/th/ui';
-import { HAIR, HAIR_STYLE_NAMES, OUTFIT, OUTFIT_NAMES, PRESETS, SKIN, type Appearance } from '../scene/draw/character';
+import {
+  HAIR,
+  HAIR_STYLE_NAMES,
+  OUTFIT,
+  OUTFIT_NAMES,
+  PRESETS,
+  SKIN,
+  type Appearance,
+} from '../scene/draw/character';
 import { SpriteView } from '../scene/CharacterCanvas';
 
-function Swatches({ legend, colors, value, onChange }: { legend: string; colors: string[]; value: number; onChange: (i: number) => void }) {
+function Swatches({
+  legend,
+  colors,
+  value,
+  onChange,
+}: {
+  legend: string;
+  colors: string[];
+  value: number;
+  onChange: (i: number) => void;
+}) {
   return (
     <fieldset className="m-0 border-0 p-0">
       <legend className="mb-2 p-0 text-sm font-medium">{legend}</legend>
@@ -26,7 +44,17 @@ function Swatches({ legend, colors, value, onChange }: { legend: string; colors:
   );
 }
 
-function Options({ legend, labels, value, onChange }: { legend: string; labels: readonly string[]; value: number; onChange: (i: number) => void }) {
+function Options({
+  legend,
+  labels,
+  value,
+  onChange,
+}: {
+  legend: string;
+  labels: readonly string[];
+  value: number;
+  onChange: (i: number) => void;
+}) {
   return (
     <fieldset className="m-0 border-0 p-0">
       <legend className="mb-2 p-0 text-sm font-medium">{legend}</legend>
@@ -69,11 +97,36 @@ export function AvatarPicker({ value, onChange }: { value: Appearance; onChange:
           ))}
         </div>
       </fieldset>
-      <Swatches legend={ui.player.skin} colors={SKIN} value={value.skin} onChange={(i) => set('skin', i as Appearance['skin'])} />
-      <Options legend={ui.player.hairStyle} labels={HAIR_STYLE_NAMES} value={value.hairStyle} onChange={(i) => set('hairStyle', i as Appearance['hairStyle'])} />
-      <Swatches legend={ui.player.hairColor} colors={HAIR} value={value.hairColor} onChange={(i) => set('hairColor', i as Appearance['hairColor'])} />
-      <Options legend={ui.player.outfit} labels={OUTFIT_NAMES} value={value.outfit} onChange={(i) => set('outfit', i as Appearance['outfit'])} />
-      <Swatches legend={ui.player.outfitColor} colors={OUTFIT} value={value.outfitColor} onChange={(i) => set('outfitColor', i as Appearance['outfitColor'])} />
+      <Swatches
+        legend={ui.player.skin}
+        colors={SKIN}
+        value={value.skin}
+        onChange={(i) => set('skin', i as Appearance['skin'])}
+      />
+      <Options
+        legend={ui.player.hairStyle}
+        labels={HAIR_STYLE_NAMES}
+        value={value.hairStyle}
+        onChange={(i) => set('hairStyle', i as Appearance['hairStyle'])}
+      />
+      <Swatches
+        legend={ui.player.hairColor}
+        colors={HAIR}
+        value={value.hairColor}
+        onChange={(i) => set('hairColor', i as Appearance['hairColor'])}
+      />
+      <Options
+        legend={ui.player.outfit}
+        labels={OUTFIT_NAMES}
+        value={value.outfit}
+        onChange={(i) => set('outfit', i as Appearance['outfit'])}
+      />
+      <Swatches
+        legend={ui.player.outfitColor}
+        colors={OUTFIT}
+        value={value.outfitColor}
+        onChange={(i) => set('outfitColor', i as Appearance['outfitColor'])}
+      />
       <Options
         legend={ui.player.glasses}
         labels={[ui.player.glassesOff, ui.player.glassesOn]}

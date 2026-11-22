@@ -159,8 +159,23 @@ interface ChapterContent {
   firstScene: string;
   scenes: SceneContent[];
   reflection: QuestionContent[];        // r1_1 ... (เล่นที่บรรทัด REFLECTION)
-  emotionCards?: { insider: OptionContent[]; waiter: OptionContent[] };   // การ์ดความรู้สึก (บรรทัด EMOTION_CARDS)
-  transition: { lines: LineContent[]; nextChapter?: ChapterId };          // หลังจบฉากสุดท้าย + ปุ่ม [ไปบทถัดไป] [พักก่อน]
+  emotionCards?: { groups: { role: Role; period?: string; cards: OptionContent[] }[] };   // การ์ดความรู้สึก (บรรทัด EMOTION_CARDS) · period เช่น "T+5"
+  fragments?: Record<string, { flag: string; values: Record<string, string>; fallback: string }>;  // token {ชื่อ} → ข้อความตามค่า Flag (ภาคผนวก A ของ 02)
+  interpretations?: InterpretationSet[];                                  // Ch3 Interpretation Check
+  mirrorQuestions?: QuestionContent[];   // คำถาม Mirror เฉพาะบท (w3_1, w3_2 — context 'role') · M01–M07 มาจาก questions.ts
+  statements?: { id: string; stem: string; starters: { id: string; text: string }[] }[];   // Ch5 cs1–cs5
+  rewrites?: { token: string; flag: string; choiceId: string; originalChoiceId: string; storyItem: string }[];  // {rewrite_out} = ตัวเลือก / ข้อความที่พิมพ์เอง / คำเดิม ("ไม่เปลี่ยน")
+  ending?: { en: string; th?: string; title?: boolean }[];   // S15 (Ch5)
+  transition: { lines: LineContent[]; nextChapter?: ChapterId; ending?: boolean };   // ending = ไป S15 หลังจบบท (Ch5)
+}
+
+interface InterpretationSet {           // แถวของ Interpretation Check ตามคำพูดที่เกิดขึ้นจริงในเรื่อง
+  id: string;                           // "ic_out_blame" → StoryAnswer itemId
+  role: Role;                           // เจ้าของคำพูด
+  when: Condition;                      // เช่น { flag: 'out_first_words', eq: 'blame' }
+  quote: string;                        // คำพูดที่แสดงเป็นหัวข้อ
+  quoteByCondition?: { when: Condition; text: string }[];
+  feelings: { id: string; text: string; when?: Condition }[];
 }
 
 interface SceneContent {
@@ -179,11 +194,16 @@ type LineContent =
   | { type: 'SYS'; title?: string; text: string; when?: Condition }   // title = "โทรศัพท์ของ {in}", "จอลิฟต์"
   | { type: 'DLG' | 'MONO'; speaker: 'in'|'out'|'A'|'B'|string; expression?: Expression; text: string; when?: Condition }
   | { type: 'ENV'; set: EnvSet; when?: Condition }
-  | { type: 'CHOICE'; id: string; owner: 'insider'|'waiter'|'A'|'B'|'each'; options: ChoiceOption[] }
+  | { type: 'CHOICE'; id: string; owner: 'insider'|'waiter'|'A'|'B'|'each'; options: ChoiceOption[];
+      custom?: { setFlags: Record<string, string>; storyItem: string; maxLength: number } }   // ตัวเลือก "พิมพ์เอง" (Ch3 s06) — ข้อความเก็บเป็น StoryAnswer itemId = storyItem (plain text)
   | { type: 'QUESTION'; questionId: QuestionId; layer: Layer | 'both'; private: boolean }
   | { type: 'EMOTION_CARDS' }           // การ์ดความรู้สึกของบท → StoryAnswer kind 'emotion_card', itemId 'ec_<chapter>'
+  | { type: 'TIMELINE'; rows: { label: string; in: string; out: string }[] }   // Ch2 Part C · ข้อความใช้ token fragment
+  | { type: 'INTERPRETATION' }          // Ch3 Interpretation Check → StoryAnswer kind 'interpretation' ต่อชุดที่ when ผ่าน
+  | { type: 'MIRROR'; questionId: string; bridge?: LineContent[] }   // S7 (Solo: self → perceived → การ์ดผล) → SharedAnswer
+  | { type: 'STATEMENTS' }              // Ch5 cs1–cs5 → SharedAnswer kind 'statement'
   | { type: 'REFLECTION' }              // ชุดคำถามท้ายบท → StoryAnswer kind 'reflection' · ข้ามทั้งชุดได้
-  | { type: 'SAFETY_NOTE'; text: string; when?: Condition };
+  | { type: 'SAFETY_NOTE'; text: string; when?: Condition };   // ไม่หยุดเกม: แสดงเป็นกล่องเล็กเหนือบทพูดจนกว่าจะปิด/จบฉาก
 
 // ENV เป็นชนิดที่กำหนดไว้ ไม่ใช่ Record อิสระ — key ที่ไม่รู้จักจึง compile ไม่ผ่าน
 interface EnvSet {
@@ -198,13 +218,14 @@ interface EnvSet {
 
 interface ChoiceOption {
   id: string; text: string;
+  when?: Condition;                     // แสดงตัวเลือกนี้เฉพาะเมื่อผ่าน (Ch3 c02 e*)
   textByCondition?: { when: Condition; text: string }[];
   setFlags?: Record<string, string>;
   tag?: `${DimensionId}:${string}`;
   responseLines?: LineContent[];
 }
 
-type Condition = { flag: string; eq: string } | { flag: string; unset: true } | { scenario: 'priorWarning'; eq: boolean } | { all: Condition[] } | { any: Condition[] };
+type Condition = { flag: string; eq: string } | { flag: string; unset: true } | { flag: string; set: true } | { scenario: 'priorWarning'; eq: boolean } | { all: Condition[] } | { any: Condition[] };
 // { flag, unset: true } = Flag ยังไม่มีค่า (ข้ามฉาก) → ใช้เลือกบรรทัด fallback (แทน eq: '__missing' ใน 10 §4)
 type Expression = 'neutral'|'happy'|'sad'|'worried'|'angry'|'scared'|'relieved'|'thinking';
 
@@ -219,6 +240,7 @@ interface QuestionContent {
   interpretation?: string;              // สำหรับระบบ ไม่แสดงตรง
   reflectionPrompt?: string;
   quick?: boolean;
+  toNextConversation?: boolean;         // Reflection: ข้อความที่เลือก/พิมพ์ถูกเพิ่มใน "Our Next Conversation" (r4_3, r5_2)
 }
 ```
 
@@ -267,7 +289,7 @@ type StoryAnswerKey = `${PlayerId}:${string}`;     // "pl_x:r1_1", "pl_x:ic_out_
 interface StoryAnswer {
   key: StoryAnswerKey;
   playerId: PlayerId;
-  itemId: string;                       // r1_1 | ic_<speaker>_<flag> | rewrite_* | ec_<chapter>
+  itemId: string;                       // r1_1 | ic_<speaker>_<flag> | rewrite_* | ec_<chapter> (rewrite_* = ข้อความที่พิมพ์เอง เก็บใน freeText, kind 'reflection')
   kind: 'reflection' | 'interpretation' | 'emotion_card';   // Statements ย้ายไป SharedAnswer (§7)
   layer: Layer;
   selected: OptionId[];

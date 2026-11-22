@@ -69,7 +69,9 @@ export function DataSection() {
         <p className="m-0">{ui.data.whereStored}</p>
         <p className="m-0 mt-2">{ui.data.notEncrypted}</p>
         <p className="m-0 mt-2">{ui.data.size(sizeKb)}</p>
-        {lastSavedAt && <p className="m-0 mt-2">{ui.data.lastSaved(new Date(lastSavedAt).toLocaleString('th-TH'))}</p>}
+        {lastSavedAt && (
+          <p className="m-0 mt-2">{ui.data.lastSaved(new Date(lastSavedAt).toLocaleString('th-TH'))}</p>
+        )}
       </section>
 
       {message && (
@@ -79,7 +81,9 @@ export function DataSection() {
       )}
 
       <section className="panel flex flex-col gap-3" aria-labelledby="export-h">
-        <h3 id="export-h" className="m-0 text-lg font-semibold">{ui.data.exportHeading}</h3>
+        <h3 id="export-h" className="m-0 text-lg font-semibold">
+          {ui.data.exportHeading}
+        </h3>
         <p className="m-0 text-sm text-lavender">{ui.data.exportNote}</p>
         <button type="button" className="btn btn-primary self-start" onClick={onExport}>
           <Download aria-hidden className="h-5 w-5" />
@@ -88,11 +92,19 @@ export function DataSection() {
       </section>
 
       <section className="panel flex flex-col gap-3" aria-labelledby="import-h">
-        <h3 id="import-h" className="m-0 text-lg font-semibold">{ui.data.importHeading}</h3>
+        <h3 id="import-h" className="m-0 text-lg font-semibold">
+          {ui.data.importHeading}
+        </h3>
         <label className="btn btn-ghost cursor-pointer self-start">
           <Upload aria-hidden className="h-5 w-5" />
           {ui.data.importPick}
-          <input ref={fileRef} type="file" accept="application/json,.json" className="sr-only" onChange={onFile} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            onChange={onFile}
+          />
         </label>
         {pending && (
           <div className="flex flex-col gap-3 rounded-btn border-2 border-orange p-3">
@@ -111,7 +123,9 @@ export function DataSection() {
       </section>
 
       <section className="panel flex flex-col gap-3" aria-labelledby="delete-h">
-        <h3 id="delete-h" className="m-0 text-lg font-semibold">{ui.data.deleteHeading}</h3>
+        <h3 id="delete-h" className="m-0 text-lg font-semibold">
+          {ui.data.deleteHeading}
+        </h3>
         <p className="m-0 text-sm text-lavender">{ui.data.deleteWarn}</p>
         <label className="flex flex-col gap-1 text-sm">
           {ui.data.deleteTypeHint}

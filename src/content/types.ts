@@ -16,6 +16,8 @@ export interface QuestionContent {
   reflectionPrompt?: string;
   quick?: boolean;
   safetyNote?: string;
+  /** Reflection only: chosen option texts / free text are added to "Our Next Conversation" (docs/02 r4_3, r5_2). */
+  toNextConversation?: boolean;
 }
 
 export type MetaValue = 'depends' | 'not_sure' | 'prefer_not' | 'skipped';
@@ -24,11 +26,20 @@ export type MetaValue = 'depends' | 'not_sure' | 'prefer_not' | 'skipped';
 
 export type ChapterId = 'ch1' | 'ch2' | 'ch3' | 'ch4' | 'ch5';
 export type RoleId = 'insider' | 'waiter';
-export type Expression = 'neutral' | 'happy' | 'sad' | 'worried' | 'angry' | 'scared' | 'relieved' | 'thinking';
+export type Expression =
+  | 'neutral'
+  | 'happy'
+  | 'sad'
+  | 'worried'
+  | 'angry'
+  | 'scared'
+  | 'relieved'
+  | 'thinking';
 
 export type Condition =
   | { flag: string; eq: string }
   | { flag: string; unset: true }
+  | { flag: string; set: true }
   | { scenario: 'priorWarning'; eq: boolean }
   | { all: Condition[] }
   | { any: Condition[] };
@@ -51,6 +62,8 @@ export interface EnvSet {
 export interface ChoiceOption {
   id: string;
   text: string;
+  /** Show this option only when the condition holds (docs/02 Ch3 c02 e*). */
+  when?: Condition;
   textByCondition?: { when: Condition; text: string }[];
   setFlags?: Record<string, string>;
   tag?: string;
@@ -62,8 +75,19 @@ export type LineContent =
   | { type: 'SYS'; title?: string; text: string; when?: Condition }
   | { type: 'DLG' | 'MONO'; speaker: string; expression?: Expression; text: string; when?: Condition }
   | { type: 'ENV'; set: EnvSet; when?: Condition }
-  | { type: 'CHOICE'; id: string; owner: RoleId; options: ChoiceOption[] }
+  | {
+      type: 'CHOICE';
+      id: string;
+      owner: RoleId;
+      options: ChoiceOption[];
+      /** "พิมพ์เอง": the text is kept as plain text in StoryAnswer `storyItem` (docs/02 Ch3 s06). */
+      custom?: { setFlags: Record<string, string>; storyItem: string; maxLength: number };
+    }
   | { type: 'EMOTION_CARDS' }
+  | { type: 'TIMELINE'; rows: { label: string; in: string; out: string }[] }
+  | { type: 'INTERPRETATION' }
+  | { type: 'MIRROR'; questionId: string }
+  | { type: 'STATEMENTS' }
   | { type: 'REFLECTION' }
   | { type: 'SAFETY_NOTE'; text: string; when?: Condition };
 
@@ -89,6 +113,29 @@ export interface ChapterContent {
   firstScene: string;
   scenes: SceneContent[];
   reflection: QuestionContent[];
-  emotionCards?: { insider: OptionContent[]; waiter: OptionContent[] };
-  transition: { lines: LineContent[]; nextChapter?: ChapterId };
+  emotionCards?: { groups: { role: RoleId; period?: string; cards: OptionContent[] }[] };
+  /** Token {name} → text chosen by a flag value (docs/02 appendix A). */
+  fragments?: Record<string, { flag: string; values: Record<string, string>; fallback: string }>;
+  interpretations?: InterpretationSet[];
+  /** Chapter-specific mirror questions (w3_1, w3_2 — context 'role'); M01–M07 come from questions.ts. */
+  mirrorQuestions?: QuestionContent[];
+  statements?: { id: string; stem: string; starters: { id: string; text: string }[] }[];
+  /**
+   * {token} = what was said in a rewrite choice (docs/02 Ch3 s06): the chosen option text, the
+   * player's own words (custom), or — for "unchanged" — the original option of `originalChoiceId`.
+   */
+  rewrites?: { token: string; flag: string; choiceId: string; originalChoiceId: string; storyItem: string }[];
+  /** S15 lines (Ch5): English as written with a small Thai translation (docs/02 ch5_end, A-13). */
+  ending?: { en: string; th?: string; title?: boolean }[];
+  transition: { lines: LineContent[]; nextChapter?: ChapterId; ending?: boolean };
+}
+
+export interface InterpretationSet {
+  /** StoryAnswer itemId, e.g. "ic_out_blame". */
+  id: string;
+  role: RoleId;
+  when: Condition;
+  quote: string;
+  quoteByCondition?: { when: Condition; text: string }[];
+  feelings: { id: string; text: string; when?: Condition }[];
 }

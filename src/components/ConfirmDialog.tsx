@@ -17,7 +17,16 @@ interface ConfirmDialogProps {
 const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /** Modal with focus trap, Esc to close and focus restore (AX-6). */
-export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCancel, destructive, typedWord }: ConfirmDialogProps) {
+export function ConfirmDialog({
+  open,
+  title,
+  body,
+  confirmLabel,
+  onConfirm,
+  onCancel,
+  destructive,
+  typedWord,
+}: ConfirmDialogProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const [typed, setTyped] = useState('');
@@ -58,7 +67,13 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/80 p-4">
-      <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} className="panel flex w-full max-w-md flex-col gap-4">
+      <div
+        ref={ref}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="panel flex w-full max-w-md flex-col gap-4"
+      >
         <h2 id={titleId} className="m-0 text-lg font-semibold">
           {title}
         </h2>

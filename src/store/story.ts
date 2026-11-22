@@ -254,3 +254,172 @@ export function resumeTarget(j: GameSession): string {
 }
 
 export const apply = (fn: (s: SaveRoot) => SaveRoot) => useGame.getState().update(fn);
+
+// ---------- Interpretation Check (Ch3 s04) ----------
+
+export interface InterpretationInput {
+  answers: Record<string, 'yes' | 'no' | 'unsure'>;
+  noneMatch: boolean;
+  freeText: string;
+}
+
+/** StoryAnswer kind 'interpretation' (docs/07 §6). Own role → layer self; partner's role → perceived (imagined). */
+export function saveInterpretation(
+  save: SaveRoot,
+  jid: string,
+  playerId: string,
+  itemId: string,
+  layer: 'self' | 'perceived',
+  input: InterpretationInput,
+): SaveRoot {
+  const key = storyAnswerKey(playerId, itemId);
+  const freeText = input.freeText.trim();
+  const answer: StoryAnswerT = {
+    key,
+    playerId,
+    itemId,
+    kind: 'interpretation',
+    layer,
+    selected: input.noneMatch ? ['none'] : [],
+    interpretation: input.answers,
+    meta: null,
+    ...(freeText ? { freeText } : {}),
+    updatedAt: nowIso(),
+  };
+  const next = withJourney(save, jid, (j) => ({ ...j, storyAnswers: { ...j.storyAnswers, [key]: answer } }));
+  const drafts = { ...next.drafts };
+  delete drafts[key];
+  return { ...next, drafts };
+}
+
+// ---------- Mirror (S7 Solo) ----------
+
+type Shared = GameSession['mirrorItems'][string];
+type PAnswer = NonNullable<Shared['entries'][string]['self']>;
+
+/**
+ * Solo mirror answer (docs/04 §6.3, docs/07 §7): SharedAnswer with state 'open' and only the real
+ * player's entry. `context: 'role'` for w3_* (never counted as personality data — docs/04 §2.1).
+ */
+export function saveMirrorAnswer(
+  save: SaveRoot,
+  jid: string,
+  questionId: string,
+  context: 'self' | 'role',
+  playerId: string,
+  layer: 'self' | 'perceived',
+  input: AnswerInput,
+): SaveRoot {
+  return withJourney(save, jid, (j, t) => {
+    const prev = j.mirrorItems[questionId];
+    const entry = prev?.entries[playerId] ?? { consent: false };
+    const old = entry[layer];
+    const freeText = input.freeText.trim();
+    const answer: PAnswer = {
+      questionId,
+      layer,
+      selected: input.meta ? [] : input.selected,
+      meta: input.meta,
+      ...(freeText && input.meta !== 'skipped' ? { freeText } : {}),
+      status: input.meta === 'skipped' ? 'skipped' : 'answered',
+      revision: (old?.revision ?? 0) + 1,
+      answeredAt: old?.answeredAt ?? t,
+      updatedAt: t,
+    };
+    const item: Shared = {
+      key: questionId,
+      questionId,
+      kind: 'mirror',
+      context,
+      state: 'open',
+      ...prev,
+      entries: { ...(prev?.entries ?? {}), [playerId]: { ...entry, [layer]: answer, submittedAt: t } },
+    };
+    return { ...j, mirrorItems: { ...j.mirrorItems, [questionId]: item } };
+  });
+}
+
+// ---------- Ch5 statements ----------
+
+export interface StatementInput {
+  text: string;
+  starterId?: string;
+  skipped: boolean;
+  shareIntent: boolean;
+}
+
+/** cs1–cs5 as SharedAnswer kind 'statement' (docs/04 §6.3.1); Solo: shareIntent = "ใส่ในการ์ดที่จะส่งออก". */
+export function saveStatement(
+  save: SaveRoot,
+  jid: string,
+  playerId: string,
+  id: string,
+  input: StatementInput,
+): SaveRoot {
+  return withJourney(save, jid, (j, t) => {
+    const prev = j.mirrorItems[id];
+    const text = input.skipped ? '' : input.text.trim().slice(0, 280);
+    const item: Shared = {
+      key: id,
+      questionId: id,
+      kind: 'statement',
+      context: 'self',
+      state: 'open',
+      ...prev,
+      entries: {
+        ...(prev?.entries ?? {}),
+        [playerId]: {
+          ...(prev?.entries[playerId] ?? {}),
+          statement: {
+            text,
+            ...(input.starterId && !input.skipped ? { starterId: input.starterId } : {}),
+            meta: input.skipped ? 'skipped' : null,
+          },
+          shareIntent: !input.skipped && input.shareIntent,
+          submittedAt: t,
+          consent: false,
+        },
+      },
+    };
+    const next = { ...j, mirrorItems: { ...j.mirrorItems, [id]: item } };
+    return next;
+  });
+}
+
+// ---------- Our Next Conversation ----------
+
+type NextItem = GameSession['nextConversation'][number];
+
+/** Adds a conversation starter (≤ 200 chars); the same text from the same owner is not added twice. */
+export function addNextConversation(
+  save: SaveRoot,
+  jid: string,
+  ownerId: string,
+  text: string,
+  source: NextItem['source'],
+  sourceRef?: string,
+): SaveRoot {
+  const clean = text.trim().slice(0, 200);
+  const j = save.journeys[jid];
+  if (!clean || !j || j.nextConversation.some((n) => n.ownerId === ownerId && n.text === clean)) return save;
+  return withJourney(save, jid, (jj, t) => ({
+    ...jj,
+    nextConversation: [
+      ...jj.nextConversation,
+      {
+        id: `nc_${jj.nextConversation.length + 1}_${Date.parse(t).toString(36)}`,
+        ownerId,
+        text: clean,
+        source,
+        ...(sourceRef ? { sourceRef } : {}),
+        done: false,
+        createdAt: t,
+      },
+    ],
+  }));
+}
+
+/** Ch5 finished → Journey `completed` (docs/05 §3.2); it stays viewable and replayable. */
+export function completeJourney(save: SaveRoot, jid: string): SaveRoot {
+  return withJourney(save, jid, (j) => ({ ...j, status: 'completed' }));
+}

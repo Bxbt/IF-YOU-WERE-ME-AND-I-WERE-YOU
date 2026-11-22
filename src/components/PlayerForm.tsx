@@ -26,7 +26,17 @@ export const emptyPlayerInput = (preset: PresetKey = randomPreset()): PlayerInpu
   appearance: { ...PRESETS[preset] },
 });
 
-function Segmented<T extends string>({ legend, value, options, onChange }: { legend: string; value: T; options: readonly { value: T; label: string }[]; onChange: (v: T) => void }) {
+function Segmented<T extends string>({
+  legend,
+  value,
+  options,
+  onChange,
+}: {
+  legend: string;
+  value: T;
+  options: readonly { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
   return (
     <fieldset className="m-0 border-0 p-0">
       <legend className="mb-2 p-0 text-sm font-medium">{legend}</legend>
@@ -105,7 +115,9 @@ export function PlayerForm({
 
       <div className="flex flex-col gap-6">
         <section className="panel flex flex-col gap-4" aria-labelledby={`${nameId}-h`}>
-          <h2 id={`${nameId}-h`} className="m-0 text-lg font-semibold">{ui.player.identity}</h2>
+          <h2 id={`${nameId}-h`} className="m-0 text-lg font-semibold">
+            {ui.player.identity}
+          </h2>
           <div className="flex flex-col gap-1">
             <label htmlFor={nameId} className="text-sm font-medium">
               {ui.player.nickname} <span className="text-lavender">({ui.player.nicknameHint})</span>
@@ -122,24 +134,49 @@ export function PlayerForm({
               className={inputCls}
             />
             {touched && nameEmpty && (
-              <p id={errId} className="m-0 text-sm text-orange">{ui.player.nicknameEmpty}</p>
+              <p id={errId} className="m-0 text-sm text-orange">
+                {ui.player.nicknameEmpty}
+              </p>
             )}
             {sameName && <p className="m-0 text-sm text-lavender">{ui.player.sameNameWarn}</p>}
           </div>
-          <Segmented legend={ui.player.sentenceEnding} value={v.sentenceEnding} options={ui.player.endings} onChange={(x) => setV({ ...v, sentenceEnding: x })} />
-          <Segmented legend={ui.player.addressStyle} value={v.addressStyle} options={ui.player.addressStyles} onChange={(x) => setV({ ...v, addressStyle: x })} />
+          <Segmented
+            legend={ui.player.sentenceEnding}
+            value={v.sentenceEnding}
+            options={ui.player.endings}
+            onChange={(x) => setV({ ...v, sentenceEnding: x })}
+          />
+          <Segmented
+            legend={ui.player.addressStyle}
+            value={v.addressStyle}
+            options={ui.player.addressStyles}
+            onChange={(x) => setV({ ...v, addressStyle: x })}
+          />
           <label className="flex flex-col gap-1 text-sm font-medium">
             {ui.player.pronouns}
-            <input value={v.pronouns ?? ''} maxLength={20} onChange={(e) => setV({ ...v, pronouns: e.target.value })} className={inputCls} />
+            <input
+              value={v.pronouns ?? ''}
+              maxLength={20}
+              onChange={(e) => setV({ ...v, pronouns: e.target.value })}
+              className={inputCls}
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium">
             {ui.player.bio}
-            <textarea rows={2} value={v.bio ?? ''} maxLength={140} onChange={(e) => setV({ ...v, bio: e.target.value })} className={`${inputCls} py-2`} />
+            <textarea
+              rows={2}
+              value={v.bio ?? ''}
+              maxLength={140}
+              onChange={(e) => setV({ ...v, bio: e.target.value })}
+              className={`${inputCls} py-2`}
+            />
           </label>
         </section>
 
         <section className="panel flex flex-col gap-4" aria-labelledby={`${nameId}-a`}>
-          <h2 id={`${nameId}-a`} className="m-0 text-lg font-semibold">{ui.player.appearance}</h2>
+          <h2 id={`${nameId}-a`} className="m-0 text-lg font-semibold">
+            {ui.player.appearance}
+          </h2>
           <p className="m-0 text-[13px] text-lavender">{ui.player.appearanceNote}</p>
           <AvatarPicker value={v.appearance} onChange={(appearance) => setV({ ...v, appearance })} />
         </section>

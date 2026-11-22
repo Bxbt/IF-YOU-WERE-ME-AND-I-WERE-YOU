@@ -16,11 +16,25 @@ import {
   type HistoryEntry,
 } from '../components/Story';
 import { PauseMenu } from '../components/PauseMenu';
+import {
+  CustomChoice,
+  InterpretationCheck,
+  MirrorStep,
+  SafetyNotes,
+  Statements,
+  Timeline,
+} from '../components/StorySteps';
+import { MIRRORS } from '../content/th/questions';
 import { SceneCanvas } from '../scene/SceneCanvas';
 import { PortraitView } from '../scene/CharacterCanvas';
 import { useGame } from '../store/game';
 import { saveDraft } from '../store/actions';
 import {
+  addNextConversation,
+  completeJourney,
+  saveInterpretation,
+  saveMirrorAnswer,
+  saveStatement,
   apply,
   buildStoryState,
   buildTokenContext,
@@ -38,6 +52,11 @@ import {
   storyAnswerKey,
 } from '../store/story';
 import {
+  evalCondition,
+  fragmentTokens,
+  rewriteTokens,
+  safetyNotesUpTo,
+  visibleOptions,
   advance,
   controllingRole,
   envAt,
@@ -141,7 +160,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   const ch = content.id;
   const progress = journey.chapterProgress[ch] ?? emptyProgress(ch);
   const selfId = journey.playerIds[0];
-  const ctx = useMemo(() => buildTokenContext(save, journey), [save, journey]);
+  const baseCtx = useMemo(() => buildTokenContext(save, journey), [save, journey]);
   const mySelfRole = selfRole(journey);
 
   const freshState = useCallback(
@@ -214,6 +233,35 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   const steps = useMemo(() => (scene ? expandScene(scene, state) : []), [scene, state]);
   const step: Step | undefined = pos ? steps[pos.lineIndex] : undefined;
 
+  // Tokens from flags (Part C fragments) and from what was said (Ch3 rewrites).
+  const ctx = useMemo(
+    () => ({
+      ...baseCtx,
+      extra: {
+        // Fragment texts may contain tokens themselves ("…ที่มีหน้าของ {out}").
+        ...Object.fromEntries(
+          Object.entries(fragmentTokens(content, state)).map(([k, v]) => [k, resolveTokens(v, baseCtx)]),
+        ),
+        ...rewriteTokens(
+          content,
+          state,
+          (item) => journey.storyAnswers[storyAnswerKey(selfId, item)]?.freeText,
+        ),
+      },
+    }),
+    [baseCtx, content, state, journey.storyAnswers, selfId],
+  );
+  const selfSpeaker = mySelfRole === 'insider' ? 'in' : 'out';
+
+  // Safety notes stay until closed or until the scene changes (docs/06 S6).
+  const [closedNotes, setClosedNotes] = useState<string[]>([]);
+  useEffect(() => setClosedNotes([]), [pos?.sceneId]);
+  const notes = pos
+    ? safetyNotesUpTo(steps, pos.lineIndex)
+        .map((n) => resolveTokens(n.text, ctx))
+        .filter((t) => !closedNotes.includes(t))
+    : [];
+
   const lastScene = content.scenes.find((s) => s.next === null) ?? content.scenes[content.scenes.length - 1]!;
   const env = useMemo(() => {
     if (scene && pos) return envAt(scene, steps, pos.lineIndex);
@@ -236,13 +284,16 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       }
       apply((s0) => {
         const s = before ? before(s0) : s0;
-        return move.kind === 'at'
-          ? setPosition(s, journey.id, ch, move.pos.sceneId, move.pos.lineIndex)
-          : completeChapter(s, journey.id, ch);
+        if (move.kind === 'at') return setPosition(s, journey.id, ch, move.pos.sceneId, move.pos.lineIndex);
+        const done = completeChapter(s, journey.id, ch);
+        return content.transition.ending ? completeJourney(done, journey.id) : done;
       });
-      if (move.kind === 'end') useGame.getState().flush();
+      if (move.kind === 'end') {
+        useGame.getState().flush();
+        if (content.transition.ending) navigate(`/j/${journey.id}/ending`);
+      }
     },
-    [content, view, journey.id, ch],
+    [content, view, journey.id, ch, navigate],
   );
 
   const next = useCallback(() => {
@@ -267,6 +318,41 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         asRole: step.line.owner,
       };
       moveTo(advance(content, pos, st), pos, st, (s) => recordChoice(s, journey.id, ch, choice));
+    },
+    [pos, step, state, content, moveTo, selfId, journey.id, ch],
+  );
+
+  /** "พิมพ์เอง" (Ch3 s06): the text is kept as plain text in a story answer, the flag says "custom". */
+  const chooseCustom = useCallback(
+    (text: string) => {
+      if (!pos || step?.kind !== 'choice' || !step.line.custom) return;
+      const custom = step.line.custom;
+      const st: StoryState = {
+        ...state,
+        flags: { ...state.flags, ...custom.setFlags },
+        chosen: { ...state.chosen, [step.line.id]: 'custom' },
+      };
+      const choice = {
+        choiceId: step.line.id,
+        optionId: 'custom',
+        setFlags: custom.setFlags,
+        byPlayerId: selfId,
+        asRole: step.line.owner,
+      };
+      moveTo(advance(content, pos, st), pos, st, (s) =>
+        saveStoryAnswer(
+          recordChoice(s, journey.id, ch, choice),
+          journey.id,
+          selfId,
+          custom.storyItem,
+          'reflection',
+          {
+            selected: [],
+            meta: null,
+            freeText: text.slice(0, custom.maxLength),
+          },
+        ),
+      );
     },
     [pos, step, state, content, moveTo, selfId, journey.id, ch],
   );
@@ -367,7 +453,11 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     : (scene?.ariaLabel ?? lastScene.ariaLabel);
 
   // Scene height budget: landscape phones give the scene the full height of its 60% column.
-  const sceneHeightRatio = typeof window !== 'undefined' && window.matchMedia?.('(max-height: 479px) and (orientation: landscape)').matches ? 0.82 : 0.55;
+  const sceneHeightRatio =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(max-height: 479px) and (orientation: landscape)').matches
+      ? 0.82
+      : 0.55;
 
   // ----- steps that are not dialogue -----
   let body: React.ReactNode = null;
@@ -386,20 +476,22 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       <TransitionCard
         lines={lines}
         next={
-          nextMeta
-            ? nextMeta.load
-              ? {
-                  label: ui.play.nextChapter(nextMeta.number),
-                  onClick: () =>
-                    navigate(
-                      chapterHref(journey, nextMeta, nextP?.status === 'in_progress' ? '' : '?start=1'),
-                    ),
-                }
-              : {
-                  label: ui.play.nextChapter(nextMeta.number),
-                  disabledReason: ui.play.nextChapterNotReady(nextMeta.number),
-                }
-            : null
+          content.transition.ending
+            ? { label: ui.play.toEnding, onClick: () => navigate(`/j/${journey.id}/ending`) }
+            : nextMeta
+              ? nextMeta.load
+                ? {
+                    label: ui.play.nextChapter(nextMeta.number),
+                    onClick: () =>
+                      navigate(
+                        chapterHref(journey, nextMeta, nextP?.status === 'in_progress' ? '' : '?start=1'),
+                      ),
+                  }
+                : {
+                    label: ui.play.nextChapter(nextMeta.number),
+                    disabledReason: ui.play.nextChapterNotReady(nextMeta.number),
+                  }
+              : null
         }
         onRest={() => navigate(chaptersHref)}
       />
@@ -411,10 +503,12 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     ) : (
       <EmotionCards
         key={key}
-        groups={[
-          { label: ui.play.cardsInsider(ctx.names.in), cards: content.emotionCards.insider },
-          { label: ui.play.cardsWaiter(ctx.names.out), cards: content.emotionCards.waiter },
-        ]}
+        groups={content.emotionCards.groups.map((g) => ({
+          label:
+            (g.period ? `${g.period} · ` : '') +
+            (g.role === 'insider' ? ui.play.cardsInsider(ctx.names.in) : ui.play.cardsWaiter(ctx.names.out)),
+          cards: g.cards,
+        }))}
         initial={journey.storyAnswers[key]?.selected ?? []}
         onDone={(selected) => {
           apply((s) =>
@@ -449,9 +543,168 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         questions={content.reflection}
         initial={initial}
         startAt={firstOpen < 0 ? 0 : firstOpen}
-        onAnswer={(qid, d) => apply((s) => saveStoryAnswer(s, journey.id, selfId, qid, 'reflection', d))}
+        onAnswer={(qid, d) =>
+          apply((s) => {
+            let out = saveStoryAnswer(s, journey.id, selfId, qid, 'reflection', d);
+            const q = content.reflection.find((x) => x.id === qid);
+            if (q?.toNextConversation && !d.meta) {
+              const texts = [
+                ...q.options.filter((o) => d.selected.includes(o.id)).map((o) => resolveTokens(o.text, ctx)),
+                d.freeText.trim(),
+              ];
+              for (const t of texts)
+                if (t) out = addNextConversation(out, journey.id, selfId, t, 'reflection', qid);
+            }
+            return out;
+          })
+        }
         onDraft={(qid, text) => saveDraft(selfId, storyAnswerKey(selfId, qid), text)}
         onFinish={next}
+      />
+    );
+  } else if (step?.kind === 'timeline') {
+    body = (
+      <Timeline
+        inName={ctx.names.in}
+        outName={ctx.names.out}
+        rows={step.line.rows.map((r) => ({
+          label: resolveTokens(r.label, ctx),
+          in: resolveTokens(r.in, ctx),
+          out: resolveTokens(r.out, ctx),
+        }))}
+        onNext={next}
+      />
+    );
+  } else if (step?.kind === 'interpretation') {
+    const sets = (content.interpretations ?? []).filter((x) => evalCondition(x.when, state));
+    body = view ? (
+      <ViewOnlySkip onNext={next} />
+    ) : (
+      <InterpretationCheck
+        key={`ic-${pos?.sceneId}`}
+        partnerName={ctx.names.other}
+        sets={sets.map((x) => {
+          const sp = x.role === 'insider' ? 'in' : 'out';
+          const quote = x.quoteByCondition?.find((v) => evalCondition(v.when, state))?.text ?? x.quote;
+          const a = journey.storyAnswers[storyAnswerKey(selfId, x.id)];
+          return {
+            id: x.id,
+            own: x.role === mySelfRole,
+            speakerName: sp === 'in' ? ctx.names.in : ctx.names.out,
+            quote: resolveTokens(quote, ctx, sp),
+            feelings: x.feelings
+              .filter((f) => evalCondition(f.when, state))
+              .map((f) => ({ id: f.id, text: resolveTokens(f.text, ctx) })),
+            initial: a
+              ? {
+                  answers: a.interpretation ?? {},
+                  noneMatch: a.selected.includes('none'),
+                  freeText: a.freeText ?? '',
+                }
+              : undefined,
+          };
+        })}
+        onDone={(answers) => {
+          apply((s0) =>
+            sets.reduce(
+              (s, x) =>
+                saveInterpretation(
+                  s,
+                  journey.id,
+                  selfId,
+                  x.id,
+                  x.role === mySelfRole ? 'self' : 'perceived',
+                  answers[x.id]!,
+                ),
+              s0,
+            ),
+          );
+          next();
+        }}
+      />
+    );
+  } else if (step?.kind === 'mirror') {
+    const q =
+      MIRRORS.find((m) => m.id === step.questionId) ??
+      content.mirrorQuestions?.find((m) => m.id === step.questionId);
+    const entry = journey.mirrorItems[step.questionId]?.entries[selfId];
+    const toDraft = (a?: {
+      selected: string[];
+      meta: AnswerDraft['meta'];
+      freeText?: string;
+    }): AnswerDraft | undefined =>
+      a ? { selected: [...a.selected], meta: a.meta, freeText: a.freeText ?? '' } : undefined;
+    body =
+      !q || view ? (
+        <ViewOnlySkip onNext={next} />
+      ) : (
+        <MirrorStep
+          key={`mirror-${q.id}`}
+          question={{
+            ...q,
+            self: resolveTokens(q.self, ctx),
+            perceived: q.perceived ? resolveTokens(q.perceived, ctx) : undefined,
+          }}
+          otherName={ctx.names.other}
+          describe={(d) => {
+            if (!d) return ui.play.noAnswer;
+            if (d.meta) return ui.answer.meta[d.meta];
+            const picked = q.options.filter((o) => d.selected.includes(o.id)).map((o) => o.text);
+            const free = d.freeText.trim() ? `“${d.freeText.trim()}”` : '';
+            return [...picked, free].filter(Boolean).join(' · ') || ui.play.noAnswer;
+          }}
+          initial={{ self: toDraft(entry?.self), perceived: toDraft(entry?.perceived) }}
+          onSave={(layer, d) =>
+            apply((s) => saveMirrorAnswer(s, journey.id, q.id, q.context ?? 'self', selfId, layer, d))
+          }
+          onAddConversation={
+            q.reflectionPrompt
+              ? () =>
+                  apply((s) =>
+                    addNextConversation(
+                      s,
+                      journey.id,
+                      selfId,
+                      resolveTokens(q.reflectionPrompt!, ctx),
+                      'mirror',
+                      q.id,
+                    ),
+                  )
+              : undefined
+          }
+          conversationAdded={journey.nextConversation.some(
+            (n) => n.source === 'mirror' && n.sourceRef === q.id,
+          )}
+          onNext={next}
+        />
+      );
+  } else if (step?.kind === 'statements') {
+    const items = (content.statements ?? []).map((st) => {
+      const e = journey.mirrorItems[st.id]?.entries[selfId];
+      return {
+        id: st.id,
+        stem: resolveTokens(st.stem, ctx, selfSpeaker),
+        starters: st.starters.map((x) => ({ id: x.id, text: resolveTokens(x.text, ctx, selfSpeaker) })),
+        initial: e?.statement
+          ? {
+              text: e.statement.text,
+              starterId: e.statement.starterId,
+              skipped: e.statement.meta === 'skipped',
+              shareIntent: !!e.shareIntent,
+            }
+          : undefined,
+      };
+    });
+    const firstOpen = items.findIndex((x) => !x.initial);
+    body = view ? (
+      <ViewOnlySkip onNext={next} />
+    ) : (
+      <Statements
+        key={`st-${pos?.sceneId}`}
+        items={items}
+        startAt={firstOpen < 0 ? 0 : firstOpen}
+        onSave={(id, v) => apply((s) => saveStatement(s, journey.id, selfId, id, v))}
+        onDone={next}
       />
     );
   } else if (step?.kind === 'choice') {
@@ -461,12 +714,19 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         <StoryChoices
           key={step.line.id}
           label={ui.play.choicesLabel}
-          options={step.line.options.map((o) => ({
+          options={visibleOptions(step.line, state).map((o) => ({
             id: o.id,
             text: resolveTokens(optionText(o, state), ctx, step.line.owner === 'insider' ? 'in' : 'out'),
           }))}
           onChoose={choose}
         />
+        {step.line.custom && (
+          <CustomChoice
+            key={`custom-${step.line.id}`}
+            maxLength={step.line.custom.maxLength}
+            onSubmit={chooseCustom}
+          />
+        )}
       </div>
     );
   } else if (step?.kind === 'line') {
@@ -504,7 +764,13 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
           </button>
           <PauseButton onClick={() => setPaused(true)} />
         </header>
-        <SceneCanvas env={env} label={sceneLabel} shakeKey={shakeKey} className="w-full" maxHeightRatio={sceneHeightRatio} />
+        <SceneCanvas
+          env={env}
+          label={sceneLabel}
+          shakeKey={shakeKey}
+          className="w-full"
+          maxHeightRatio={sceneHeightRatio}
+        />
       </div>
 
       <section
@@ -523,6 +789,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
             variant={role === mySelfRole ? 'own' : 'partner-imagined'}
           />
         )}
+        <SafetyNotes notes={notes} onClose={(t) => setClosedNotes((c) => [...c, t])} />
         {body}
       </section>
 

@@ -12,6 +12,7 @@ import { drawBuildingExteriorRain } from './draw/exterior';
 import { drawLobbyFloor6 } from './draw/lobby';
 import { drawLivingRoomMorning, drawLivingRoomNight } from './draw/livingRoom';
 import { drawRooftopNight } from './draw/rooftop';
+import { drawBlack, drawStairwell } from './draw/stairwell';
 
 export interface BackgroundDef {
   key: string;
@@ -106,6 +107,20 @@ const LIST: BackgroundDef[] = [
     fallback: '#171c2f',
     ariaLabel: 'ตึกอพาร์ตเมนต์ทั้งหลังกลางสายฝนตอนกลางคืน',
     priority: 'P1',
+  },
+  {
+    key: 'bg_stairwell',
+    draw: drawStairwell,
+    fallback: '#2e2a44',
+    ariaLabel: 'บันไดหนีไฟในตึก แสงไฟสีอุ่นสลัว',
+    priority: 'P1',
+  },
+  {
+    key: 'bg_black',
+    draw: drawBlack,
+    fallback: '#0e1120',
+    ariaLabel: 'จอมืด',
+    priority: 'P0',
   },
 ];
 

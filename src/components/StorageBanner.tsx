@@ -7,7 +7,11 @@ export function StorageBanner() {
   if (health === 'ok') return null;
 
   const text =
-    health === 'unavailable' ? ui.banner.unavailable : health === 'quota' ? ui.banner.quota : ui.banner.staleTab;
+    health === 'unavailable'
+      ? ui.banner.unavailable
+      : health === 'quota'
+        ? ui.banner.quota
+        : ui.banner.staleTab;
 
   return (
     <div role="status" className="flex items-start gap-3 bg-indigo px-4 py-3 text-sm text-cream">

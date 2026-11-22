@@ -33,6 +33,7 @@ export function evalCondition(cond: Condition | undefined, s: StoryState): boole
   if ('any' in cond) return cond.any.some((c) => evalCondition(c, s));
   if ('scenario' in cond) return s.priorWarning === cond.eq;
   if ('unset' in cond) return s.flags[cond.flag] === undefined;
+  if ('set' in cond) return s.flags[cond.flag] !== undefined;
   return s.flags[cond.flag] === cond.eq;
 }
 
@@ -43,11 +44,13 @@ export interface TokenContext {
   endings: { in: string; out: string };
   /** The word each role uses for the partner, from their addressStyle (docs/07 §3). */
   address: { in: string; out: string };
+  /** Chapter fragments ({in_cope_text}) and story text ({rewrite_out}) — see fragmentTokens(). */
+  extra?: Record<string, string>;
 }
 
 export class UnknownTokenError extends Error {}
 
-const TOKEN = /\{([A-Za-z.]+)\}/g;
+const TOKEN = /\{([A-Za-z_.]+)\}/g;
 
 /** Strict mode throws on unknown tokens (dev/tests); production renders them empty and logs. */
 let strict = import.meta.env?.DEV ?? true;
@@ -83,8 +86,18 @@ function tokenValue(name: string, ctx: TokenContext, speaker?: string): string |
       // {you} only makes sense in a line spoken by one of the two roles (A-22).
       return speaker === 'in' || speaker === 'out' ? ctx.address[speaker] : undefined;
     default:
-      return undefined;
+      return ctx.extra?.[name];
   }
+}
+
+/** Fragment tokens of a chapter from the current flags; unset flags use the neutral fallback (docs/02 appendix B). */
+export function fragmentTokens(ch: Pick<ChapterContent, 'fragments'>, s: StoryState): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [name, f] of Object.entries(ch.fragments ?? {})) {
+    const v = s.flags[f.flag];
+    out[name] = (v !== undefined ? f.values[v] : undefined) ?? f.fallback;
+  }
+  return out;
 }
 
 /** Display name for a DLG/MONO speaker: roles resolve to nicknames, anything else is an NPC label. */
@@ -97,7 +110,9 @@ export function speakerName(speaker: string, ctx: TokenContext): string {
 
 // ---------- Steps ----------
 
-type TextLine = Extract<LineContent, { type: 'NARR' | 'SYS' | 'DLG' | 'MONO' | 'SAFETY_NOTE' }>;
+type TextLine = Extract<LineContent, { type: 'NARR' | 'SYS' | 'DLG' | 'MONO' }>;
+export type SafetyLine = Extract<LineContent, { type: 'SAFETY_NOTE' }>;
+export type TimelineLine = Extract<LineContent, { type: 'TIMELINE' }>;
 export type ChoiceLine = Extract<LineContent, { type: 'CHOICE' }>;
 
 export type Step =
@@ -105,7 +120,12 @@ export type Step =
   | { kind: 'env'; set: EnvSet }
   | { kind: 'choice'; line: ChoiceLine }
   | { kind: 'cards' }
-  | { kind: 'reflection' };
+  | { kind: 'reflection' }
+  | { kind: 'safety'; line: SafetyLine }
+  | { kind: 'timeline'; line: TimelineLine }
+  | { kind: 'interpretation' }
+  | { kind: 'mirror'; questionId: string }
+  | { kind: 'statements' };
 
 export function expandLines(lines: LineContent[], s: StoryState, out: Step[] = []): Step[] {
   for (const line of lines) {
@@ -127,6 +147,21 @@ export function expandLines(lines: LineContent[], s: StoryState, out: Step[] = [
       case 'REFLECTION':
         out.push({ kind: 'reflection' });
         break;
+      case 'SAFETY_NOTE':
+        out.push({ kind: 'safety', line });
+        break;
+      case 'TIMELINE':
+        out.push({ kind: 'timeline', line });
+        break;
+      case 'INTERPRETATION':
+        out.push({ kind: 'interpretation' });
+        break;
+      case 'MIRROR':
+        out.push({ kind: 'mirror', questionId: line.questionId });
+        break;
+      case 'STATEMENTS':
+        out.push({ kind: 'statements' });
+        break;
       default:
         out.push({ kind: 'line', line });
     }
@@ -138,7 +173,23 @@ export function expandScene(scene: SceneContent, s: StoryState): Step[] {
   return expandLines(scene.lines, s);
 }
 
-const isStop = (st: Step) => st.kind !== 'env';
+/** ENV and safety notes never stop the player; safety notes show beside the dialogue (docs/06 S6). */
+const isStop = (st: Step) => st.kind !== 'env' && st.kind !== 'safety';
+
+/** Safety notes reached in this scene up to `index` (shown until dismissed). */
+export function safetyNotesUpTo(steps: Step[], index: number): SafetyLine[] {
+  const out: SafetyLine[] = [];
+  for (let k = 0; k < Math.min(index, steps.length); k++) {
+    const st = steps[k]!;
+    if (st.kind === 'safety') out.push(st.line);
+  }
+  return out;
+}
+
+/** Options shown for a choice under the current state (`when`, docs/02 Ch3 c02 e*). */
+export function visibleOptions(choice: ChoiceLine, s: StoryState) {
+  return choice.options.filter((o) => evalCondition(o.when, s));
+}
 
 /** First step at or after `i` that waits for the player; steps.length when the scene is over. */
 export function normalizeIndex(steps: Step[], i: number): number {
@@ -259,4 +310,54 @@ export function controllingRole(scene: SceneContent, step: Step | undefined): Ro
 export function lineBefore(steps: Step[], index: number): Step | undefined {
   for (let k = index - 1; k >= 0; k--) if (steps[k]!.kind === 'line') return steps[k];
   return undefined;
+}
+
+// ---------- Rewrite tokens (docs/02 Ch3 s06) ----------
+
+export function findChoice(ch: ChapterContent, id: string): ChoiceLine | undefined {
+  const walk = (lines: LineContent[]): ChoiceLine | undefined => {
+    for (const l of lines) {
+      if (l.type !== 'CHOICE') continue;
+      if (l.id === id) return l;
+      for (const o of l.options) {
+        const hit = o.responseLines && walk(o.responseLines);
+        if (hit) return hit;
+      }
+    }
+    return undefined;
+  };
+  for (const sc of ch.scenes) {
+    const hit = walk(sc.lines);
+    if (hit) return hit;
+  }
+  return undefined;
+}
+
+const NOT_SAID = '…';
+
+/**
+ * {rewrite_out}/{rewrite_in}: the option text, the player's own words (plain text — React renders it
+ * as text, never HTML, TC-PLAY-09), or the original words when "unchanged". Unknown → "…".
+ */
+export function rewriteTokens(
+  ch: ChapterContent,
+  s: StoryState,
+  customText: (storyItem: string) => string | undefined,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const r of ch.rewrites ?? []) {
+    const v = s.flags[r.flag];
+    const original = () => {
+      const c = findChoice(ch, r.originalChoiceId);
+      const o = c?.options.find((x) => x.id === s.chosen[r.originalChoiceId]);
+      return o ? optionText(o, s) : NOT_SAID;
+    };
+    if (v === 'custom') out[r.token] = customText(r.storyItem)?.trim() || NOT_SAID;
+    else if (v === undefined || v === 'unchanged') out[r.token] = original();
+    else {
+      const o = findChoice(ch, r.choiceId)?.options.find((x) => x.id === v);
+      out[r.token] = o ? optionText(o, s) : NOT_SAID;
+    }
+  }
+  return out;
 }

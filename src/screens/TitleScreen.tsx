@@ -9,13 +9,13 @@ import { drawStars, drawTitleBase, drawTitleForeground, makeStars } from '../sce
 import { useGame } from '../store/game';
 import { FEATURES } from '../lib/features';
 import { APP_VERSION } from '../persistence/exportImport';
-import { activeJourney } from '../store/actions';
+import { currentJourney } from '../store/actions';
 import { resumeTarget } from '../store/story';
 
 /** S1 — docs/06 §3 S1. Buttons whose screens are not built yet are disabled with the reason shown. */
 export function TitleScreen() {
   const navigate = useNavigate();
-  const journey = useGame((s) => activeJourney(s.save));
+  const journey = useGame((s) => currentJourney(s.save));
   const hasActive = !!journey;
   const hasPlayers = useGame((s) => Object.values(s.save.players).some((p) => p.kind === 'real'));
   const stars = useMemo(makeStars, []);

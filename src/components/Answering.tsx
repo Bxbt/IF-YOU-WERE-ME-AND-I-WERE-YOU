@@ -21,7 +21,12 @@ export function ChoiceList({ label, options, maxSelect, draft, onChange }: Choic
   const atMax = maxSelect > 1 && draft.selected.length >= maxSelect;
   return (
     <div>
-      <div role="group" aria-label={label} aria-describedby={atMax ? hintId : undefined} className="flex flex-col gap-2">
+      <div
+        role="group"
+        aria-label={label}
+        aria-describedby={atMax ? hintId : undefined}
+        className="flex flex-col gap-2"
+      >
         {options.map((o, i) => {
           const selected = draft.selected.includes(o.id);
           const disabled = isOptionDisabled(draft, o, maxSelect);
@@ -37,7 +42,10 @@ export function ChoiceList({ label, options, maxSelect, draft, onChange }: Choic
               onClick={() => onChange(toggleOption(draft, o, options, maxSelect))}
               className={`btn w-full justify-start text-left ${selected ? 'border-orange bg-orange/15' : 'bg-navy'}`}
             >
-              <span aria-hidden className="flex h-5 w-5 shrink-0 items-center justify-center border-2 border-lavender">
+              <span
+                aria-hidden
+                className="flex h-5 w-5 shrink-0 items-center justify-center border-2 border-lavender"
+              >
                 {selected && <Check className="h-4 w-4 text-orange" />}
               </span>
               {o.text}
@@ -116,7 +124,10 @@ export function FreeTextField({
         onChange={(e) => onChange({ ...draft, freeText: e.target.value })}
         className="w-full rounded-btn border-2 border-lavender/40 bg-navy p-3 text-cream placeholder:text-lavender/70"
       />
-      <span className={`self-end text-[13px] ${n >= max - 20 ? 'text-orange' : 'text-lavender'}`} aria-live="polite">
+      <span
+        className={`self-end text-[13px] ${n >= max - 20 ? 'text-orange' : 'text-lavender'}`}
+        aria-live="polite"
+      >
         {ui.answer.counter(n, max)}
       </span>
     </div>

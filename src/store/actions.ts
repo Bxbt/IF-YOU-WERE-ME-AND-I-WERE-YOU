@@ -47,6 +47,17 @@ export function activeJourney(save: SaveRoot): GameSession | undefined {
   return Object.values(save.journeys).find((j) => j.status === 'active');
 }
 
+/**
+ * The journey the player is on: the active one, else the last one played if it is completed —
+ * a completed journey stays viewable and replayable (docs/05 §3.2). Archived ones never.
+ */
+export function currentJourney(save: SaveRoot): GameSession | undefined {
+  const active = activeJourney(save);
+  if (active) return active;
+  const last = save.settings.lastJourneyId ? save.journeys[save.settings.lastJourneyId] : undefined;
+  return last?.status === 'completed' ? last : undefined;
+}
+
 /** MVP: one active journey (A-23). Any existing active journey is archived first. */
 export function createSoloJourney(selfId: string, imaginedId: string): string {
   const id = newJourneyId();

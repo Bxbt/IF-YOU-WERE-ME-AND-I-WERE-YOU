@@ -6,7 +6,7 @@ import { AssumptionTag } from '../components/Labels';
 import { PixelButton } from '../components/PixelButton';
 import { SpriteView } from '../scene/CharacterCanvas';
 import { useGame } from '../store/game';
-import { activeJourney, getAnswers, profileKey } from '../store/actions';
+import { currentJourney, getAnswers, profileKey } from '../store/actions';
 import { FULL_SET, progress } from '../engine/personality';
 import type { Player } from '../persistence/schema';
 
@@ -83,7 +83,7 @@ export function ProfileHubScreen() {
   const save = useGame((s) => s.save);
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const journey = activeJourney(save);
+  const journey = currentJourney(save);
   const allReal = Object.values(save.players).filter((p) => p.kind === 'real');
   // docs/06 S3 Profile Hub: the active journey's players; everyone else goes in a folded section.
   const real = journey

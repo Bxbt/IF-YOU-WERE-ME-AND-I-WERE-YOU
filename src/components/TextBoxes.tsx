@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState, type ReactNode } from 'react';
+import { forwardRef, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, Cloud } from 'lucide-react';
 import { useGame } from '../store/game';
 import { useReducedMotion } from '../lib/motion';
@@ -10,27 +10,34 @@ export function useTypewriter(text: string): [string, boolean, () => void] {
   const speed = useGame((s) => s.save.settings.textSpeed);
   const reduced = useReducedMotion();
   const cps = reduced ? Infinity : CHARS_PER_SECOND[speed];
-  const [count, setCount] = useState(cps === Infinity ? text.length : 0);
+  const total = Array.from(text).length;
+  const [count, setCount] = useState(cps === Infinity ? total : 0);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (cps === Infinity) {
-      setCount(text.length);
+      setCount(total);
       return;
     }
     setCount(0);
-    const chars = Array.from(text).length;
     const started = performance.now();
     const id = setInterval(() => {
-      const n = Math.min(chars, Math.floor(((performance.now() - started) / 1000) * cps));
+      const n = Math.min(total, Math.floor(((performance.now() - started) / 1000) * cps));
       setCount(n);
-      if (n >= chars) clearInterval(id);
+      if (n >= total) clearInterval(id);
     }, 1000 / 60);
+    timer.current = id;
     return () => clearInterval(id);
-  }, [text, cps]);
+  }, [text, total, cps]);
+
+  // Tapping shows the whole line at once; the typing timer must stop so it cannot shrink it again.
+  const complete = useCallback(() => {
+    if (timer.current) clearInterval(timer.current);
+    setCount(total);
+  }, [total]);
 
   const chars = Array.from(text);
-  const done = count >= chars.length;
-  return [chars.slice(0, count).join(''), done, () => setCount(chars.length)];
+  return [chars.slice(0, count).join(''), count >= total, complete];
 }
 
 export type LineVariant = 'dlg' | 'narr' | 'mono' | 'sys';
@@ -63,7 +70,14 @@ export const DialogueBox = forwardRef<HTMLButtonElement, DialogueBoxProps>(funct
   ref,
 ) {
   const [visible, done, complete] = useTypewriter(text);
-  const spoken = variant === 'mono' && speaker ? `${speaker} คิด: ${text}` : speaker ? `${speaker}: ${text}` : title ? `${title}: ${text}` : text;
+  const spoken =
+    variant === 'mono' && speaker
+      ? `${speaker} คิด: ${text}`
+      : speaker
+        ? `${speaker}: ${text}`
+        : title
+          ? `${title}: ${text}`
+          : text;
 
   return (
     <div
@@ -87,7 +101,11 @@ export const DialogueBox = forwardRef<HTMLButtonElement, DialogueBoxProps>(funct
         <div aria-hidden className="min-h-[3.4em] flex-1">
           {title && <div className="mb-1 text-[13px] not-italic text-lavender">{title}</div>}
           {speaker && variant !== 'narr' && (
-            <div className={`mb-1 font-semibold not-italic ${variant === 'mono' ? 'text-lavender' : 'text-orange'}`}>{speaker}</div>
+            <div
+              className={`mb-1 font-semibold not-italic ${variant === 'mono' ? 'text-lavender' : 'text-orange'}`}
+            >
+              {speaker}
+            </div>
           )}
           <div>{visible}</div>
         </div>
