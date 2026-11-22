@@ -26,6 +26,8 @@ import {
   Timeline,
 } from '../components/StorySteps';
 import { Handoff } from '../components/Handoff';
+import { PlayerGate } from '../components/PlayerGate';
+import { useSession } from '../store/session';
 import { MIRRORS } from '../content/th/questions';
 import { SceneCanvas } from '../scene/SceneCanvas';
 import { PortraitView } from '../scene/CharacterCanvas';
@@ -345,6 +347,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     const rest = remaining.filter((x) => x !== answeringId);
     apply((s) => setPendingPrivate(dropDrafts(s, answeringId), journey.id, ch, stepKey, rest));
     if (rest.length === 0) {
+      useSession.getState().lock(); // back to the shared screen: nobody is unlocked any more
       setShowReturn(true);
       next();
     } else setPrivatePhase('handoff');
@@ -879,7 +882,13 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         )}
         <SafetyNotes notes={notes} onClose={(t) => setClosedNotes((c) => [...c, t])} />
         {/* While handing over, the next player's form is not even rendered (TC-PRIV-01). */}
-        {privateHandoff ? null : body}
+        {privateHandoff ? null : together && isPrivate && !view ? (
+          <PlayerGate playerId={answeringId} onCancel={() => setPrivatePhase('handoff')}>
+            {body}
+          </PlayerGate>
+        ) : (
+          body
+        )}
       </section>
 
       {privateHandoff && (

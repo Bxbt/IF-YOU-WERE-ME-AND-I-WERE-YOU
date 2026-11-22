@@ -6,6 +6,8 @@ import { AssumptionTag } from '../components/Labels';
 import { PixelButton } from '../components/PixelButton';
 import { SpriteView } from '../scene/CharacterCanvas';
 import { useGame } from '../store/game';
+import { PinSetup } from '../components/PinSetup';
+import { recordPinAttempt, removePin, setPin } from '../store/pinActions';
 import { currentJourney, getAnswers, profileKey } from '../store/actions';
 import { FULL_SET, progress } from '../engine/personality';
 import type { Player } from '../persistence/schema';
@@ -160,6 +162,20 @@ export function ProfileHubScreen() {
                 aboutId={partner.id}
                 tag
               />
+            )}
+            {journey?.mode === 'together' && (
+              <details className="border-t border-lavender/20 pt-3">
+                <summary className="min-h-[44px] cursor-pointer py-2 font-semibold">
+                  {ui.hub.pinTitle}
+                </summary>
+                <PinSetup
+                  player={p}
+                  onSave={(r) =>
+                    useGame.getState().update((s) => (r ? setPin(s, p.id, r) : removePin(s, p.id)))
+                  }
+                  onAttempt={(r) => useGame.getState().update((s) => recordPinAttempt(s, p.id, r))}
+                />
+              </details>
             )}
           </PlayerCard>
         );

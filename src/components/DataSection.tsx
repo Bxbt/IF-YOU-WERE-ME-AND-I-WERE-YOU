@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { Download, Trash2, Upload } from 'lucide-react';
 import { useGame } from '../store/game';
 import { ui } from '../content/th/ui';
+import { PinGate } from './PinGate';
+import { forgetPin, recordPinAttempt } from '../store/pinActions';
 import { byteSize, downloadText } from '../lib/download';
 import {
   IMPORT_ERROR_TEXT,
@@ -23,6 +25,26 @@ export function DataSection() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const sizeKb = (byteSize(JSON.stringify(save)) / 1024).toFixed(1);
+
+  // Full export contains everyone's unrevealed answers, so everyone who set a PIN enters it first
+  // (docs/07 §11.1, docs/08 §4.2, TC-PRIV-10). A delay, not protection — see docs/08 §4.2.
+  const [pinQueue, setPinQueue] = useState<string[] | null>(null);
+  const pinned = Object.values(save.players).filter((p) => p.pin);
+  function startExport() {
+    if (pinned.length === 0) void onExport();
+    else setPinQueue(pinned.map((p) => p.id));
+  }
+  function nextPin() {
+    setPinQueue((q) => {
+      const rest = (q ?? []).slice(1);
+      if (rest.length === 0) {
+        void onExport();
+        return null;
+      }
+      return rest;
+    });
+  }
+  const gatePlayer = pinQueue?.[0] ? save.players[pinQueue[0]] : undefined;
 
   async function onExport() {
     try {
@@ -85,10 +107,24 @@ export function DataSection() {
           {ui.data.exportHeading}
         </h3>
         <p className="m-0 text-sm text-lavender">{ui.data.exportNote}</p>
-        <button type="button" className="btn btn-primary self-start" onClick={onExport}>
+        <button type="button" className="btn btn-primary self-start" onClick={startExport}>
           <Download aria-hidden className="h-5 w-5" />
           {ui.data.exportFull}
         </button>
+        {pinned.length > 0 && <p className="m-0 text-[13px] text-lavender">{ui.data.exportNeedsPins}</p>}
+        {gatePlayer?.pin && (
+          <PinGate
+            key={gatePlayer.id}
+            player={{ id: gatePlayer.id, nickname: gatePlayer.nickname, pin: gatePlayer.pin }}
+            onUnlock={nextPin}
+            onAttempt={(r) => useGame.getState().update((s) => recordPinAttempt(s, gatePlayer.id, r))}
+            onForget={() => {
+              useGame.getState().update((s) => forgetPin(s, gatePlayer.id));
+              nextPin();
+            }}
+            onCancel={() => setPinQueue(null)}
+          />
+        )}
       </section>
 
       <section className="panel flex flex-col gap-3" aria-labelledby="import-h">

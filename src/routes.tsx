@@ -18,6 +18,7 @@ import { ScenarioScreen } from './screens/ScenarioScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { ErrorScreen } from './screens/ErrorScreen';
+import { RouteGate } from './components/PlayerGate';
 
 const errorElement = <ErrorScreen />;
 
@@ -30,16 +31,40 @@ export const routes = [
   { path: '/players/new', element: <CreatePlayersScreen />, errorElement },
   { path: '/players/:playerId/edit', element: <EditPlayerScreen />, errorElement },
   { path: '/profile', element: <ProfileHubScreen />, errorElement },
-  { path: '/profile/:playerId/self', element: <QuestionnaireScreen layer="self" />, errorElement },
-  { path: '/profile/:playerId/self/answers', element: <AnswersScreen layer="self" />, errorElement },
+  {
+    path: '/profile/:playerId/self',
+    element: (
+      <RouteGate>
+        <QuestionnaireScreen layer="self" />
+      </RouteGate>
+    ),
+    errorElement,
+  },
+  {
+    path: '/profile/:playerId/self/answers',
+    element: (
+      <RouteGate>
+        <AnswersScreen layer="self" />
+      </RouteGate>
+    ),
+    errorElement,
+  },
   {
     path: '/profile/:playerId/perceived/:aboutId',
-    element: <QuestionnaireScreen layer="perceived" />,
+    element: (
+      <RouteGate>
+        <QuestionnaireScreen layer="perceived" />
+      </RouteGate>
+    ),
     errorElement,
   },
   {
     path: '/profile/:playerId/perceived/:aboutId/answers',
-    element: <AnswersScreen layer="perceived" />,
+    element: (
+      <RouteGate>
+        <AnswersScreen layer="perceived" />
+      </RouteGate>
+    ),
     errorElement,
   },
   { path: '/j/:journeyId/chapters', element: <ChaptersScreen />, errorElement },
@@ -52,7 +77,14 @@ export const routes = [
   },
   {
     path: '/j/:journeyId/report/:playerId',
-    lazy: () => import('./screens/ReportScreen').then((m) => ({ Component: m.ReportScreen })),
+    lazy: () =>
+      import('./screens/ReportScreen').then((m) => ({
+        Component: () => (
+          <RouteGate>
+            <m.ReportScreen />
+          </RouteGate>
+        ),
+      })),
     errorElement,
   },
   {
