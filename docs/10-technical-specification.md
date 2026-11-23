@@ -155,6 +155,8 @@ Safari iOS 16+, Chrome Android 110+, Chrome/Edge/Firefox/Safari desktop 2 เว
 
 ---
 
+**เต็มจอ:** Fullscreen API ที่รองรับ (รวม prefix `webkit`) · iPhone ใช้ Web App Manifest + `apple-mobile-web-app-capable` เปิดจากหน้าจอโฮม ([06](06-ui-ux-specification.md) "เต็มจอ") · ไม่ใช้ service worker
+
 ## 8. MVP (Phase 1) — Scope
 
 | รวม | ไม่รวม |

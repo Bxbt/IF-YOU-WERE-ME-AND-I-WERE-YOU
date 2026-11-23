@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 import { ui } from '../content/th/ui';
 import { PixelButton } from './PixelButton';
 import { useGame } from '../store/game';
+import { FullscreenToggle } from './FullscreenToggle';
 
 export interface PauseMenuProps {
   open: boolean;
@@ -69,6 +70,7 @@ export function PauseMenu({
             {ui.pause.chapters}
           </PixelButton>
         )}
+        <FullscreenToggle variant="block" />
         <PixelButton variant="ghost" block onClick={onSettings}>
           {ui.pause.settings}
         </PixelButton>

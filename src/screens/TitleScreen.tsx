@@ -5,6 +5,7 @@ import { useAmbient } from '../audio/useSound';
 import { PixelButton } from '../components/PixelButton';
 import { SoundToggle } from '../components/Misc';
 import { StarField } from '../components/StarField';
+import { FullscreenToggle } from '../components/FullscreenToggle';
 import { useGame } from '../store/game';
 import { ownPlayers } from '../live/merge';
 import { FEATURES } from '../lib/features';
@@ -44,6 +45,7 @@ export function TitleScreen() {
       <StarField />
 
       <div className="absolute right-3 top-3 z-20 flex gap-2">
+        <FullscreenToggle />
         <SoundToggle />
         <Link
           to="/settings"
