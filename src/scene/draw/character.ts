@@ -44,14 +44,6 @@ export const PRESETS: Record<Appearance['preset'], Appearance> = {
   p6: { preset: 'p6', skin: 0, hairStyle: 4, hairColor: 9, outfit: 1, outfitColor: 3, accessory: 'none' },
 };
 
-/** A pointed tuft (spiky hair): rows widen every 2px. `outline` draws the 1px border version. */
-function spike(c: Ctx, sx: number, ty: number, h: number, col: string, outline = false) {
-  for (let i = 0; i < h; i++) {
-    const half = Math.floor(i / 2) + (outline ? 1 : 0);
-    rect(c, sx - half, ty + i - (outline ? 1 : 0), 1 + 2 * half, 1, col);
-  }
-}
-
 export function shade(hex: string, amount: number): string {
   const n = parseInt(hex.slice(1), 16);
   const f = (c: number) => Math.max(0, Math.min(255, Math.round(c + amount * (amount < 0 ? c : 255 - c))));
@@ -76,6 +68,39 @@ function ellipse(c: Ctx, cx: number, cy: number, rx: number, ry: number, col: st
     }
   }
 }
+/** Ellipse rows from `yMin` down — carves the face back out of a hair mass. */
+function ellipseFrom(c: Ctx, cx: number, cy: number, rx: number, ry: number, col: string, yMin: number) {
+  c.fillStyle = col;
+  for (let y = Math.max(Math.floor(cy - ry), yMin); y <= Math.ceil(cy + ry); y++) {
+    for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+      const dx = (x + 0.5 - cx) / rx;
+      const dy = (y + 0.5 - cy) / ry;
+      if (dx * dx + dy * dy <= 1) c.fillRect(x, y, 1, 1);
+    }
+  }
+}
+type Bump = [x: number, y: number, r: number];
+/**
+ * Soft hair volume (cover-art look, docs/09 §3.1): one outline around the whole silhouette,
+ * three tones inside — shadow rim, base, and a highlight patch top-left. Bumps make fluffy tufts.
+ */
+function hairMass(c: Ctx, k: Colors, cx: number, cy: number, rx: number, ry: number, bumps: Bump[] = []) {
+  for (const [x, y, r] of bumps) ellipse(c, x, y, r + 1, r + 1, OUTLINE);
+  ellipse(c, cx, cy, rx + 1, ry + 1, OUTLINE);
+  for (const [x, y, r] of bumps) ellipse(c, x, y, r, r, k.hairShade);
+  ellipse(c, cx, cy, rx, ry, k.hairShade);
+  for (const [x, y, r] of bumps) if (y < cy + ry * 0.3) ellipse(c, x - 0.5, y - 0.5, r - 0.6, r - 0.6, k.hair);
+  ellipse(c, cx - 0.5, cy - 1, rx - 1.2, ry - 1.4, k.hair);
+  ellipse(c, cx - rx * 0.35, cy - ry * 0.5, Math.max(1, rx * 0.2), Math.max(0.8, ry * 0.12), k.hairLight);
+}
+
+/** Small tufts sitting on the rim of an ellipse (angles in degrees, 0 = right, -90 = top). */
+const rimTufts = (cx: number, cy: number, rx: number, ry: number, r: number, angles: number[]): Bump[] =>
+  angles.map((a) => {
+    const t = (a * Math.PI) / 180;
+    return [cx + (rx - r * 0.4) * Math.cos(t), cy + (ry - r * 0.4) * Math.sin(t), r];
+  });
+
 /** Ellipse + 1px outline. */
 function blob(c: Ctx, cx: number, cy: number, rx: number, ry: number, col: string) {
   ellipse(c, cx, cy, rx + 1, ry + 1, OUTLINE);
@@ -143,13 +168,14 @@ export function drawSprite(
   if (a.hairStyle === 2) rect(c, X(8), Y(14 + b), 16, 14, k.hairShade);
 
   // torso
-  rect(c, X(9), Y(21 + b), 14, 16 - b, OUTLINE);
+  rect(c, X(10), Y(21 + b), 12, 1, OUTLINE); // rounded shoulders: no corner pixels
+  rect(c, X(9), Y(22 + b), 14, 15 - b, OUTLINE);
   rect(c, X(10), Y(22 + b), 12, 14 - b, k.cloth);
   rect(c, X(10), Y(32), 12, 4, k.clothShade);
   if (a.outfit === 1) {
-    rect(c, X(12), Y(28 + b), 8, 4, k.clothShade); // hoodie pocket
-    rect(c, X(13), Y(22 + b), 1, 4, '#f3ebdd'); // drawstrings
-    rect(c, X(18), Y(22 + b), 1, 4, '#f3ebdd');
+    rect(c, X(12), Y(29 + b), 8, 3, k.clothShade); // hoodie pocket
+    rect(c, X(13), Y(29 + b), 6, 1, k.cloth);
+    rect(c, X(16), Y(24 + b), 1, 5, k.clothShade); // zip seam
   } else if (a.outfit === 2) {
     rect(c, X(14), Y(22 + b), 4, 14 - b, '#f3ebdd'); // shirt under open cardigan
     rect(c, X(15), Y(25 + b), 1, 1, k.clothShade);
@@ -165,6 +191,12 @@ export function drawSprite(
 
   // neck + head
   rect(c, X(14), Y(19 + b), 4, 3, k.skinShade);
+  if (a.outfit === 1) {
+    // hood folded behind the neck
+    ellipse(c, X(16), Y(21.5 + b), 6.5, 2.5, OUTLINE);
+    ellipse(c, X(16), Y(21.5 + b), 5.5, 1.6, k.clothShade);
+    rect(c, X(14), Y(21 + b), 4, 1, k.skinShade);
+  }
   blob(c, X(16), Y(13 + b), 7, 7, k.skin);
   rect(c, X(10), Y(16 + b), 2, 1, k.skinShade);
 
@@ -181,37 +213,48 @@ export function drawSprite(
 
 function drawSpriteHair(c: Ctx, style: number, k: Colors, ox: number, oy: number) {
   const r = (x: number, y: number, w: number, h: number, col: string) => rect(c, ox + x, oy + y, w, h, col);
-  const tufts: [number, number, number][] = [
-    [11, 3, 4],
-    [15, 1, 5],
-    [19, 2, 4],
-    [22, 5, 3],
-  ];
-  if (style === 4) for (const [x, y, h] of tufts) spike(c, ox + x, oy + y, h, OUTLINE, true);
+  if (style === 4) {
+    // fluffy: a big round mass with soft tufts all round
+    hairMass(c, k, ox + 16, oy + 8, 9.5, 6.5, rimTufts(ox + 16, oy + 8, 9.5, 6.5, 1.8, [-165, -130, -100, -70, -40, -10, 20, 160]));
+    ellipseFrom(c, ox + 16, oy + 13, 7, 7, k.skin, oy + 12);
+    r(8, 11, 2, 4, k.hair); // sideburns, tapered
+    r(9, 15, 1, 1, k.hair);
+    r(22, 11, 2, 3, k.hair);
+    r(22, 14, 1, 1, k.hair);
+    r(10, 11, 3, 2, k.hair); // uneven fringe
+    r(13, 11, 1, 1, k.hairShade);
+    r(15, 11, 2, 2, k.hair);
+    r(18, 11, 1, 1, k.hairShade);
+    r(19, 11, 3, 2, k.hair);
+    r(18, 3, 2, 1, k.hairLight);
+    return;
+  }
+  if (style === 1) {
+    // bob: a rounded helmet that falls to the jaw, side-swept fringe
+    r(6, 11, 5, 11, OUTLINE);
+    r(21, 11, 5, 11, OUTLINE);
+    hairMass(c, k, ox + 16, oy + 9.5, 9, 6.5);
+    ellipseFrom(c, ox + 16, oy + 13, 7, 7, k.skin, oy + 12);
+    r(7, 11, 3, 10, k.hair);
+    r(22, 11, 3, 10, k.hair);
+    r(9, 12, 1, 8, k.hairShade);
+    r(22, 12, 1, 8, k.hairShade);
+    r(7, 20, 3, 1, k.hairShade);
+    r(22, 20, 3, 1, k.hairShade);
+    r(10, 11, 3, 2, k.hair); // side-swept fringe
+    r(13, 11, 4, 1, k.hair);
+    r(19, 11, 3, 2, k.hair);
+    r(17, 11, 1, 1, k.hairShade);
+    return;
+  }
   // shared cap
   ellipse(c, ox + 16, oy + 9, 8, 5, OUTLINE);
   ellipse(c, ox + 16, oy + 9, 7, 4, k.hair);
-  if (style === 4) for (const [x, y, h] of tufts) spike(c, ox + x, oy + y, h + 2, k.hair);
   r(11, 6, 5, 1, k.hairLight);
-  if (style === 4) {
-    r(8, 9, 3, 6, k.hair);
-    r(21, 9, 3, 6, k.hair);
-    r(7, 11, 1, 2, k.hair);
-    r(24, 11, 1, 2, k.hair);
-    r(11, 10, 10, 2, k.hair); // messy fringe
-    r(12, 12, 1, 1, k.hair);
-    r(15, 12, 2, 1, k.hair);
-    r(19, 12, 1, 1, k.hair);
-  } else if (style === 0) {
+  if (style === 0) {
     r(9, 9, 2, 5, k.hair);
     r(21, 9, 2, 4, k.hair);
     r(12, 10, 6, 2, k.hair); // fringe
-  } else if (style === 1) {
-    r(8, 9, 3, 10, k.hair);
-    r(21, 9, 3, 10, k.hair);
-    r(8, 18, 3, 1, k.hairShade);
-    r(21, 18, 3, 1, k.hairShade);
-    r(11, 10, 10, 2, k.hair);
   } else if (style === 2) {
     r(8, 9, 3, 14, k.hair);
     r(21, 9, 3, 14, k.hair);
@@ -260,8 +303,10 @@ export function drawPortrait(c: Ctx, a: Appearance, exprIn: string = 'neutral') 
   rect(c, 8, 60, 48, 4, k.clothShade);
   if (a.outfit === 2) rect(c, 28, 54, 8, 10, '#f3ebdd');
   if (a.outfit === 1) {
-    rect(c, 24, 54, 2, 7, '#f3ebdd');
-    rect(c, 38, 54, 2, 7, '#f3ebdd');
+    // hood folded round the neck
+    ellipse(c, 32, 53, 15, 5, OUTLINE);
+    ellipse(c, 32, 53, 14, 4, k.clothShade);
+    rect(c, 31, 57, 2, 7, k.clothShade); // zip seam
   }
   if (a.hairStyle === 2) {
     rect(c, 13, 24, 6, 30, k.hairShade);
@@ -273,43 +318,53 @@ export function drawPortrait(c: Ctx, a: Appearance, exprIn: string = 'neutral') 
 
   // hair
   const h = a.hairStyle;
-  const tufts: [number, number, number][] = [
-    [19, 8, 6],
-    [26, 3, 8],
-    [34, 2, 8],
-    [41, 5, 7],
-    [47, 11, 5],
-  ];
-  if (h === 4) for (const [x, y, n] of tufts) spike(c, x, y, n, OUTLINE, true);
-  ellipse(c, 32, 20, 17, 11, OUTLINE);
-  ellipse(c, 32, 20, 16, 10, k.hair);
-  if (h === 4) for (const [x, y, n] of tufts) spike(c, x, y, n + 3, k.hair);
-  rect(c, 22, 12, 10, 2, k.hairLight);
   if (h === 4) {
-    rect(c, 15, 20, 6, 14, k.hair);
-    rect(c, 43, 20, 6, 13, k.hair);
-    rect(c, 14, 24, 1, 4, k.hair);
-    rect(c, 49, 24, 1, 4, k.hair);
-    rect(c, 20, 22, 24, 4, k.hair); // messy fringe
-    rect(c, 22, 26, 2, 2, k.hair);
-    rect(c, 28, 26, 3, 1, k.hair);
-    rect(c, 34, 26, 2, 2, k.hair);
-    rect(c, 40, 26, 2, 1, k.hair);
-  } else if (h === 0) {
+    hairMass(c, k, 32, 18, 19, 13.5, rimTufts(32, 18, 19, 13.5, 3, [-170, -145, -120, -97, -75, -52, -28, -5, 18, 162, 185]));
+    ellipseFrom(c, 32, 30, 15, 16, k.skin, 25);
+    rect(c, 16, 22, 4, 8, k.hair); // sideburns, tapered
+    rect(c, 17, 30, 2, 3, k.hair);
+    rect(c, 44, 22, 4, 7, k.hair);
+    rect(c, 45, 29, 2, 2, k.hair);
+    rect(c, 19, 24, 7, 4, k.hair); // uneven fringe
+    rect(c, 26, 24, 2, 2, k.hairShade);
+    rect(c, 28, 24, 6, 3, k.hair);
+    rect(c, 34, 24, 2, 2, k.hairShade);
+    rect(c, 36, 24, 8, 4, k.hair);
+    rect(c, 21, 28, 2, 1, k.hair);
+    rect(c, 38, 28, 2, 1, k.hair);
+    rect(c, 24, 6, 3, 2, k.hairLight);
+    rect(c, 34, 4, 3, 1, k.hairLight);
+  } else if (h === 1) {
+    rect(c, 12, 22, 10, 25, OUTLINE);
+    rect(c, 42, 22, 10, 25, OUTLINE);
+    hairMass(c, k, 32, 20, 19, 13);
+    ellipseFrom(c, 32, 30, 15, 16, k.skin, 25);
+    rect(c, 13, 22, 8, 23, k.hair);
+    rect(c, 43, 22, 8, 23, k.hair);
+    rect(c, 19, 26, 2, 18, k.hairShade);
+    rect(c, 43, 26, 2, 18, k.hairShade);
+    rect(c, 13, 43, 8, 2, k.hairShade);
+    rect(c, 43, 43, 8, 2, k.hairShade);
+    rect(c, 15, 30, 1, 10, k.hairShade); // strands
+    rect(c, 48, 30, 1, 10, k.hairShade);
+    rect(c, 20, 24, 10, 4, k.hair); // side-swept fringe
+    rect(c, 30, 24, 6, 2, k.hair);
+    rect(c, 36, 25, 1, 2, k.hairShade);
+    rect(c, 38, 24, 6, 4, k.hair);
+  } else {
+    ellipse(c, 32, 20, 17, 11, OUTLINE);
+    ellipse(c, 32, 20, 16, 10, k.hair);
+    rect(c, 22, 12, 10, 2, k.hairLight);
+  }
+  if (h === 0) {
     rect(c, 16, 20, 5, 10, k.hair);
     rect(c, 43, 20, 5, 9, k.hair);
     rect(c, 22, 22, 12, 4, k.hair);
-  } else if (h === 1) {
-    rect(c, 15, 20, 6, 22, k.hair);
-    rect(c, 43, 20, 6, 22, k.hair);
-    rect(c, 21, 22, 22, 4, k.hair);
-    rect(c, 15, 40, 6, 2, k.hairShade);
-    rect(c, 43, 40, 6, 2, k.hairShade);
   } else if (h === 2) {
     rect(c, 15, 20, 6, 32, k.hair);
     rect(c, 43, 20, 6, 32, k.hair);
     rect(c, 25, 22, 16, 4, k.hair);
-  } else {
+  } else if (h === 3) {
     ellipse(c, 32, 7, 8, 6, OUTLINE);
     ellipse(c, 32, 7, 7, 5, k.hair);
     rect(c, 17, 20, 4, 8, k.hair);
