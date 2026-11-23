@@ -29,7 +29,7 @@
 | S15 | Ending | `#/j/:journeyId/ending` | MVP |
 | S16 | Memory Scenes | `#/memories` | Phase 2 |
 | S17 | Remote Lobby | `#/remote` | Phase 3 |
-| S19 | Live Lobby (เล่นสด) | `#/live` · ลิงก์เชิญ `#/live?join=…` | Phase 3C |
+| S19 | Live Lobby (เล่นสด) | `#/live` · ลิงก์เชิญ `#/live?join=…` หรือกรอกโค้ดห้อง `XXXXX-XXXXX` | Phase 3C |
 | S18 | Data Recovery | `#/recovery` | MVP |
 
 **Profile Hub** เป็นส่วนหนึ่งของ S3 (แท็บ "โปรไฟล์") เข้าถึงได้จาก S5 และ S10
@@ -235,7 +235,7 @@ sequenceDiagram
     participant B as เครื่อง B
     Note over A: S2 → เล่นสด → สร้างตัวละครของตัวเอง → S19 สร้างห้อง
     A->>S: ช่อง A (เข้ารหัส: ตัวละคร A)
-    Note over A: ได้ลิงก์เชิญ #/live?join=ห้อง.กุญแจ ส่งให้ B เอง
+    Note over A: ได้ลิงก์เชิญ #/live?join=ห้อง.กุญแจ และโค้ดห้อง XXXXX-XXXXX ส่งอย่างใดอย่างหนึ่งให้ B เอง
     B->>S: เปิดลิงก์ → อ่านช่อง A → สร้างตัวละคร B → เขียนช่อง B (เข้ารหัส: ตัวละคร B + Journey)
     S-->>A: แจ้งว่าช่อง B เปลี่ยน → A รวมข้อมูล → Journey เดียวกันทั้งสองเครื่อง
     Note over A,B: เล่นด้วยกันสด ๆ ทุกการเปลี่ยนแปลงเขียนลงช่องของตัวเอง อีกฝ่ายได้รับภายในไม่กี่วินาที

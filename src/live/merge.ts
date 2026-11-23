@@ -44,6 +44,8 @@ export interface LiveLink {
   slot: 0 | 1;
   localPlayerId: string;
   journeyId: string;
+  /** Room code shown to the inviter while waiting (never stored in the journey). */
+  code?: string;
 }
 
 export function remoteFor(link: LiveLink): NonNullable<Journey['remote']> {

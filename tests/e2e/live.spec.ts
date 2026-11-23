@@ -15,6 +15,35 @@ test('TC-LIVE-08: without a relay, live play is disabled with the reason shown',
   await expect(page.getByRole('button', { name: 'สร้างห้องเล่นสด' })).toHaveCount(0);
 });
 
+test('TC-LIVE-10: the partner joins by typing the room code', async ({ browser }, info) => {
+  test.skip(info.project.name !== 'desktop', 'two-device flow runs once, on desktop');
+  test.setTimeout(60_000);
+  const ctxA = await browser.newContext({ baseURL: LIVE });
+  const ctxB = await browser.newContext({ baseURL: LIVE });
+  const a = await ctxA.newPage();
+  const b = await ctxB.newPage();
+  await a.goto('/#/live');
+  await makePlayer(a, 'ดาว', 'สร้างห้องเล่นสด');
+  const code = (await a.getByTestId('live-invite-code').textContent())!;
+  expect(code).toMatch(/^\w{5}-\w{5}$/);
+
+  await b.goto('/#/live');
+  await b.getByTestId('live-code-input').fill('00000-00000');
+  await tap(b.getByRole('button', { name: 'เข้าร่วมด้วยโค้ด' }));
+  await expect(b.getByRole('alert')).toContainText('ไม่พบห้องนี้');
+
+  await b.goto('/#/live');
+  await b.reload();
+  await b.getByTestId('live-code-input').fill(code.toLowerCase().replace('-', ' '));
+  await tap(b.getByRole('button', { name: 'เข้าร่วมด้วยโค้ด' }));
+  await expect(b.getByText('ดาว ชวนคุณเล่นสด')).toBeVisible({ timeout: 15_000 });
+  await makePlayer(b, 'เมฆ', 'เข้าร่วม');
+  await expect(b).toHaveURL(/#\/j\/jr_[^/]+\/chapters/);
+  await expect(a).toHaveURL(/#\/j\/jr_[^/]+\/chapters/, { timeout: 15_000 });
+  await ctxA.close();
+  await ctxB.close();
+});
+
 test('TC-LIVE-07/09: create room → join by link → both enter Ch1 → same scene, controller chooses, private step waits for both', async ({
   browser,
 }, info) => {

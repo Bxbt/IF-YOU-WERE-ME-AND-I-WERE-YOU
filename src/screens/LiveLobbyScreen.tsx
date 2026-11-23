@@ -1,6 +1,6 @@
 /**
  * S19 Live Lobby — Phase 3C (docs/05 §5.3, docs/08 §6.3, docs/10 §10.3).
- * Create a room (inviter) → share `#/live?join=room.key` → partner joins → both play like Play
+ * Create a room (inviter) → share `#/live?join=room.key` or the room code → partner joins → both play like Play
  * Together, each on their own device. Without a reachable relay the feature is disabled with the
  * reason shown (no fake online).
  */
@@ -16,7 +16,7 @@ import { useGame } from '../store/game';
 import { createPlayer } from '../store/actions';
 import { newJourneyId, nowIso } from '../lib/ids';
 import type { GameSession, SaveRoot } from '../persistence/schema';
-import { decryptJson, newRoomId, newRoomKey, parseJoin } from '../live/crypto';
+import { decryptJson, newRoomCode, normalizeRoomCode, parseJoin, roomFromCode } from '../live/crypto';
 import { claimSlot, getRoom, leaveSlot, liveAvailable } from '../live/api';
 import { linkOf, remoteFor, SlotPayload, type LiveLink } from '../live/merge';
 import {
@@ -108,8 +108,25 @@ const inviteUrl = (l: LiveLink) => {
   return `${base}#/live?join=${l.room}.${l.key}`;
 };
 
-function Waiting({ link, onCancel }: { link: LiveLink; onCancel: () => void }) {
+function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
+  return (
+    <PixelButton
+      className="self-start"
+      onClick={() => {
+        void navigator.clipboard?.writeText(text).then(
+          () => setCopied(true),
+          () => setCopied(false),
+        );
+      }}
+    >
+      <Copy aria-hidden className="h-5 w-5" />
+      {copied ? t.copied : label}
+    </PixelButton>
+  );
+}
+
+function Waiting({ link, onCancel }: { link: LiveLink; onCancel: () => void }) {
   const url = inviteUrl(link);
   return (
     <section className="panel flex flex-col gap-3" aria-labelledby="live-invite-h" data-testid="live-waiting">
@@ -125,18 +142,21 @@ function Waiting({ link, onCancel }: { link: LiveLink; onCancel: () => void }) {
         className="w-full rounded border border-lavender/40 bg-navy px-2 py-2 text-[13px]"
         onFocus={(e) => e.currentTarget.select()}
       />
-      <PixelButton
-        className="self-start"
-        onClick={() => {
-          void navigator.clipboard?.writeText(url).then(
-            () => setCopied(true),
-            () => setCopied(false),
-          );
-        }}
-      >
-        <Copy aria-hidden className="h-5 w-5" />
-        {copied ? t.copied : t.copy}
-      </PixelButton>
+      <CopyButton text={url} label={t.copy} />
+      {link.code && (
+        <>
+          <h3 className="m-0 mt-2 text-base font-semibold">{t.codeHeading}</h3>
+          <p className="m-0 text-sm text-lavender">{t.codeHint}</p>
+          <p
+            className="m-0 select-all font-mono text-2xl font-bold tracking-[0.2em]"
+            data-testid="live-invite-code"
+            aria-label={t.codeLabel}
+          >
+            {link.code}
+          </p>
+          <CopyButton text={link.code} label={t.copyCode} />
+        </>
+      )}
       <p className="m-0 text-sm" role="status">
         {t.waitingJoin}
       </p>
@@ -300,7 +320,57 @@ function Join({ room, keyText }: { room: string; keyText: string }) {
   );
 }
 
-function Create({ onCreated }: { onCreated: (l: LiveLink) => void }) {
+/** The partner types the room code instead of opening the link (docs/08 §6.3). */
+function CodeEntry({ onCode }: { onCode: (j: { room: string; key: string }) => void }) {
+  const [text, setText] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  return (
+    <form
+      className="panel flex flex-col gap-2"
+      aria-labelledby="live-code-h"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (busy) return;
+        if (!normalizeRoomCode(text)) return setError(t.badCode);
+        setError(null);
+        setBusy(true);
+        void roomFromCode(text).then((j) => {
+          setBusy(false);
+          if (j) onCode(j);
+        });
+      }}
+    >
+      <h2 id="live-code-h" className="m-0 text-lg font-semibold">
+        {t.haveCode}
+      </h2>
+      <label className="flex flex-col gap-1 text-sm">
+        {t.codeLabel}
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={t.codePlaceholder}
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={16}
+          data-testid="live-code-input"
+          className="w-full rounded border border-lavender/40 bg-navy px-2 py-2 font-mono text-lg tracking-[0.15em]"
+        />
+      </label>
+      {error && (
+        <p role="alert" className="m-0 text-orange">
+          {error}
+        </p>
+      )}
+      <PixelButton type="submit" className="self-start" disabled={busy}>
+        {busy ? t.joining : t.joinByCode}
+      </PixelButton>
+    </form>
+  );
+}
+
+function Create({ onCreated, onCode }: { onCreated: (l: LiveLink) => void; onCode: (j: { room: string; key: string }) => void }) {
   const [available, setAvailable] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -316,11 +386,12 @@ function Create({ onCreated }: { onCreated: (l: LiveLink) => void }) {
     if (busy) return;
     setBusy(true);
     setError(null);
-    const room = newRoomId();
+    const code = newRoomCode();
+    const { room, key } = (await roomFromCode(code))!;
     const c = await claimSlot(room, 0);
     setBusy(false);
-    if (!c.ok) return setError(t.offline);
-    const link: LiveLink = { room, key: newRoomKey(), token: c.body.token, slot: 0, localPlayerId: selfId, journeyId: newJourneyId() };
+    if (!c.ok) return setError(c.error === 'taken' ? t.taken : t.offline);
+    const link: LiveLink = { room, key, token: c.body.token, slot: 0, localPlayerId: selfId, journeyId: newJourneyId(), code };
     writePendingLink(link);
     onCreated(link);
   }
@@ -346,6 +417,7 @@ function Create({ onCreated }: { onCreated: (l: LiveLink) => void }) {
           {error}
         </p>
       )}
+      {available && <CodeEntry onCode={onCode} />}
       {available && <ChooseSelf submitLabel={busy ? t.creating : t.createRoom} busy={busy} onChosen={(id) => void create(id)} />}
       <Link to="/remote" className="btn btn-ghost self-start no-underline">
         {t.sealedLink}
@@ -358,7 +430,7 @@ export function LiveLobbyScreen() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   // The key lives only in the fragment; read it once and drop it from the address bar (docs/08 §6.3).
-  const [joinCode] = useState(() => parseJoin(params.get('join') ?? ''));
+  const [joinCode, setJoinCode] = useState(() => parseJoin(params.get('join') ?? ''));
   const [badJoin] = useState(() => params.has('join') && !parseJoin(params.get('join') ?? ''));
   useEffect(() => {
     if (params.has('join')) setParams({}, { replace: true });
@@ -397,7 +469,7 @@ export function LiveLobbyScreen() {
       />
     );
   else if (live) body = <Current journey={live} />;
-  else body = <Create onCreated={setPending} />;
+  else body = <Create onCreated={setPending} onCode={setJoinCode} />;
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8" data-testid="live-lobby">

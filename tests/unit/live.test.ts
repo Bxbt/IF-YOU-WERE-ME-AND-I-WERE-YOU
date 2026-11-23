@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { AddressInfo } from 'node:net';
 import { createEmptySave, SaveRoot, type GameSession, type SaveRoot as Save } from '../../src/persistence/schema';
 import { buildPayload, mergePartner, remoteFor, stampSeq, type LiveLink, type SlotPayload } from '../../src/live/merge';
-import { decryptJson, encryptJson, newRoomId, newRoomKey, parseJoin } from '../../src/live/crypto';
+import { decryptJson, encryptJson, newRoomCode, newRoomId, newRoomKey, normalizeRoomCode, parseJoin, roomFromCode } from '../../src/live/crypto';
 import { submitTogetherMirror, consentItems, setPendingPrivate, startChapter } from '../../src/store/story';
 // @ts-expect-error — plain ESM server module without types
 import { createApp, memoryStore } from '../../server/index.mjs';
@@ -199,6 +199,23 @@ describe('Live crypto', () => {
     await expect(decryptJson(box, newRoomKey())).rejects.toThrow('bad_key');
     expect(parseJoin(`${newRoomId()}.${key}`)).not.toBeNull();
     expect(parseJoin('nope')).toBeNull();
+  });
+});
+
+describe('Live room code', () => {
+  it('TC-LIVE-10: a typed code gives the same room and key as the link; sloppy typing is fine', async () => {
+    const code = newRoomCode();
+    expect(code).toMatch(/^[0-9A-HJKMNP-TV-Z]{5}-[0-9A-HJKMNP-TV-Z]{5}$/);
+    const j = (await roomFromCode(code))!;
+    expect(parseJoin(`${j.room}.${j.key}`)).toEqual(j); // same shape as an invite link
+    const sloppy = ` ${code.replace('-', '').toLowerCase().slice(0, 5)} ${code.slice(6).toLowerCase()} `;
+    expect(await roomFromCode(sloppy)).toEqual(j);
+    expect(normalizeRoomCode('ABCDE-FGHIO')).toBe('ABCDEFGH10');
+    expect(normalizeRoomCode('ABCD')).toBeNull();
+    expect(normalizeRoomCode('ABCDE-FGHJU')).toBeNull(); // U is not in the alphabet
+    const other = (await roomFromCode('00000-00001'))!;
+    expect(other.room).not.toBe(j.room);
+    expect(other.key).not.toBe(j.key);
   });
 });
 
