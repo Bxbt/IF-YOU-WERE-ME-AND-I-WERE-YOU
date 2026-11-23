@@ -10,6 +10,7 @@ import { RecoveryScreen } from './screens/RecoveryScreen';
 import { StorageBanner } from './components/StorageBanner';
 import { SupportCard } from './components/SupportCard';
 import { followSave } from './live/sync';
+import { LiveInvite } from './components/LiveInvite';
 
 export function App() {
   const ready = useGame((s) => s.ready);
@@ -46,6 +47,7 @@ export function App() {
       <StorageBanner />
       <RouterProvider router={router} />
       <Toaster />
+      <LiveInvite />
       <SupportCard />
     </MotionConfig>
   );

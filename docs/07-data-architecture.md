@@ -291,7 +291,9 @@ interface ChapterProgress {
   choiceLog: { choiceId: string; optionId: string; byPlayerId: PlayerId; asRole: Role | 'self'; at: ISODate }[];
   skippedScenes: string[];
   revealMode?: 'per_question' | 'end_of_chapter';   // ch4
-  pendingPrivateSteps?: { itemId: string; playerIds: PlayerId[] }[];  // Phase 2: ใครยังต้องตอบส่วนลับ (resume กลาง Handoff)
+  pendingPrivateSteps?: { itemId: string; playerIds: PlayerId[] }[];
+  livePos?: Record<PlayerId, { sceneId: string; lineIndex: number; end?: boolean }>;  // 3C: ตำแหน่งอ่านของแต่ละเครื่อง (ต่างคนต่างอ่าน) · merge: เจ้าของตำแหน่งชนะ เฉพาะรอบเล่นเดียวกัน (`startedAt`) · ไม่นับใน syncSeq
+  // pendingPrivateSteps รายการพิเศษในเล่นสด: `ready` (ใครยังไม่เข้าบท) · `decline:<startedAt>` (ใครกด "ขอเวลาก่อน")  // Phase 2: ใครยังต้องตอบส่วนลับ (resume กลาง Handoff)
   startedAt?: ISODate;
   completedAt?: ISODate;
   playCount: number;

@@ -17,6 +17,7 @@ import {
   type HistoryEntry,
 } from '../components/Story';
 import { PauseMenu } from '../components/PauseMenu';
+import { PixelButton } from '../components/PixelButton';
 import {
   CustomChoice,
   InterpretationCheck,
@@ -26,7 +27,7 @@ import {
   Timeline,
 } from '../components/StorySteps';
 import { Handoff } from '../components/Handoff';
-import { linkOf } from '../live/merge';
+import { declineItem, linkOf } from '../live/merge';
 import { LiveStatusLine } from './LiveLobbyScreen';
 import { PlayerGate } from '../components/PlayerGate';
 import { RevealPanel } from '../components/Reveal';
@@ -62,6 +63,8 @@ import {
   saveStoryAnswer,
   selfRole,
   setPosition,
+  setLivePos,
+  finishLiveRead,
   skipChapter,
   startChapter,
   storyAnswerKey,
@@ -197,6 +200,8 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   const save = useGame((s) => s.save);
   const ch = content.id;
   const progress = journey.chapterProgress[ch] ?? emptyProgress(ch);
+  /** Live (3C): this device's player — reading positions are per device (docs/05 §5.3). */
+  const liveId = linkOf(journey)?.localPlayerId;
   const selfId = journey.playerIds[0];
   const baseCtx = useMemo(() => buildTokenContext(save, journey), [save, journey]);
   const mySelfRole = selfRole(journey);
@@ -246,12 +251,21 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       useGame.getState().flush();
       if (explicitStart) setParams({}, { replace: true });
     } else if (p.status === 'in_progress') {
-      const saved =
-        p.currentSceneId !== undefined
+      const mine = liveId ? p.livePos?.[liveId] : undefined;
+      if (mine?.end) return;
+      const saved = mine
+        ? { sceneId: mine.sceneId, lineIndex: mine.lineIndex }
+        : p.currentSceneId !== undefined
           ? { sceneId: p.currentSceneId, lineIndex: p.lineIndex ?? 0 }
           : undefined;
       const m = resumePosition(content, saved, buildStoryState(journey, ch));
-      if (m.kind === 'end') apply((s) => completeChapter(s, journey.id, ch));
+      if (liveId) {
+        // Live: only this device's own reading position moves.
+        if (m.kind === 'end')
+          apply((s) => finishLiveRead(s, journey.id, ch, liveId, !!content.transition.ending));
+        else if (!mine || m.pos.sceneId !== mine.sceneId || m.pos.lineIndex !== mine.lineIndex)
+          apply((s) => setLivePos(s, journey.id, ch, liveId, m.pos));
+      } else if (m.kind === 'end') apply((s) => completeChapter(s, journey.id, ch));
       else if (!saved || m.pos.sceneId !== saved.sceneId || m.pos.lineIndex !== saved.lineIndex)
         apply((s) => setPosition(s, journey.id, ch, m.pos.sceneId, m.pos.lineIndex));
     }
@@ -263,14 +277,24 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     () => (view ? (viewRun?.state ?? freshState()) : buildStoryState(journey, ch)),
     [view, viewRun, freshState, journey, ch],
   );
-  const pSceneId = progress.status === 'in_progress' ? progress.currentSceneId : undefined;
-  const pLine = progress.lineIndex ?? 0;
+  const myLive = liveId ? progress.livePos?.[liveId] : undefined;
+  const pSceneId =
+    progress.status === 'in_progress'
+      ? myLive
+        ? myLive.end
+          ? undefined
+          : myLive.sceneId
+        : progress.currentSceneId
+      : undefined;
+  const pLine = myLive && !myLive.end ? myLive.lineIndex : (progress.lineIndex ?? 0);
   const pos: Position | null = useMemo(
     () =>
       view ? (viewRun?.pos ?? null) : pSceneId !== undefined ? { sceneId: pSceneId, lineIndex: pLine } : null,
     [view, viewRun, pSceneId, pLine],
   );
-  const ended = view ? viewRun !== null && viewRun.pos === null : progress.status === 'completed';
+  const ended = view
+    ? viewRun !== null && viewRun.pos === null
+    : progress.status === 'completed' || !!myLive?.end;
   const scene = pos ? sceneById(content, pos.sceneId) : undefined;
   const steps = useMemo(() => (scene ? expandScene(scene, state) : []), [scene, state]);
   const step: Step | undefined = pos ? steps[pos.lineIndex] : undefined;
@@ -294,6 +318,28 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   /** Live: who has not entered this chapter yet (docs/05 §5.3 "เริ่มบท"). */
   const readyEntry = live ? progress.pendingPrivateSteps?.find((x) => x.itemId === READY_ITEM) : undefined;
   const waitingEnter = !!readyEntry && !view && !ended && readyEntry.playerIds.some((x) => x !== localId);
+  /** Live: who answered this invitation with "ขอเวลาก่อน" (docs/05 §5.3). */
+  const declinedBy = waitingEnter
+    ? (progress.pendingPrivateSteps
+        ?.find((x) => x.itemId === declineItem(progress.startedAt))
+        ?.playerIds.filter((x) => x !== localId) ?? [])
+    : [];
+  /** Invite again: a fresh run of the chapter, so the old "ขอเวลาก่อน" no longer applies. */
+  const reinvite = () => {
+    const m = startOfChapter(content, freshState());
+    if (m.kind !== 'at' || !localId) return;
+    const others = journey.playerIds.filter((x) => x !== localId);
+    apply((s) =>
+      setPendingPrivate(
+        startChapter(s, journey.id, ch, m.pos.sceneId, m.pos.lineIndex),
+        journey.id,
+        ch,
+        READY_ITEM,
+        others,
+        true,
+      ),
+    );
+  };
   useEffect(() => {
     // Being on this chapter's screen means this player has arrived.
     if (!live || view || !readyEntry?.playerIds.includes(localId!)) return;
@@ -413,6 +459,11 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       }
       apply((s0) => {
         const s = before ? before(s0) : s0;
+        if (liveId) {
+          // Live: move only this device's reading position; the chapter is done once both read to the end.
+          if (move.kind === 'at') return setLivePos(s, journey.id, ch, liveId, move.pos);
+          return finishLiveRead(s, journey.id, ch, liveId, !!content.transition.ending);
+        }
         if (move.kind === 'at') return setPosition(s, journey.id, ch, move.pos.sceneId, move.pos.lineIndex);
         const done = completeChapter(s, journey.id, ch);
         return content.transition.ending ? completeJourney(done, journey.id) : done;
@@ -422,7 +473,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         if (content.transition.ending) navigate(`/j/${journey.id}/ending`);
       }
     },
-    [content, view, journey.id, ch, navigate],
+    [content, view, journey.id, ch, navigate, liveId],
   );
 
   const next = useCallback(() => {
@@ -481,6 +532,28 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   useEffect(() => {
     if (everyoneSent) next();
   }, [everyoneSent, stepKey, next]);
+
+  // ----- Live: each reads at their own pace, and they meet at every answer step (docs/05 §5.3) -----
+  const partnerId = live ? journey.playerIds.find((x) => x !== localId) : undefined;
+  const partnerLive = partnerId ? progress.livePos?.[partnerId] : undefined;
+  const partnerPos = partnerLive
+    ? partnerLive.end
+      ? null
+      : partnerLive
+    : progress.currentSceneId !== undefined
+      ? { sceneId: progress.currentSceneId, lineIndex: progress.lineIndex ?? 0 }
+      : null;
+  const answerStep = live && !view && !!step && (step.kind === 'choice' || isPrivate);
+  const answered = step?.kind === 'choice' ? !!state.chosen[step.line.id] : !!pendingEntry;
+  const partnerHere =
+    !!partnerPos && !!pos && partnerPos.sceneId === pos.sceneId && partnerPos.lineIndex === pos.lineIndex;
+  /** Live: this device reached an answer step first — wait for the partner to read up to it. */
+  const waitingArrive = answerStep && !answered && !partnerHere;
+  // The partner chose at a step this device is on: move on into the response lines.
+  const chosenHere = live && !view && step?.kind === 'choice' && !!state.chosen[step.line.id];
+  useEffect(() => {
+    if (chosenHere) next();
+  }, [chosenHere, stepKey, next]);
 
   const doneItems = live
     ? (progress.pendingPrivateSteps ?? []).filter((x) => x.playerIds.length === 0).map((x) => x.itemId)
@@ -1082,7 +1155,35 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
                   .join(', '),
               )}
             </p>
-            <p className="m-0 text-sm text-lavender">{ui.live.waitEnterHint}</p>
+            {declinedBy.length > 0 ? (
+              <>
+                <p className="m-0 text-orange" data-testid="live-declined">
+                  {ui.live.declined(declinedBy.map(nick).join(', '))}
+                </p>
+                <p className="m-0 text-sm text-lavender">{ui.live.declinedHint}</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <PixelButton onClick={reinvite}>{ui.live.reinvite}</PixelButton>
+                  <PixelButton variant="ghost" onClick={() => navigate(chaptersHref)}>
+                    {ui.live.backToChapters}
+                  </PixelButton>
+                </div>
+              </>
+            ) : (
+              <p className="m-0 text-sm text-lavender">{ui.live.waitEnterHint}</p>
+            )}
+          </div>
+        ) : waitingArrive ? (
+          <div className="flex flex-col gap-3">
+            {step?.kind === 'choice' && renderLine(lineBefore(steps, pos!.lineIndex), true)}
+            <div
+              className="panel flex flex-col items-center gap-2 text-center"
+              data-testid="live-wait-arrive"
+            >
+              <p role="status" className="m-0 font-semibold">
+                {ui.live.waitArrive(nick(partnerId ?? ''))}
+              </p>
+              <p className="m-0 text-sm text-lavender">{ui.live.waitArriveHint}</p>
+            </div>
           </div>
         ) : privateHandoff ? null : reveal && together && !view ? (
           <RevealPanel
@@ -1137,7 +1238,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       <PauseMenu
         open={paused}
         onResume={() => setPaused(false)}
-        onSkipScene={pos && !ended ? onSkipScene : undefined}
+        onSkipScene={pos && !ended && !live ? onSkipScene : undefined}
         onSkipChapter={
           !view && !ended
             ? () => {

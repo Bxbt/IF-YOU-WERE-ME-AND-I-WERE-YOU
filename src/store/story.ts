@@ -32,7 +32,12 @@ export function roleView(j: GameSession, ch: ChapterId): GameSession {
   const teller = j.otherSide?.tellerPlayerId ?? j.playerIds[0];
   return {
     ...j,
-    scenario: { insiderPlayerId: teller, priorWarning: true, randomized: !!j.otherSide?.randomized, setAt: j.otherSide?.setAt ?? j.createdAt },
+    scenario: {
+      insiderPlayerId: teller,
+      priorWarning: true,
+      randomized: !!j.otherSide?.randomized,
+      setAt: j.otherSide?.setAt ?? j.createdAt,
+    },
   };
 }
 
@@ -140,9 +145,10 @@ export function startChapter(
 ): SaveRoot {
   return withProgress(save, jid, ch, (p, t) => {
     // A fresh run asks every private step again: waiting lists from the last run are dropped.
-    const { completedAt: _c, pendingPrivateSteps: _pp, ...base } = dropPosition(p);
+    const { completedAt: _c, pendingPrivateSteps: _pp, livePos: _lp, ...base } = dropPosition(p);
     void _c;
     void _pp;
+    void _lp;
     return {
       ...base,
       status: 'in_progress',
@@ -155,6 +161,39 @@ export function startChapter(
       lineIndex,
     };
   });
+}
+
+/**
+ * Live (3C): one device's own reading position (docs/05 §5.3). `null` = this device read to the
+ * end. Not part of `syncSeq`, so it never moves the partner.
+ */
+export function setLivePos(
+  save: SaveRoot,
+  jid: string,
+  ch: ChapterId,
+  playerId: string,
+  pos: { sceneId: string; lineIndex: number } | null,
+): SaveRoot {
+  return withProgress(save, jid, ch, (p) => ({
+    ...p,
+    livePos: { ...p.livePos, [playerId]: pos ? { ...pos } : { sceneId: '', lineIndex: 0, end: true } },
+  }));
+}
+
+/** Live: this device read to the end; the chapter (and the journey, after Ch5) completes once both did. */
+export function finishLiveRead(
+  save: SaveRoot,
+  jid: string,
+  ch: ChapterId,
+  localId: string,
+  endsJourney: boolean,
+): SaveRoot {
+  const out = setLivePos(save, jid, ch, localId, null);
+  const j = out.journeys[jid];
+  const partner = j?.playerIds.find((x) => x !== localId);
+  if (!j || !partner || !j.chapterProgress[ch]?.livePos?.[partner]?.end) return out;
+  const done = completeChapter(out, jid, ch);
+  return endsJourney ? completeJourney(done, jid) : done;
 }
 
 export function setPosition(
@@ -643,7 +682,9 @@ export function consentItems(
   exclude: readonly string[] = [],
 ): SaveRoot {
   return withJourney(save, jid, (j, t) => {
-    const subset = Object.fromEntries(keys.filter((k) => j.mirrorItems[k]).map((k) => [k, j.mirrorItems[k]!]));
+    const subset = Object.fromEntries(
+      keys.filter((k) => j.mirrorItems[k]).map((k) => [k, j.mirrorItems[k]!]),
+    );
     const updated = setGroupConsent(subset, playerId, consent, exclude, t);
     return { ...j, mirrorItems: { ...j.mirrorItems, ...updated } };
   });

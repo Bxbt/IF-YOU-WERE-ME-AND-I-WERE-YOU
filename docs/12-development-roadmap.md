@@ -67,7 +67,7 @@
 | **M14 Remote Client (3B)** | RemoteAdapter · S17 · Realtime (consents/members/events) · Offline queue · Revoke/Delete/Leave · Expiry job | TC-RMT-08, 10, 11 · TC-DEL-06 | 5–6 วัน |
 
 | **M16 เส้นเรื่องที่ 2 "อีกด้านของเรื่อง"** | สคริปต์ 6 บท ([02](02-story-script.md)) · ChapterId os1–os6 · S5 แท็บเส้นเรื่อง · S20 เลือกคนเล่า · Flag แยกเส้นเรื่อง · ฉากใหม่ 4 ฉาก | TC-OS-01–06 | 4–6 วัน |
-| **M15 Live (3C)** | relay server + Dockerfile · `src/live/` · S19 · PlayScreen แบบสองเครื่อง (รอตา/รอส่ง/ยินยอมบนเครื่องตัวเอง/รอเข้าบทพร้อมกัน/เชิญด้วยโค้ด) | TC-LIVE-01–10 · Manual test 2 เครื่องบนเซิร์ฟเวอร์จริง | 4–5 วัน |
+| **M15 Live (3C)** | relay server + Dockerfile · `src/live/` · S19 · PlayScreen แบบสองเครื่อง (รอตา/รอส่ง/ยินยอมบนเครื่องตัวเอง/รอเข้าบทพร้อมกัน/เชิญด้วยโค้ด/ป๊อปอัปชวนเข้าบท/ต่างคนต่างอ่าน) | TC-LIVE-01–12 · Manual test 2 เครื่องบนเซิร์ฟเวอร์จริง | 4–5 วัน |
 
 **รวม Phase 3 ≈ 14–17 วัน** (M13/M14 พักไว้ตาม Q-05)
 

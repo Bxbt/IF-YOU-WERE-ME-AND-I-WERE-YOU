@@ -1,6 +1,6 @@
 /** Phase 3C Live — two devices (two browser contexts) through the real relay. Fictional names only. */
 import { expect, test, type Page } from '@playwright/test';
-import { playThrough, tap } from './helpers';
+import { tap } from './helpers';
 
 const LIVE = 'http://localhost:4174';
 
@@ -44,11 +44,11 @@ test('TC-LIVE-10: the partner joins by typing the room code', async ({ browser }
   await ctxB.close();
 });
 
-test('TC-LIVE-07/09: create room → join by link → both enter Ch1 → same scene, controller chooses, private step waits for both', async ({
+test('TC-LIVE-07/09/11/12: invite → join → each reads at their own pace → meet at answer steps', async ({
   browser,
 }, info) => {
   test.skip(info.project.name !== 'desktop', 'two-device flow runs once, on desktop');
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
   const ctxA = await browser.newContext({ baseURL: LIVE });
   const ctxB = await browser.newContext({ baseURL: LIVE });
   const a = await ctxA.newPage();
@@ -68,60 +68,66 @@ test('TC-LIVE-07/09: create room → join by link → both enter Ch1 → same sc
   const jid = /#\/j\/(jr_[^/]+)\//.exec(b.url())![1]!;
   expect(a.url()).toContain(jid);
 
-  // A sets the scenario and starts Ch1; B follows into the same chapter.
+  // A sets the scenario and starts Ch1 → waits for B (TC-LIVE-09).
   await a.goto(`/#/j/${jid}/scenario?next=${encodeURIComponent(`/j/${jid}/play/ch1?start=1`)}`);
   await tap(a.getByRole('button', { name: 'ฉันเอง' }));
   await tap(a.getByRole('button', { name: 'เริ่มเรื่อง' }));
-  await expect(a.getByTestId('play')).toBeVisible();
-  await expect(a.getByTestId('live-status')).toContainText('ส่งแล้ว', { timeout: 15_000 });
-  // TC-LIVE-09: the chapter waits until the partner has entered it too — nobody reads ahead.
   await expect(a.getByTestId('live-wait-enter')).toContainText('รอ เมฆ', { timeout: 15_000 });
   await expect(a.getByRole('button', { name: /^(ถัดไป|แสดงข้อความทั้งหมด)$/ })).toHaveCount(0);
-  await b.goto(`/#/j/${jid}/play/ch1`);
+
+  // TC-LIVE-11: B is asked on the chapter list; "ขอเวลาก่อน" tells A, who can invite again.
+  const popup = b.getByRole('dialog');
+  await expect(popup).toContainText('ดาว ชวนเริ่มบทด้วยกัน', { timeout: 15_000 });
+  await expect(b.getByTestId('live-invite')).toContainText('บทที่ 1');
+  await tap(popup.getByRole('button', { name: 'ขอเวลาก่อน' }));
+  await expect(b.getByRole('dialog')).toHaveCount(0);
+  await expect(a.getByTestId('live-declined')).toContainText('เมฆ ขอเวลาก่อน', { timeout: 15_000 });
+  await b.waitForTimeout(1500);
+  await expect(b.getByRole('dialog')).toHaveCount(0); // not asked again by itself
+  await tap(a.getByRole('button', { name: 'ชวนอีกครั้ง' }));
+  await expect(b.getByRole('dialog')).toContainText('ดาว ชวนเริ่มบทด้วยกัน', { timeout: 15_000 });
+  await tap(b.getByRole('dialog').getByRole('button', { name: 'เข้าบทด้วยกัน' }));
+  await expect(b).toHaveURL(/play\/ch1/);
   await expect(b.getByTestId('play')).toBeVisible({ timeout: 15_000 });
   await expect(a.getByTestId('live-wait-enter')).toBeHidden({ timeout: 15_000 });
-  await expect(b.getByTestId('live-wait-enter')).toBeHidden();
 
-  // A plays forward until somebody has to choose.
+  // TC-LIVE-12: A reads ahead alone and stops at the first answer step; B has not moved.
+  const adv = (p: Page) => p.getByRole('button', { name: /^(ถัดไป|แสดงข้อความทั้งหมด)$/ }).first();
+  const readOn = async (p: Page) => {
+    const btn = adv(p);
+    if ((await btn.isVisible()) && (await btn.getAttribute('aria-disabled')) !== 'true') await tap(btn);
+    else await p.waitForTimeout(120);
+  };
   const choicesA = a.getByRole('group', { name: 'เลือกสิ่งที่จะทำ' });
-  const waitA = a.getByTestId('live-wait-choice');
-  await playThrough(a, async () => (await choicesA.isVisible()) || (await waitA.isVisible()));
-  const scene = await a.getByTestId('play').getAttribute('data-scene');
-  await expect(b.getByTestId('play')).toHaveAttribute('data-scene', scene!, { timeout: 15_000 });
-
   const choicesB = b.getByRole('group', { name: 'เลือกสิ่งที่จะทำ' });
-  const waitB = b.getByTestId('live-wait-choice');
-  if (await choicesA.isVisible()) {
-    await expect(waitB).toBeVisible({ timeout: 15_000 });
-    await tap(choicesA.getByRole('button').first());
-    await expect(waitB).toBeHidden({ timeout: 15_000 });
-  } else {
-    await expect(choicesB).toBeVisible({ timeout: 15_000 });
-    await tap(choicesB.getByRole('button').first());
-    await expect(waitA).toBeHidden({ timeout: 15_000 });
-  }
+  const arriveA = a.getByTestId('live-wait-arrive');
+  const bScene = await b.getByTestId('play').getAttribute('data-scene');
+  for (let i = 0; i < 80 && !(await arriveA.isVisible()); i++) await readOn(a);
+  await expect(arriveA).toContainText('รอ เมฆ อ่านมาถึงตรงนี้');
+  await expect(choicesA).toHaveCount(0);
+  await expect(b.getByTestId('play')).toHaveAttribute('data-scene', bScene!);
 
-  // Drive both devices to the first private step (emotion cards): whoever has a choice picks; A taps on.
+  // B reads up to the same step on their own; then the choice opens (A owns the insider role).
+  for (let i = 0; i < 80 && !(await arriveA.isHidden()); i++) await readOn(b);
+  await expect(choicesA).toBeVisible({ timeout: 15_000 });
+  await expect(b.getByTestId('live-wait-choice')).toBeVisible({ timeout: 15_000 });
+  await tap(choicesA.getByRole('button').first());
+  await expect(b.getByTestId('live-wait-choice')).toBeHidden({ timeout: 15_000 });
+
+  // Both read on to the first private step (emotion cards) and answer it together.
   const cards = (p: Page) => p.getByRole('button', { name: 'ไปต่อ', exact: true });
-  for (let i = 0; i < 400 && !((await cards(a).isVisible()) && (await cards(b).isVisible())); i++) {
+  for (let i = 0; i < 600 && !((await cards(a).isVisible()) && (await cards(b).isVisible())); i++) {
     if (await choicesA.isVisible()) await tap(choicesA.getByRole('button').first());
     else if (await choicesB.isVisible()) await tap(choicesB.getByRole('button').first());
-    else {
-      const adv = a.getByRole('button', { name: /^(ถัดไป|แสดงข้อความทั้งหมด)$/ }).first();
-      if ((await adv.isVisible()) && (await adv.getAttribute('aria-disabled')) !== 'true') await tap(adv);
-      else await a.waitForTimeout(150);
-    }
+    await readOn(i % 2 ? a : b);
   }
   const cardsScene = await a.getByTestId('play').getAttribute('data-scene');
-  // Private step: answered at the same time; the first to send waits for the other.
   await tap(cards(a));
   await expect(a.getByTestId('live-wait-answer')).toContainText('รอ เมฆ', { timeout: 15_000 });
-  await expect(cards(b)).toBeVisible();
   await tap(cards(b));
   await expect(a.getByTestId('live-wait-answer')).toBeHidden({ timeout: 15_000 });
   await expect(b.getByTestId('live-wait-answer')).toBeHidden();
   await expect(a.getByTestId('play')).not.toHaveAttribute('data-scene', cardsScene!, { timeout: 15_000 });
-  await expect(b.getByTestId('play')).toHaveAttribute('data-scene', (await a.getByTestId('play').getAttribute('data-scene'))!, { timeout: 15_000 });
   await ctxA.close();
   await ctxB.close();
 });

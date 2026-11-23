@@ -1,10 +1,38 @@
 /** Phase 3C Live: merge rules (TC-LIVE-01..04) and the relay server (TC-LIVE-05/06). Fictional names only. */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { AddressInfo } from 'node:net';
-import { createEmptySave, SaveRoot, type GameSession, type SaveRoot as Save } from '../../src/persistence/schema';
-import { buildPayload, mergePartner, remoteFor, stampSeq, type LiveLink, type SlotPayload } from '../../src/live/merge';
-import { decryptJson, encryptJson, newRoomCode, newRoomId, newRoomKey, normalizeRoomCode, parseJoin, roomFromCode } from '../../src/live/crypto';
-import { submitTogetherMirror, consentItems, setPendingPrivate, startChapter } from '../../src/store/story';
+import {
+  createEmptySave,
+  SaveRoot,
+  type GameSession,
+  type SaveRoot as Save,
+} from '../../src/persistence/schema';
+import {
+  buildPayload,
+  mergePartner,
+  remoteFor,
+  stampSeq,
+  type LiveLink,
+  type SlotPayload,
+} from '../../src/live/merge';
+import {
+  decryptJson,
+  encryptJson,
+  newRoomCode,
+  newRoomId,
+  newRoomKey,
+  normalizeRoomCode,
+  parseJoin,
+  roomFromCode,
+} from '../../src/live/crypto';
+import {
+  submitTogetherMirror,
+  consentItems,
+  setPendingPrivate,
+  startChapter,
+  setLivePos,
+  finishLiveRead,
+} from '../../src/store/story';
 // @ts-expect-error — plain ESM server module without types
 import { createApp, memoryStore } from '../../server/index.mjs';
 
@@ -12,7 +40,15 @@ const A = 'pl_liveAAA01';
 const B = 'pl_liveBBB01';
 const JID = 'jr_liveJRN01';
 const T0 = '2026-11-23T10:00:00.000Z';
-const appearance = { preset: 'p1', skin: 1, hairStyle: 1, hairColor: 1, outfit: 0, outfitColor: 1, accessory: 'none' } as const;
+const appearance = {
+  preset: 'p1',
+  skin: 1,
+  hairStyle: 1,
+  hairColor: 1,
+  outfit: 0,
+  outfitColor: 1,
+  accessory: 'none',
+} as const;
 
 const player = (id: string, nickname: string) => ({
   id,
@@ -65,7 +101,14 @@ const progress = (s: Save, ch = 'ch1') => s.journeys[JID]!.chapterProgress[ch]!;
 
 function withProgress(s: Save, p: Partial<GameSession['chapterProgress'][string]>): Save {
   const j = s.journeys[JID]!;
-  const base = { chapterId: 'ch1' as const, status: 'in_progress' as const, flags: {}, choiceLog: [], skippedScenes: [], playCount: 1 };
+  const base = {
+    chapterId: 'ch1' as const,
+    status: 'in_progress' as const,
+    flags: {},
+    choiceLog: [],
+    skippedScenes: [],
+    playCount: 1,
+  };
   return { ...s, journeys: { [JID]: { ...j, chapterProgress: { ch1: { ...base, ...p } } } } };
 }
 
@@ -88,7 +131,10 @@ describe('Live merge', () => {
 
   it('never sends PINs, and the local journey link stays on the device', () => {
     const a = device(0);
-    a.players[A] = { ...a.players[A]!, pin: { algo: 'PBKDF2-SHA256', iterations: 1, salt: 's', hash: 'h', failedAttempts: 0 } };
+    a.players[A] = {
+      ...a.players[A]!,
+      pin: { algo: 'PBKDF2-SHA256', iterations: 1, salt: 's', hash: 'h', failedAttempts: 0 },
+    };
     const p = payloadOf(a, 0);
     expect(JSON.stringify(p)).not.toContain('PBKDF2');
     expect(p.journey && 'remote' in p.journey).toBe(false);
@@ -104,7 +150,8 @@ describe('Live merge', () => {
     b = setPendingPrivate(b, JID, 'ch1', 's1:3', [A], true);
     const a2 = mergePartner(a, linkFor(0), payloadOf(b, 1));
     const b2 = mergePartner(b, linkFor(1), payloadOf(a, 0));
-    for (const s of [a2, b2]) expect(progress(s).pendingPrivateSteps).toEqual([{ itemId: 's1:3', playerIds: [] }]);
+    for (const s of [a2, b2])
+      expect(progress(s).pendingPrivateSteps).toEqual([{ itemId: 's1:3', playerIds: [] }]);
   });
 
   it('TC-LIVE-09: a chapter starts only after both entered it — one after the other, or at once', () => {
@@ -112,9 +159,17 @@ describe('Live merge', () => {
     const enter = (s: Save, self: string) => {
       const started = startChapter(s, JID, 'ch2', 's1', 0);
       const stamped = { ...started, journeys: { [JID]: stampSeq(s.journeys[JID], started.journeys[JID]!) } };
-      return setPendingPrivate(stamped, JID, 'ch2', 'ready', [A, B].filter((x) => x !== self), true);
+      return setPendingPrivate(
+        stamped,
+        JID,
+        'ch2',
+        'ready',
+        [A, B].filter((x) => x !== self),
+        true,
+      );
     };
-    const ready = (s: Save) => progress(s, 'ch2').pendingPrivateSteps?.find((x) => x.itemId === 'ready')?.playerIds;
+    const ready = (s: Save) =>
+      progress(s, 'ch2').pendingPrivateSteps?.find((x) => x.itemId === 'ready')?.playerIds;
 
     // One after the other: A waits for B; B receives A's start and arrives.
     const a = enter(device(0), A);
@@ -129,6 +184,42 @@ describe('Live merge', () => {
     const b2 = enter(device(1), B);
     expect(ready(mergePartner(a2, linkFor(0), payloadOf(b2, 1)))).toEqual([]);
     expect(ready(mergePartner(b2, linkFor(1), payloadOf(a2, 0)))).toEqual([]);
+  });
+
+  it('TC-LIVE-12: reading positions — each player owns theirs, a new run drops the old ones', () => {
+    const run = (s: Save, at: string) =>
+      withProgress(s, { currentSceneId: 's1', lineIndex: 0, syncSeq: 4, startedAt: at });
+    let a = setLivePos(run(device(0), T0), JID, 'ch1', A, { sceneId: 's2', lineIndex: 3 });
+    let b = setLivePos(run(device(1), T0), JID, 'ch1', B, { sceneId: 's1', lineIndex: 5 });
+    // A stale copy of my own position on the partner's side never wins.
+    b = setLivePos(b, JID, 'ch1', A, { sceneId: 's1', lineIndex: 0 });
+    const a2 = mergePartner(a, linkFor(0), payloadOf(b, 1));
+    expect(progress(a2).livePos).toEqual({
+      [A]: { sceneId: 's2', lineIndex: 3 },
+      [B]: { sceneId: 's1', lineIndex: 5 },
+    });
+    // Partner restarted the chapter (newer run, higher seq): my old position is dropped.
+    const restarted = withProgress(device(1), {
+      currentSceneId: 's1',
+      lineIndex: 0,
+      syncSeq: 9,
+      startedAt: '2026-11-23T11:00:00.000Z',
+    });
+    expect(progress(mergePartner(a, linkFor(0), payloadOf(restarted, 1))).livePos).toBeUndefined();
+    // Moving my own position never bumps syncSeq (it must not move the partner).
+    a = setLivePos(a, JID, 'ch1', A, { sceneId: 's2', lineIndex: 4 });
+    expect(progress(a).syncSeq).toBe(4);
+  });
+
+  it('TC-LIVE-12: the chapter completes only once both read to the end', () => {
+    const run = (s: Save) =>
+      withProgress(s, { currentSceneId: 's1', lineIndex: 0, syncSeq: 4, startedAt: T0 });
+    const a = finishLiveRead(run(device(0)), JID, 'ch1', A, false);
+    expect(progress(a).status).toBe('in_progress');
+    expect(progress(a).livePos?.[A]?.end).toBe(true);
+    const b = mergePartner(finishLiveRead(run(device(1)), JID, 'ch1', B, false), linkFor(1), payloadOf(a, 0));
+    expect(progress(b).livePos?.[A]?.end).toBe(true);
+    expect(progress(finishLiveRead(b, JID, 'ch1', B, false)).status).toBe('completed');
   });
 
   it('TC-LIVE-03: the higher syncSeq wins; a tie goes to slot 0 on both devices', () => {
@@ -146,7 +237,10 @@ describe('Live merge', () => {
     const j = withProgress(device(0), { currentSceneId: 's1', lineIndex: 0, syncSeq: 3 }).journeys[JID]!;
     const moved = { ...j, chapterProgress: { ch1: { ...j.chapterProgress.ch1!, lineIndex: 1 } } };
     expect(stampSeq(j, moved).chapterProgress.ch1!.syncSeq).toBe(4);
-    const waiting = { ...j, chapterProgress: { ch1: { ...j.chapterProgress.ch1!, pendingPrivateSteps: [] } } };
+    const waiting = {
+      ...j,
+      chapterProgress: { ch1: { ...j.chapterProgress.ch1!, pendingPrivateSteps: [] } },
+    };
     expect(stampSeq(j, waiting)).toBe(waiting);
   });
 
@@ -250,13 +344,17 @@ describe('Live relay server', () => {
     expect((await fetch(`${base}/rooms/${room}/slots/2`, { method: 'POST' })).status).toBe(404);
     expect((await put(0, token, 'x'.repeat(600 * 1024))).status).toBe(413);
     expect((await put(0, token, { iv: 'a', data: 'b' })).status).toBe(200);
-    const g = (await (await fetch(`${base}/rooms/${room}`)).json()) as { slots: { slot: number; rev: number }[] };
+    const g = (await (await fetch(`${base}/rooms/${room}`)).json()) as {
+      slots: { slot: number; rev: number }[];
+    };
     expect(g.slots).toEqual([expect.objectContaining({ slot: 0, rev: 1 })]);
   });
 
   it('TC-LIVE-06: only ciphertext is stored', async () => {
     const key = newRoomKey();
-    const c1 = (await (await fetch(`${base}/rooms/${room}/slots/1`, { method: 'POST' })).json()) as { token: string };
+    const c1 = (await (await fetch(`${base}/rooms/${room}/slots/1`, { method: 'POST' })).json()) as {
+      token: string;
+    };
     const box = await encryptJson({ nickname: 'ชื่อลับมาก' }, key);
     expect((await put(1, c1.token, box)).status).toBe(200);
     expect(store.dump()).not.toContain('ชื่อลับมาก');

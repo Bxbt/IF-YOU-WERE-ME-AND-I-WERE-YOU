@@ -12,6 +12,8 @@ interface ConfirmDialogProps {
   destructive?: boolean;
   /** When set, the confirm button stays disabled until this exact word is typed. */
   typedWord?: string;
+  /** Defaults to "ยกเลิก". */
+  cancelLabel?: string;
 }
 
 const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -26,6 +28,7 @@ export function ConfirmDialog({
   onCancel,
   destructive,
   typedWord,
+  cancelLabel,
 }: ConfirmDialogProps) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -89,7 +92,7 @@ export function ConfirmDialog({
         )}
         <div className="flex flex-wrap justify-end gap-3">
           <PixelButton variant="ghost" onClick={onCancel}>
-            {ui.cancel}
+            {cancelLabel ?? ui.cancel}
           </PixelButton>
           <PixelButton variant={destructive ? 'danger' : 'primary'} disabled={blocked} onClick={onConfirm}>
             {confirmLabel}

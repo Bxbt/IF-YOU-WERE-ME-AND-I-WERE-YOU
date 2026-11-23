@@ -13,13 +13,7 @@
  *   change to any answer of the item (an edit after consent asks for consent again, R7).
  */
 import { z } from 'zod';
-import {
-  GameSession,
-  Player,
-  Profile,
-  type SaveRoot,
-  type SharedAnswer,
-} from '../persistence/schema';
+import { GameSession, Player, Profile, type SaveRoot, type SharedAnswer } from '../persistence/schema';
 import { deriveState, mirrorRevision, requiredConsenters } from '../engine/reveal';
 
 type Journey = z.infer<typeof GameSession>;
@@ -90,7 +84,14 @@ export function buildPayload(save: SaveRoot, link: LiveLink): SlotPayload | null
   const profiles = Object.fromEntries(
     Object.entries(save.profiles).filter(([, p]) => p.ownerId === link.localPlayerId),
   );
-  return { v: 1, playerId: me.id, player, journeyId: link.journeyId, ...(journey ? { journey } : {}), profiles };
+  return {
+    v: 1,
+    playerId: me.id,
+    player,
+    journeyId: link.journeyId,
+    ...(journey ? { journey } : {}),
+    profiles,
+  };
 }
 
 // ---------- progress ----------
@@ -141,14 +142,37 @@ function intersectPending(a: Pending = [], b: Pending = []): Pending {
   });
 }
 
-function mergeProgress(l: Progress | undefined, q: Progress | undefined, partnerSlot: 0 | 1): Progress {
+/**
+ * Reading positions (3C ต่างคนต่างอ่าน): each player's entry comes from that player's device, and
+ * only while both sides are on the same run of the chapter (`startedAt`) — a restart clears them.
+ */
+function mergeLivePos(win: Progress, l: Progress, q: Progress, localId: string, partnerId: string) {
+  const out: NonNullable<Progress['livePos']> = {};
+  const mine = l.startedAt === win.startedAt ? l.livePos?.[localId] : undefined;
+  const theirs = q.startedAt === win.startedAt ? q.livePos?.[partnerId] : undefined;
+  if (mine) out[localId] = mine;
+  if (theirs) out[partnerId] = theirs;
+  return Object.keys(out).length ? out : undefined;
+}
+
+function mergeProgress(
+  l: Progress | undefined,
+  q: Progress | undefined,
+  partnerSlot: 0 | 1,
+  localId: string,
+  partnerId: string,
+): Progress {
   if (!l) return q!;
   if (!q) return l;
   const ls = l.syncSeq ?? 0;
   const qs = q.syncSeq ?? 0;
   const win = ls > qs ? l : qs > ls ? q : partnerSlot === 0 ? q : l;
-  if (ls !== qs) return win;
-  return { ...win, pendingPrivateSteps: intersectPending(l.pendingPrivateSteps, q.pendingPrivateSteps) };
+  const { livePos: _drop, ...base } = win;
+  void _drop;
+  const livePos = mergeLivePos(win, l, q, localId, partnerId);
+  const merged: Progress = livePos ? { ...base, livePos } : base;
+  if (ls !== qs) return merged;
+  return { ...merged, pendingPrivateSteps: intersectPending(l.pendingPrivateSteps, q.pendingPrivateSteps) };
 }
 
 // ---------- reveal ----------
@@ -196,13 +220,24 @@ export function normalizeItem(
 
 // ---------- journey ----------
 
-export function mergeJourney(L: Journey, P: NonNullable<SlotPayload['journey']>, link: LiveLink, partnerId: string): Journey {
+export function mergeJourney(
+  L: Journey,
+  P: NonNullable<SlotPayload['journey']>,
+  link: LiveLink,
+  partnerId: string,
+): Journey {
   const partnerSlot: 0 | 1 = link.slot === 0 ? 1 : 0;
   const local = link.localPlayerId;
 
   const chapterProgress: Journey['chapterProgress'] = {};
   for (const ch of new Set([...Object.keys(L.chapterProgress), ...Object.keys(P.chapterProgress)]))
-    chapterProgress[ch] = mergeProgress(L.chapterProgress[ch], P.chapterProgress[ch], partnerSlot);
+    chapterProgress[ch] = mergeProgress(
+      L.chapterProgress[ch],
+      P.chapterProgress[ch],
+      partnerSlot,
+      local,
+      partnerId,
+    );
 
   const storyAnswers = Object.fromEntries([
     ...Object.entries(L.storyAnswers).filter(([, a]) => a.playerId !== partnerId),
@@ -226,7 +261,11 @@ export function mergeJourney(L: Journey, P: NonNullable<SlotPayload['journey']>,
   }
 
   const scenario =
-    L.scenario && P.scenario ? (P.scenario.setAt > L.scenario.setAt ? P.scenario : L.scenario) : (L.scenario ?? P.scenario);
+    L.scenario && P.scenario
+      ? P.scenario.setAt > L.scenario.setAt
+        ? P.scenario
+        : L.scenario
+      : (L.scenario ?? P.scenario);
 
   const otherSide =
     L.otherSide && P.otherSide
@@ -238,12 +277,20 @@ export function mergeJourney(L: Journey, P: NonNullable<SlotPayload['journey']>,
   return {
     ...L,
     ...(otherSide ? { otherSide } : {}),
-    status: L.status === 'archived' ? 'archived' : L.status === 'completed' || P.status === 'completed' ? 'completed' : L.status,
+    status:
+      L.status === 'archived'
+        ? 'archived'
+        : L.status === 'completed' || P.status === 'completed'
+          ? 'completed'
+          : L.status,
     ...(scenario ? { scenario } : {}),
     chapterProgress,
     storyAnswers,
     mirrorItems,
-    observed: [...L.observed.filter((o) => o.playerId !== partnerId), ...P.observed.filter((o) => o.playerId === partnerId)],
+    observed: [
+      ...L.observed.filter((o) => o.playerId !== partnerId),
+      ...P.observed.filter((o) => o.playerId === partnerId),
+    ],
     nextConversation: [
       ...L.nextConversation.filter((n) => n.ownerId !== partnerId),
       ...P.nextConversation.filter((n) => n.ownerId === partnerId),
@@ -272,7 +319,10 @@ export function mergePartner(save: SaveRoot, link: LiveLink, p: SlotPayload): Sa
       // The partner created the journey (the inviter's device adopts it, docs/05 §5.3).
       const t = p.journey.updatedAt;
       journeys = Object.fromEntries(
-        Object.entries(save.journeys).map(([k, j]) => [k, j.status === 'active' ? { ...j, status: 'archived' as const, updatedAt: t } : j]),
+        Object.entries(save.journeys).map(([k, j]) => [
+          k,
+          j.status === 'active' ? { ...j, status: 'archived' as const, updatedAt: t } : j,
+        ]),
       );
       journeys[link.journeyId] = { ...p.journey, mode: 'remote_online', remote: remoteFor(link) };
       settings = { ...settings, lastJourneyId: link.journeyId };
@@ -293,3 +343,6 @@ export function livePartnerIds(save: SaveRoot): Set<string> {
   }
   return out;
 }
+
+/** `decline:<startedAt>` — "ขอเวลาก่อน" for one chapter invitation (one run of the chapter). docs/07. */
+export const declineItem = (startedAt: string | undefined) => `decline:${startedAt ?? ''}`;

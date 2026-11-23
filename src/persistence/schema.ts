@@ -147,6 +147,10 @@ export const ChapterProgress = z.object({
   playCount: z.number().int().min(0),
   /** Phase 3C: bumped on every local position change; the higher one wins a merge (docs/10 §10.3). */
   syncSeq: z.number().int().min(0).optional(),
+  /** Phase 3C: each device's own reading position (docs/05 §5.3 ต่างคนต่างอ่าน, docs/07). */
+  livePos: z
+    .record(z.object({ sceneId: z.string(), lineIndex: z.number().int().min(0), end: z.boolean().optional() }))
+    .optional(),
 });
 
 export const StoryAnswer = z.object({
