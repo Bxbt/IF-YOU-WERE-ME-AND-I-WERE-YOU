@@ -8,6 +8,7 @@ import {
   playThrough,
   seed,
   seedSave,
+  tap,
   T,
   transitionHeading,
 } from './helpers';
@@ -31,8 +32,8 @@ test('Ch1 plays from chapter selection through scenario setup to the end (M4 exi
   await expect(page.getByRole('button', { name: 'เริ่มเรื่อง' })).toBeDisabled();
   await noOverflow(page);
   await noSeriousA11y(page);
-  await page.getByRole('button', { name: 'ฉันเอง' }).click();
-  await page.getByRole('button', { name: 'เริ่มเรื่อง' }).click();
+  await tap(page.getByRole('button', { name: 'ฉันเอง' }));
+  await tap(page.getByRole('button', { name: 'เริ่มเรื่อง' }));
 
   await expect(page).toHaveURL(new RegExp(`/j/${J}/play/ch1$`));
   await expect(page.getByText('เย็นวันพฤหัสบดี ฝนตกปรอย ๆ มาตั้งแต่บ่าย').first()).toBeVisible();
