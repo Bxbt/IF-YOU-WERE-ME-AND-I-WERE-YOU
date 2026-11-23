@@ -20,7 +20,6 @@ import {
   type StoryState,
   type TokenContext,
 } from '../../src/engine/dialogue';
-import type { Step } from '../../src/engine/dialogue';
 import { sampleSave } from '../fixtures/factory';
 import {
   buildStoryState,
@@ -105,7 +104,7 @@ describe('tokens', () => {
 describe('TC-PLAY-04: priorWarning=false', () => {
   it('hides lines that need priorWarning=true and uses the other option texts', () => {
     const off = texts('ch1_s01', S({ priorWarning: false }));
-    expect(off.join()).not.toContain('แบตเหลือน้อยนะ');
+    expect(off.join()).not.toContain('ลิฟต์ตัวขวาเมื่อวาน');
     expect(off.join()).toContain('เอาร่มไปด้วยนะ');
     expect(texts('ch1_s02', S({ priorWarning: false })).join()).not.toContain('เหลือตัวเดียวสินะ');
     const c01 = expandScene(sceneById(ch1, 'ch1_s01')!, S({ priorWarning: false })).find(
@@ -117,7 +116,7 @@ describe('TC-PLAY-04: priorWarning=false', () => {
   });
 
   it('priorWarning=true shows the warning', () => {
-    expect(texts('ch1_s01', S()).join()).toContain('แบตเหลือน้อยนะ');
+    expect(texts('ch1_s01', S()).join()).toContain('ลิฟต์ตัวขวาเมื่อวาน');
   });
 });
 
@@ -131,11 +130,9 @@ describe('interpreter', () => {
     const scene = sceneById(ch1, 'ch1_s02')!;
     const steps = expandScene(scene, S());
     const last = steps.length - 1;
-    expect(envAt(scene, steps, 1).bg).toBe('bg_convenience_store');
-    expect(envAt(scene, steps, 1).rain).toBe('light');
-    // Later the rain pours down with lightning (docs/02 ch1_s02).
-    expect(envAt(scene, steps, last).rain).toBe('heavy');
-    expect(envAt(scene, steps, last).light).toBe('flicker');
+    expect(envAt(scene, steps, last).bg).toBe('bg_elevator_emergency');
+    expect(envAt(scene, steps, 1).bg).toBe('bg_corridor');
+    expect(envAt(scene, steps, 1).light).toBe('flicker');
   });
 
   it('response lines follow the chosen option and nothing else', () => {
@@ -187,13 +184,8 @@ describe('interpreter', () => {
   it('shake happens once between positions; perspective follows choice owner', () => {
     const scene = sceneById(ch1, 'ch1_s02')!;
     const steps = expandScene(scene, S());
-    const shaky: Step[] = [
-      { kind: 'env', set: { light: 'flicker' } },
-      { kind: 'env', set: { shake: 'small' } },
-    ] as Step[];
-    expect(shakeBetween(shaky, 0, 2)).toBe(true);
-    expect(shakeBetween(shaky, 0, 1)).toBe(false);
-    expect(shakeBetween(steps, 0, steps.length)).toBe(false); // the rainy night has no shaking
+    expect(shakeBetween(steps, 0, steps.length)).toBe(true);
+    expect(shakeBetween(steps, 0, 2)).toBe(false);
     const choiceIdx = steps.findIndex((x) => x.kind === 'choice');
     expect(controllingRole(scene, steps[choiceIdx])).toBe('insider');
     expect(lineBefore(steps, choiceIdx)?.kind).toBe('line');
@@ -280,12 +272,7 @@ describe('resolveQuestion', () => {
       address: { in: 'เธอ', out: 'เธอ' },
     };
     const q = resolveQuestion(
-      {
-        id: 'x',
-        self: 'อยากให้ {other} รู้',
-        perceived: '{other} คิด',
-        options: [{ id: 'a', text: 'ชวน {other}' }],
-      },
+      { id: 'x', self: 'อยากให้ {other} รู้', perceived: '{other} คิด', options: [{ id: 'a', text: 'ชวน {other}' }] },
       ctx,
     );
     expect(q.self).toBe('อยากให้ เมฆ รู้');

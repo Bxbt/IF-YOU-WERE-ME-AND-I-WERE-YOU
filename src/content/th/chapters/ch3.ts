@@ -44,24 +44,24 @@ export const ch3: ChapterContent = {
   scenes: [
     {
       id: 'ch3_s01',
-      background: 'bg_building_entrance',
-      ariaLabel: 'ล็อบบี้ชั้นล่าง ไฟสีขาวเย็น ประตูกระจกเปิดอยู่ ฝนซาลงแล้ว',
+      background: 'bg_lobby_floor6',
+      ariaLabel: 'โถงหน้าลิฟต์ชั้นหก ไฟสีขาวเย็น ประตูลิฟต์เปิดอยู่',
       controller: 'narrator',
       lines: [
         // docs/02: "light: white_cold" → normal light.
-        { type: 'ENV', set: { bg: 'bg_building_entrance', light: 'normal', door: 'open', music: 'none' } },
-        { type: 'NARR', text: '{in} ก้าวเข้ามาทางประตูกระจก ตัวเปียกครึ่งตัว มือยังเย็นเฉียบ' },
+        { type: 'ENV', set: { bg: 'bg_lobby_floor6', light: 'normal', door: 'open', music: 'none' } },
+        { type: 'NARR', text: '{in} ก้าวออกมาจากลิฟต์ หน้าซีด มือยังสั่นอยู่เล็กน้อย' },
         { type: 'NARR', text: '{out} ยืนอยู่ตรงนั้น ห่างไปสามก้าว' },
       ],
       next: 'ch3_c01',
     },
     {
       id: 'ch3_c01',
-      background: 'bg_building_entrance',
-      ariaLabel: 'สองคนยืนห่างกันสามก้าวในล็อบบี้ชั้นล่าง',
+      background: 'bg_lobby_floor6',
+      ariaLabel: 'สองคนยืนห่างกันสามก้าวในโถงหน้าลิฟต์ชั้นหก',
       controller: 'waiter',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_building_entrance', light: 'normal', door: 'open' } },
+        { type: 'ENV', set: { bg: 'bg_lobby_floor6', light: 'normal', door: 'open' } },
         { type: 'NARR', text: 'ช่วงเวลาเงียบ ๆ ที่ยาวกว่าที่ควร' },
         {
           type: 'CHOICE',
@@ -106,11 +106,11 @@ export const ch3: ChapterContent = {
     },
     {
       id: 'ch3_s02',
-      background: 'bg_building_entrance',
-      ariaLabel: 'ล็อบบี้ชั้นล่าง สองคนยืนเผชิญหน้ากัน',
+      background: 'bg_lobby_floor6',
+      ariaLabel: 'โถงหน้าลิฟต์ชั้นหก สองคนยืนเผชิญหน้ากัน',
       controller: 'insider',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_building_entrance', light: 'normal', door: 'open' } },
+        { type: 'ENV', set: { bg: 'bg_lobby_floor6', light: 'normal', door: 'open' } },
         {
           type: 'SAFETY_NOTE',
           text: 'ความกังวลเป็นสิ่งที่เข้าใจได้ — แต่ไม่ได้แปลว่าคำพูดที่ทำให้อีกคนเจ็บเป็นเรื่องที่ไม่เป็นไร ทั้งสองอย่างจริงได้พร้อมกัน',
@@ -196,11 +196,11 @@ export const ch3: ChapterContent = {
     },
     {
       id: 'ch3_c02',
-      background: 'bg_building_entrance',
-      ariaLabel: 'ล็อบบี้ชั้นล่าง ทางขึ้นบันไดอยู่ไม่ไกล',
+      background: 'bg_lobby_floor6',
+      ariaLabel: 'โถงหน้าลิฟต์ชั้นหก ทางขึ้นบันไดอยู่ไม่ไกล',
       controller: 'insider',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_building_entrance', light: 'normal', door: 'open' } },
+        { type: 'ENV', set: { bg: 'bg_lobby_floor6', light: 'normal', door: 'open' } },
         {
           type: 'CHOICE',
           id: 'ch3_c02',
@@ -264,7 +264,7 @@ export const ch3: ChapterContent = {
               when: FIRST('ask_hug'),
               setFlags: { in_resp: 'hug_yes' },
               tag: 'D05:physical',
-              responseLines: [{ type: 'NARR', text: 'สองคนกอดกันกลางล็อบบี้ ยามมองไปทางอื่น' }],
+              responseLines: [{ type: 'NARR', text: 'สองคนกอดกันกลางโถงชั้นหก ยามมองไปทางอื่น' }],
             },
             {
               id: 'e_later',
@@ -284,23 +284,23 @@ export const ch3: ChapterContent = {
     },
     {
       id: 'ch3_s04',
-      background: 'bg_building_entrance',
-      ariaLabel: 'ล็อบบี้ชั้นล่างที่เงียบลง',
+      background: 'bg_lobby_floor6',
+      ariaLabel: 'โถงหน้าลิฟต์ชั้นหกที่เงียบลง',
       controller: 'narrator',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_building_entrance', light: 'normal', door: 'open' } },
+        { type: 'ENV', set: { bg: 'bg_lobby_floor6', light: 'normal', door: 'open' } },
         { type: 'INTERPRETATION' },
       ],
       next: 'ch3_s05',
     },
     {
       id: 'ch3_s05',
-      background: 'bg_building_entrance',
-      ariaLabel: 'ล็อบบี้ชั้นล่างที่เงียบลง',
+      background: 'bg_lobby_floor6',
+      ariaLabel: 'โถงหน้าลิฟต์ชั้นหกที่เงียบลง',
       controller: 'narrator',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_building_entrance', light: 'normal', door: 'open' } },
-        { type: 'SYS', text: 'ตอนนั้นที่ล็อบบี้…' },
+        { type: 'ENV', set: { bg: 'bg_lobby_floor6', light: 'normal', door: 'open' } },
+        { type: 'SYS', text: 'ตอนนั้นในโถงชั้นหก…' },
         { type: 'MIRROR', questionId: 'w3_1' },
         { type: 'MIRROR', questionId: 'w3_2' },
       ],
@@ -308,11 +308,11 @@ export const ch3: ChapterContent = {
     },
     {
       id: 'ch3_s06',
-      background: 'bg_building_entrance',
-      ariaLabel: 'ภาพย้อนกลับไปที่ล็อบบี้ชั้นล่าง ตอนที่สองคนเพิ่งเจอหน้ากัน',
+      background: 'bg_lobby_floor6',
+      ariaLabel: 'ภาพย้อนกลับไปที่โถงหน้าลิฟต์ชั้นหก ตอนที่สองคนเพิ่งเจอหน้ากัน',
       controller: 'narrator',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_building_entrance', light: 'normal', door: 'open' } },
+        { type: 'ENV', set: { bg: 'bg_lobby_floor6', light: 'normal', door: 'open' } },
         {
           type: 'CHOICE',
           id: 'ch3_s06_out',
@@ -371,11 +371,11 @@ export const ch3: ChapterContent = {
     },
     {
       id: 'ch3_reflect',
-      background: 'bg_building_entrance',
-      ariaLabel: 'ล็อบบี้ชั้นล่างที่เงียบลง',
+      background: 'bg_lobby_floor6',
+      ariaLabel: 'โถงหน้าลิฟต์ชั้นหกที่เงียบลง',
       controller: 'narrator',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_building_entrance', light: 'normal', door: 'open' } },
+        { type: 'ENV', set: { bg: 'bg_lobby_floor6', light: 'normal', door: 'open' } },
         { type: 'REFLECTION' },
       ],
       next: 'ch3_end',

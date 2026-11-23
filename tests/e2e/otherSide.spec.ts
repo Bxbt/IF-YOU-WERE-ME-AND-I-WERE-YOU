@@ -13,7 +13,7 @@ test('TC-OS-01/05: storyline tab → pick the teller → play os1 to the end; th
   await page.goto(`/#/j/${J}/chapters`);
 
   // Main tab first, as before.
-  await expect(page.getByRole('tab', { name: /คืนที่ฝนตกหนัก/ })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tab', { name: /คืนที่ลิฟต์ค้าง/ })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('article', { name: /The Incident/ })).toBeVisible();
   await tap(page.getByRole('tab', { name: /อีกด้านของเรื่อง/ }));
   await expect(page).toHaveURL(/line=other/);
