@@ -163,6 +163,9 @@ interface ViewRun {
   state: StoryState;
 }
 
+/** Live chapter-start gate: a pending entry listing who has not entered the chapter yet. */
+const READY_ITEM = 'ready';
+
 const VARIANT: Record<string, LineVariant> = {
   DLG: 'dlg',
   NARR: 'narr',
@@ -216,11 +219,15 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     const explicitStart = params.get('start') === '1';
     if (explicitStart || (p.status !== 'in_progress' && p.status !== 'completed')) {
       const m = startOfChapter(content, freshState());
-      apply((s) =>
-        m.kind === 'at'
-          ? startChapter(s, journey.id, ch, m.pos.sceneId, m.pos.lineIndex)
-          : completeChapter(s, journey.id, ch),
-      );
+      const lk = linkOf(journey);
+      apply((s) => {
+        if (m.kind !== 'at') return completeChapter(s, journey.id, ch);
+        const started = startChapter(s, journey.id, ch, m.pos.sceneId, m.pos.lineIndex);
+        // Live (docs/05 §5.3): the chapter waits until the partner has entered it too.
+        if (!lk) return started;
+        const others = journey.playerIds.filter((x) => x !== lk.localPlayerId);
+        return setPendingPrivate(started, journey.id, ch, READY_ITEM, others, true);
+      });
       useGame.getState().flush();
       if (explicitStart) setParams({}, { replace: true });
     } else if (p.status === 'in_progress') {
@@ -269,6 +276,15 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     [together, isPrivate, pendingEntry, journey.playerIds],
   );
   const answeringId = live ? localId! : together && isPrivate ? (remaining[0] ?? selfId) : selfId;
+  /** Live: who has not entered this chapter yet (docs/05 §5.3 "เริ่มบท"). */
+  const readyEntry = live ? progress.pendingPrivateSteps?.find((x) => x.itemId === READY_ITEM) : undefined;
+  const waitingEnter = !!readyEntry && !view && !ended && readyEntry.playerIds.some((x) => x !== localId);
+  useEffect(() => {
+    // Being on this chapter's screen means this player has arrived.
+    if (!live || view || !readyEntry?.playerIds.includes(localId!)) return;
+    const rest = readyEntry.playerIds.filter((x) => x !== localId);
+    apply((s) => setPendingPrivate(s, journey.id, ch, READY_ITEM, rest, true));
+  }, [live, view, readyEntry, localId, journey.id, ch]);
   /** Live: this player has sent their part; the partner has not yet. */
   const waitingPartner = live && isPrivate && !view && remaining.length > 0 && !remaining.includes(localId!);
   const answeringRole = together ? roleOf(journey, answeringId) : mySelfRole;
@@ -1013,7 +1029,14 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         {live && <LiveStatusLine partnerName={nick(journey.playerIds.find((x) => x !== localId) ?? '')} />}
         <SafetyNotes notes={notes} onClose={(t) => setClosedNotes((c) => [...c, t])} />
         {/* While handing over, the next player's form is not even rendered (TC-PRIV-01). */}
-        {privateHandoff ? null : reveal && together && !view ? (
+        {waitingEnter ? (
+          <div className="panel flex flex-col items-center gap-2 text-center" data-testid="live-wait-enter">
+            <p role="status" className="m-0 font-semibold">
+              {ui.live.waitEnter(readyEntry!.playerIds.filter((x) => x !== localId).map(nick).join(', '))}
+            </p>
+            <p className="m-0 text-sm text-lavender">{ui.live.waitEnterHint}</p>
+          </div>
+        ) : privateHandoff ? null : reveal && together && !view ? (
           <RevealPanel
             key={reveal.keys.join(',')}
             journey={journey}

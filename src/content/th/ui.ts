@@ -593,6 +593,8 @@ export const ui = {
     waitChoice: (name: string) => `รอ ${name} เลือก…`,
     waitAnswer: (name: string) => `ส่งแล้ว · รอ ${name} ตอบ…`,
     waitAnswerHint: 'เรื่องจะเดินต่อเองเมื่ออีกฝ่ายส่ง',
+    waitEnter: (name: string) => `รอ ${name} เข้าบทนี้…`,
+    waitEnterHint: 'บทจะเริ่มพร้อมกันเมื่ออีกฝ่ายกดเข้าบทนี้ — จะได้ไม่มีใครอ่านล่วงหน้า',
     waitConsent: (name: string) => `รอ ${name} ตัดสินใจ`,
     partnerConsented: (name: string) => `${name} ยินยอมแล้ว`,
     onPartnerDevice: (name: string) => `หน้านี้เป็นของ ${name} — เปิดได้บนเครื่องของ ${name} เท่านั้น`,

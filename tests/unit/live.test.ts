@@ -4,7 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { createEmptySave, SaveRoot, type GameSession, type SaveRoot as Save } from '../../src/persistence/schema';
 import { buildPayload, mergePartner, remoteFor, stampSeq, type LiveLink, type SlotPayload } from '../../src/live/merge';
 import { decryptJson, encryptJson, newRoomId, newRoomKey, parseJoin } from '../../src/live/crypto';
-import { submitTogetherMirror, consentItems, setPendingPrivate } from '../../src/store/story';
+import { submitTogetherMirror, consentItems, setPendingPrivate, startChapter } from '../../src/store/story';
 // @ts-expect-error — plain ESM server module without types
 import { createApp, memoryStore } from '../../server/index.mjs';
 
@@ -105,6 +105,30 @@ describe('Live merge', () => {
     const a2 = mergePartner(a, linkFor(0), payloadOf(b, 1));
     const b2 = mergePartner(b, linkFor(1), payloadOf(a, 0));
     for (const s of [a2, b2]) expect(progress(s).pendingPrivateSteps).toEqual([{ itemId: 's1:3', playerIds: [] }]);
+  });
+
+  it('TC-LIVE-09: a chapter starts only after both entered it — one after the other, or at once', () => {
+    // Device enters ch2: start it (commit hook stamps syncSeq) and wait for everyone else.
+    const enter = (s: Save, self: string) => {
+      const started = startChapter(s, JID, 'ch2', 's1', 0);
+      const stamped = { ...started, journeys: { [JID]: stampSeq(s.journeys[JID], started.journeys[JID]!) } };
+      return setPendingPrivate(stamped, JID, 'ch2', 'ready', [A, B].filter((x) => x !== self), true);
+    };
+    const ready = (s: Save) => progress(s, 'ch2').pendingPrivateSteps?.find((x) => x.itemId === 'ready')?.playerIds;
+
+    // One after the other: A waits for B; B receives A's start and arrives.
+    const a = enter(device(0), A);
+    expect(ready(a)).toEqual([B]);
+    let b = mergePartner(device(1), linkFor(1), payloadOf(a, 0));
+    expect(ready(b)).toEqual([B]);
+    b = setPendingPrivate(b, JID, 'ch2', 'ready', [], true);
+    expect(ready(mergePartner(a, linkFor(0), payloadOf(b, 1)))).toEqual([]);
+
+    // At once: both start from the same state, each waiting for the other → nobody is stuck.
+    const a2 = enter(device(0), A);
+    const b2 = enter(device(1), B);
+    expect(ready(mergePartner(a2, linkFor(0), payloadOf(b2, 1)))).toEqual([]);
+    expect(ready(mergePartner(b2, linkFor(1), payloadOf(a2, 0)))).toEqual([]);
   });
 
   it('TC-LIVE-03: the higher syncSeq wins; a tie goes to slot 0 on both devices', () => {

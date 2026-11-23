@@ -15,7 +15,7 @@ test('TC-LIVE-08: without a relay, live play is disabled with the reason shown',
   await expect(page.getByRole('button', { name: 'สร้างห้องเล่นสด' })).toHaveCount(0);
 });
 
-test('TC-LIVE-07: create room → join by link → same scene, controller chooses, private step waits for both', async ({
+test('TC-LIVE-07/09: create room → join by link → both enter Ch1 → same scene, controller chooses, private step waits for both', async ({
   browser,
 }, info) => {
   test.skip(info.project.name !== 'desktop', 'two-device flow runs once, on desktop');
@@ -45,8 +45,13 @@ test('TC-LIVE-07: create room → join by link → same scene, controller choose
   await tap(a.getByRole('button', { name: 'เริ่มเรื่อง' }));
   await expect(a.getByTestId('play')).toBeVisible();
   await expect(a.getByTestId('live-status')).toContainText('ส่งแล้ว', { timeout: 15_000 });
+  // TC-LIVE-09: the chapter waits until the partner has entered it too — nobody reads ahead.
+  await expect(a.getByTestId('live-wait-enter')).toContainText('รอ เมฆ', { timeout: 15_000 });
+  await expect(a.getByRole('button', { name: /^(ถัดไป|แสดงข้อความทั้งหมด)$/ })).toHaveCount(0);
   await b.goto(`/#/j/${jid}/play/ch1`);
   await expect(b.getByTestId('play')).toBeVisible({ timeout: 15_000 });
+  await expect(a.getByTestId('live-wait-enter')).toBeHidden({ timeout: 15_000 });
+  await expect(b.getByTestId('live-wait-enter')).toBeHidden();
 
   // A plays forward until somebody has to choose.
   const choicesA = a.getByRole('group', { name: 'เลือกสิ่งที่จะทำ' });
