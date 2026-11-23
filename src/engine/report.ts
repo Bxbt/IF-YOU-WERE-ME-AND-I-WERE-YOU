@@ -11,7 +11,13 @@ import { SIGNALS } from '../content/th/signals';
 import { compareTogether, optionTexts, soloPairs, type Comparison } from './compare';
 
 /** partner_revealed = something the partner agreed to open (docs/07 §8); never preselected for export. */
-export type ReportSource = 'self' | 'perceived' | 'statement' | 'conversation' | 'partner_revealed' | 'observed';
+export type ReportSource =
+  | 'self'
+  | 'perceived'
+  | 'statement'
+  | 'conversation'
+  | 'partner_revealed'
+  | 'observed';
 
 export interface ReportItem {
   id: string;
@@ -283,58 +289,28 @@ export function buildReport(
 export const allItems = (sections: ReportSection[]) =>
   sections.flatMap((s) => s.groups.flatMap((g) => g.items));
 
-/** docs/07 §11.3: UTF-8, section headings, a source label on every line, footer with date. */
-export function reportToTxt(
-  sections: ReportSection[],
-  selected: Set<string>,
-  meta: { title: string; date: string },
-): string {
-  const t = templates.report;
-  const lines: string[] = [meta.title, t.date(meta.date), ''];
-  for (const s of sections) {
-    lines.push(`== ${s.title} ==`);
-    for (const g of s.groups) {
-      const items = g.items.filter((i) => selected.has(i.id));
-      if (items.length === 0) continue;
-      lines.push(`-- ${g.title} --`);
-      for (const i of items) lines.push(`[${t.source[i.source]}] ${i.text}`);
-    }
-    lines.push('');
-  }
-  lines.push(t.fileFooter(meta.date));
-  return lines.join('\n');
+export interface PrintSection {
+  title: string;
+  groups: { title: string; items: { label: string; text: string }[] }[];
 }
 
-/** JSON export (docs/07 §8 ReflectionReport) with only the selected items. */
-export function reportToJson(
-  sections: ReportSection[],
-  selected: Set<string>,
-  meta: { id: string; journeyId: string; ownerId: string; generatedAt: string },
-): string {
-  const pick = (id: ReportSection['id']) =>
-    allItems(sections.filter((s) => s.id === id))
-      .filter((i) => selected.has(i.id))
-      .map(({ id: itemId, text, source, questionId, dimension }) => ({
-        id: itemId,
-        text,
-        source,
-        ...(questionId ? { questionId } : {}),
-        ...(dimension ? { dimension } : {}),
-      }));
-  return JSON.stringify(
-    {
-      ...meta,
-      selectedItemIds: [...selected],
-      format: 'json',
-      sections: {
-        myPersonality: pick('me'),
-        myUnderstanding: pick('understanding'),
-        ourDifferences: pick('differences'),
-        nextConversation: pick('next'),
-        confirmedPatterns: [],
-      },
-    },
-    null,
-    2,
-  );
+/**
+ * docs/07 §11.3 PDF summary: only the selected items, by section and group, each with its source
+ * label. Sections or groups with nothing selected are left out.
+ */
+export function reportForPrint(sections: ReportSection[], selected: Set<string>): PrintSection[] {
+  const t = templates.report;
+  return sections
+    .map((s) => ({
+      title: s.title,
+      groups: s.groups
+        .map((g) => ({
+          title: g.title,
+          items: g.items
+            .filter((i) => selected.has(i.id))
+            .map((i) => ({ label: t.source[i.source], text: i.text })),
+        }))
+        .filter((g) => g.items.length > 0),
+    }))
+    .filter((s) => s.groups.length > 0);
 }

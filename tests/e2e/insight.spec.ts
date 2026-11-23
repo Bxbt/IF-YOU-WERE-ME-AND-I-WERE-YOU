@@ -1,7 +1,6 @@
 /** M6 — S8 Comparison, S9 Report, exports (docs/12 M6 exit criteria). Fictional names only. */
-import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { A, J, noOverflow, noSeriousA11y, seed, seedSave, T } from './helpers';
+import { A, J, noOverflow, noSeriousA11y, seed, seedSave, T, tap } from './helpers';
 
 const answer = (
   questionId: string,
@@ -91,13 +90,14 @@ test('TC-SKIP-10: empty journey → S9 shows the four sections with CTAs; TXT ex
   await expect(page.getByRole('link', { name: 'ตอบ 3 คำถาม' }).first()).toBeVisible();
   await noOverflow(page);
   await noSeriousA11y(page);
-  await page.getByRole('button', { name: 'ข้อความ (.txt)' }).click();
-  const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'ดาวน์โหลด' }).click();
-  expect((await download).suggestedFilename()).toMatch(/^iywm-report-\d{8}-\d{4}\.txt$/);
+  // Only PNG and PDF; both wait until something is picked (docs/06 S9).
+  await expect(page.getByRole('button', { name: /\.txt|\.json/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'สรุปฉบับเต็ม (PDF)' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'การ์ดภาพ (PNG)' })).toBeDisabled();
+  await expect(page.getByText('เลือกรายการก่อน')).toBeVisible();
 });
 
-test('TC-EXP-07: select 3 items → TXT has only those 3 with source labels', async ({ page }) => {
+test('TC-EXP-07: select 3 items → PDF summary has only those 3 with source labels', async ({ page }) => {
   await seedSave(page, richSave());
   await page.goto(`/#/j/${J}/report/${A}`);
   await page.getByRole('button', { name: 'เลือกสิ่งที่จะแชร์/ส่งออก' }).click();
@@ -105,14 +105,23 @@ test('TC-EXP-07: select 3 items → TXT has only those 3 with source labels', as
   for (let i = 0; i < 3; i++) await boxes.nth(i).check();
   await expect(page.getByText('เลือกไว้ 3 รายการ')).toBeVisible();
   await noSeriousA11y(page);
-  await page.getByRole('button', { name: 'ข้อความ (.txt)' }).click();
-  await expect(page.getByTestId('text-preview')).toContainText('[คุณ');
-  const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'ดาวน์โหลด' }).click();
-  const text = readFileSync((await (await download).path())!, 'utf-8');
-  const lines = text.split('\n').filter((l) => l.startsWith('['));
-  expect(lines).toHaveLength(3);
-  for (const l of lines) expect(l).toMatch(/^\[(คุณบอก|คุณคิด|คุณเขียน|คำถามครั้งหน้า)\] /);
+  await tap(page.getByRole('button', { name: 'สรุปฉบับเต็ม (PDF)' }));
+  const preview = page.getByTestId('text-preview');
+  await expect(preview.locator('li')).toHaveCount(3);
+  for (const li of await preview.locator('li').all())
+    expect(await li.textContent()).toMatch(/^\[(คุณบอก|คุณคิด|คุณเขียน|คำถามครั้งหน้า)\] /);
+  // Printing shows only the summary document; the button opens the browser's print dialog.
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('#print-root li')).toHaveCount(3);
+  await expect(page.locator('#print-root')).toBeVisible();
+  await expect(page.locator('#root')).toBeHidden();
+  await page.emulateMedia({ media: 'screen' });
+  await page.evaluate(() => {
+    (window as unknown as { printed: number }).printed = 0;
+    window.print = () => void (window as unknown as { printed: number }).printed++;
+  });
+  await tap(page.getByRole('button', { name: 'บันทึกเป็น PDF' }));
+  expect(await page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
 });
 
 test('TC-EXP-08: PNG card is 1080×1350', async ({ page }, info) => {
@@ -124,7 +133,7 @@ test('TC-EXP-08: PNG card is 1080×1350', async ({ page }, info) => {
   await page.goto(`/#/j/${J}/report/${A}`);
   await page.getByRole('button', { name: 'เลือกสิ่งที่จะแชร์/ส่งออก' }).click();
   await page.getByRole('checkbox').first().check();
-  await page.getByRole('button', { name: 'การ์ดภาพ (.png)' }).click();
+  await page.getByRole('button', { name: 'การ์ดภาพ (PNG)' }).click();
   const img = page.getByTestId('png-preview');
   await expect(img).toBeVisible();
   const size = await img.evaluate((el: HTMLImageElement) => [el.naturalWidth, el.naturalHeight]);

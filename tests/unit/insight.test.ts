@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PersonalityAnswer, SaveRoot } from '../../src/persistence/schema';
 import { categorize, compareSolo } from '../../src/engine/compare';
-import { allItems, buildReport, reportToJson, reportToTxt } from '../../src/engine/report';
+import { allItems, buildReport, reportForPrint } from '../../src/engine/report';
 import { cut } from '../../src/engine/reportCard';
 import { saveMirrorAnswer } from '../../src/store/story';
 import { exportFileName, stripUnknownOptions } from '../../src/persistence/exportImport';
@@ -127,18 +127,15 @@ describe('comparison (Solo)', () => {
 describe('report', () => {
   const build = (s: SaveRoot) => buildReport(s, s.journeys[J]!, A, compareSolo(s, s.journeys[J]!));
 
-  it('TC-SKIP-10: an empty journey still has all four sections; TXT export works with only headings', () => {
+  it('TC-SKIP-10: an empty journey still has all four sections; nothing selected → empty PDF summary', () => {
     const s = sampleSave();
     s.profiles = {};
     const sections = build(s);
     expect(sections.map((x) => x.id)).toEqual(['me', 'understanding', 'differences', 'next']);
-    const txt = reportToTxt(sections, new Set(), { title: 'สมุดบันทึก', date: '22 พฤศจิกายน 2569' });
-    expect(txt).toContain('== ตัวฉัน ==');
-    expect(txt).toContain('สร้างจาก IF YOU WERE ME, AND I WERE YOU');
-    expect(txt).not.toMatch(/\[คุณ/);
+    expect(reportForPrint(sections, new Set())).toEqual([]);
   });
 
-  it('TC-EXP-07: TXT contains only the selected items, each with its source label', () => {
+  it('TC-EXP-07: the PDF summary has only the selected items, each with its source label', () => {
     const s = withPerceived(sampleSave(), {
       Q13: ans('Q13', ['q13_listen'], null, { layer: 'perceived' }),
       Q22: ans('Q22', [], 'not_sure', { layer: 'perceived' }),
@@ -150,21 +147,12 @@ describe('report', () => {
       items.find((i) => i.source === 'perceived')!,
       items.find((i) => i.source === 'conversation')!,
     ];
-    const txt = reportToTxt(sections, new Set(pick.map((i) => i.id)), { title: 't', date: 'd' });
-    const lines = txt.split('\n').filter((l) => l.startsWith('['));
-    expect(lines).toHaveLength(3);
-    expect(lines[0]).toMatch(/^\[คุณบอก\] /);
-    expect(lines.some((l) => l.startsWith('[คุณคิด] '))).toBe(true);
-    const json = JSON.parse(
-      reportToJson(sections, new Set(pick.map((i) => i.id)), {
-        id: 'rp_1',
-        journeyId: J,
-        ownerId: A,
-        generatedAt: T,
-      }),
-    );
-    const n = Object.values(json.sections as Record<string, unknown[]>).reduce((acc, a) => acc + a.length, 0);
-    expect(n).toBe(3);
+    const doc = reportForPrint(sections, new Set(pick.map((i) => i.id)));
+    const shown = doc.flatMap((x) => x.groups.flatMap((g) => g.items));
+    expect(shown).toHaveLength(3);
+    expect(shown.map((i) => i.label)).toContain('คุณบอก');
+    expect(shown.map((i) => i.label)).toContain('คุณคิด');
+    expect(doc.every((x) => x.groups.every((g) => g.items.length > 0))).toBe(true);
   });
 
   it('perceived "ไม่แน่ใจ" lands in "สิ่งที่ฉันยังไม่เข้าใจ"', () => {
@@ -182,7 +170,7 @@ describe('report', () => {
 
   it('TC-EXP-09: export file names never contain player names', () => {
     const now = new Date('2026-11-22T10:05:00');
-    for (const ext of ['txt', 'json', 'png']) {
+    for (const ext of ['png', 'pdf']) {
       const name = exportFileName('report', now, ext);
       expect(name).toBe(`iywm-report-20261122-1005.${ext}`);
       expect(name).not.toContain('ผู้เล่น');

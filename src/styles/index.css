@@ -77,3 +77,33 @@ html[data-reduced-motion='true'] *::after {
     font-size: max(16px, 1rem) !important;
   }
 }
+
+/* Report PDF (docs/07 §11.3): print only the summary document, as plain black on white. */
+#print-root {
+  display: none;
+}
+@media print {
+  body > *:not(#print-root) {
+    display: none !important;
+  }
+  #print-root {
+    display: block;
+    color: #000;
+    background: #fff;
+    font-size: 12pt;
+  }
+  #print-root * {
+    color: #000 !important;
+  }
+  #print-root h3 {
+    font-size: 16pt;
+  }
+  #print-root section {
+    break-inside: avoid-page;
+    margin-top: 10pt;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+}

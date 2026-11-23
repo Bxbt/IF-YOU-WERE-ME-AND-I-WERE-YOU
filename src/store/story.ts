@@ -546,7 +546,7 @@ export function recordReportExport(
   ownerId: string,
   id: string,
   selectedItemIds: string[],
-  format: 'txt' | 'json' | 'png',
+  format: 'txt' | 'json' | 'png' | 'pdf',
 ): SaveRoot {
   return {
     ...save,

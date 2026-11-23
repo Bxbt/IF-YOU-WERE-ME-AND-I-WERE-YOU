@@ -124,7 +124,7 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-EXP-04 | MVP | U | ไฟล์ไม่ใช่ JSON / > 5 MB / format ผิด | ปฏิเสธพร้อมข้อความเฉพาะกรณี ไม่มีข้อมูลเดิมหาย |
 | TC-EXP-05 | P2 | E | Import Journey id ซ้ำ → "เก็บเป็นสำเนา" | มี 2 Journey id ต่างกัน |
 | TC-EXP-06 | MVP | U | Import ที่มี option id ไม่รู้จัก | ถูกตัดและแสดงใน Import Preview |
-| TC-EXP-07 | MVP | E | Report → เลือก 3 รายการ → TXT | ไฟล์มีเฉพาะ 3 รายการ + ป้ายแหล่งที่มา |
+| TC-EXP-07 | MVP | E | Report → เลือก 3 รายการ → PDF | เอกสารพิมพ์มีเฉพาะ 3 รายการ + ป้ายแหล่งที่มา · กดบันทึกแล้วเรียกหน้าพิมพ์ของเบราว์เซอร์ · ไม่มีปุ่ม .txt/.json |
 | TC-EXP-08 | MVP | E | Report → PNG | ไฟล์ 1080×1350 · ข้อความไทยแสดงถูก (ตรวจ snapshot) |
 | TC-EXP-09 | MVP | U | ชื่อไฟล์ส่งออก | ไม่มีชื่อผู้เล่น |
 | TC-EXP-10 | MVP | U | Import ล้มเหลวกลางทาง (จำลอง throw) | คืนค่าจาก backup |

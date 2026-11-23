@@ -256,7 +256,8 @@ export const ReportSnapshot = z.object({
   ownerId: playerId,
   generatedAt: isoDate,
   selectedItemIds: z.array(z.string()),
-  format: z.enum(['txt', 'json', 'png']),
+  /** txt/json: older exports only; new exports are png or pdf (docs/07 §11.3). */
+  format: z.enum(['txt', 'json', 'png', 'pdf']),
 });
 
 export const Settings = z.object({

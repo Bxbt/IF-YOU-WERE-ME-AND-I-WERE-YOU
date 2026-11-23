@@ -5,7 +5,6 @@ import {
   BarChart3,
   CheckSquare,
   Download,
-  FileJson,
   FileText,
   Image as ImageIcon,
   Pencil,
@@ -22,14 +21,15 @@ import { SpriteView } from '../scene/CharacterCanvas';
 import { useGame } from '../store/game';
 import { addNextConversation, apply, recordReportExport, updateNextConversation } from '../store/story';
 import { compareSolo } from '../engine/compare';
-import { allItems, buildReport, reportToJson, reportToTxt, type ReportItem } from '../engine/report';
+import { allItems, buildReport, reportForPrint, type PrintSection, type ReportItem } from '../engine/report';
 import { canvasToBlob, drawReflectionCard, MAX_ITEMS } from '../engine/reportCard';
-import { downloadBlob, downloadText } from '../lib/download';
+import { createPortal } from 'react-dom';
+import { downloadBlob } from '../lib/download';
 import { exportFileName } from '../persistence/exportImport';
 import { newJourneyId } from '../lib/ids';
 
 const t = templates.report;
-type Format = 'txt' | 'json' | 'png';
+type Format = 'png' | 'pdf';
 
 /** S9 — Reflection Report (docs/06 S9, docs/04 §8). Built live; exports only what the player selects. */
 export function ReportScreen() {
@@ -38,7 +38,8 @@ export function ReportScreen() {
   const journey = save.journeys[journeyId];
   const owner = save.players[playerId];
   const sections = useMemo(
-    () => (journey && owner ? buildReport(save, journey, playerId, compareSolo(save, journey, playerId)) : []),
+    () =>
+      journey && owner ? buildReport(save, journey, playerId, compareSolo(save, journey, playerId)) : [],
     [save, journey, owner, playerId],
   );
   const items = useMemo(() => allItems(sections), [sections]);
@@ -153,26 +154,28 @@ export function ReportScreen() {
         <div className="flex flex-wrap gap-2">
           <PixelButton
             variant="ghost"
-            icon={<FileText aria-hidden className="h-5 w-5" />}
-            onClick={() => setPreview('txt')}
-          >
-            {ui.report.txt}
-          </PixelButton>
-          <PixelButton
-            variant="ghost"
-            icon={<FileJson aria-hidden className="h-5 w-5" />}
-            onClick={() => setPreview('json')}
-          >
-            {ui.report.json}
-          </PixelButton>
-          <PixelButton
-            variant="ghost"
             icon={<ImageIcon aria-hidden className="h-5 w-5" />}
+            disabled={picked.length === 0}
+            aria-describedby={picked.length === 0 ? 'export-need' : undefined}
             onClick={() => setPreview('png')}
           >
             {ui.report.png}
           </PixelButton>
+          <PixelButton
+            variant="ghost"
+            icon={<FileText aria-hidden className="h-5 w-5" />}
+            disabled={picked.length === 0}
+            aria-describedby={picked.length === 0 ? 'export-need' : undefined}
+            onClick={() => setPreview('pdf')}
+          >
+            {ui.report.pdf}
+          </PixelButton>
         </div>
+        {picked.length === 0 && (
+          <p id="export-need" className="m-0 text-[13px] text-lavender">
+            {ui.report.needPick}
+          </p>
+        )}
       </section>
 
       {preview && (
@@ -180,15 +183,8 @@ export function ReportScreen() {
           format={preview}
           onClose={() => setPreview(null)}
           onSwitch={setPreview}
-          make={() => ({
-            txt: reportToTxt(sections, selected, { title: t.heading(owner.nickname), date }),
-            json: reportToJson(sections, selected, {
-              id: `rp_${newJourneyId().slice(3)}`,
-              journeyId: journey.id,
-              ownerId: playerId,
-              generatedAt: new Date().toISOString(),
-            }),
-          })}
+          make={() => reportForPrint(sections, selected)}
+          title={t.heading(owner.nickname)}
           pngItems={picked}
           name={owner.nickname}
           date={date}
@@ -361,7 +357,8 @@ function ExportPreview(p: {
   format: Format;
   onClose: () => void;
   onSwitch: (f: Format) => void;
-  make: () => { txt: string; json: string };
+  make: () => PrintSection[];
+  title: string;
   pngItems: ReportItem[];
   name: string;
   date: string;
@@ -369,7 +366,7 @@ function ExportPreview(p: {
 }) {
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
-  const [text] = useState(() => (p.format === 'png' ? '' : p.make()[p.format]));
+  const [doc] = useState(() => (p.format === 'pdf' ? p.make() : []));
   const [png, setPng] = useState<{ url: string; blob: Blob } | null>(null);
   const [pngError, setPngError] = useState(false);
   // Captured once: the preview shows exactly what will be downloaded.
@@ -408,14 +405,13 @@ function ExportPreview(p: {
   }, [p.format, card]);
 
   function download() {
-    const ok =
-      p.format === 'png'
-        ? !!png && downloadBlob(exportFileName('report', new Date(), 'png'), png.blob)
-        : downloadText(
-            exportFileName('report', new Date(), p.format),
-            text,
-            p.format === 'txt' ? 'text/plain' : 'application/json',
-          );
+    if (p.format === 'pdf') {
+      // The browser's own print dialog saves the print-only document below as a PDF (docs/07 §11.3).
+      window.print();
+      p.onDone('pdf');
+      return;
+    }
+    const ok = !!png && downloadBlob(exportFileName('report', new Date(), 'png'), png.blob);
     toast(ok ? ui.report.downloaded : ui.report.downloadFailed, ok ? 'success' : 'error');
     if (ok) {
       p.onDone(p.format);
@@ -450,7 +446,7 @@ function ExportPreview(p: {
             pngError ? (
               <div className="flex flex-col items-start gap-2">
                 <p className="m-0">{ui.report.pngFailed}</p>
-                <PixelButton onClick={() => p.onSwitch('txt')}>{ui.report.useTxt}</PixelButton>
+                <PixelButton onClick={() => p.onSwitch('pdf')}>{ui.report.usePdf}</PixelButton>
               </div>
             ) : png ? (
               <img
@@ -465,9 +461,9 @@ function ExportPreview(p: {
               </p>
             )
           ) : (
-            <pre className="m-0 whitespace-pre-wrap break-words font-thai text-sm" data-testid="text-preview">
-              {text}
-            </pre>
+            <div data-testid="text-preview">
+              <PrintDoc title={p.title} date={p.date} sections={doc} />
+            </div>
           )}
         </div>
         {p.format === 'png' && (
@@ -475,15 +471,54 @@ function ExportPreview(p: {
             {ui.report.pngLimit.replace('5', String(MAX_ITEMS))}
           </p>
         )}
+        {p.format === 'pdf' && <p className="m-0 text-[13px] text-lavender">{ui.report.pdfHint}</p>}
         <PixelButton
           onClick={download}
           disabled={p.format === 'png' && !png}
           icon={<Download aria-hidden className="h-5 w-5" />}
           className="self-end"
         >
-          {ui.report.download}
+          {p.format === 'pdf' ? ui.report.savePdf : ui.report.download}
         </PixelButton>
       </div>
+      {/* Only this is printed (styles/index.css @media print). */}
+      {p.format === 'pdf' &&
+        createPortal(
+          <div id="print-root" aria-hidden>
+            <PrintDoc title={p.title} date={p.date} sections={doc} />
+          </div>,
+          document.body,
+        )}
     </div>
+  );
+}
+
+/** The PDF summary: title, date, sections with source-labelled items, footer (docs/07 §11.3). */
+function PrintDoc({ title, date, sections }: { title: string; date: string; sections: PrintSection[] }) {
+  return (
+    <article className="print-doc flex flex-col gap-3 text-sm">
+      <header>
+        <h3 className="m-0 text-base font-semibold">{title}</h3>
+        <p className="m-0 text-lavender">{t.date(date)}</p>
+      </header>
+      {sections.map((s) => (
+        <section key={s.title} className="flex flex-col gap-2">
+          <h4 className="m-0 font-semibold">{s.title}</h4>
+          {s.groups.map((g) => (
+            <div key={g.title} className="flex flex-col gap-1">
+              <h5 className="m-0 text-[13px] font-medium text-lavender">{g.title}</h5>
+              <ul className="m-0 flex list-none flex-col gap-1 p-0">
+                {g.items.map((i, k) => (
+                  <li key={k}>
+                    <span className="font-medium">[{i.label}]</span> {i.text}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+      ))}
+      <footer className="text-[13px] text-lavender">{t.fileFooter(date)}</footer>
+    </article>
   );
 }

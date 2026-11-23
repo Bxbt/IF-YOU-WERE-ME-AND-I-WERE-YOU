@@ -395,7 +395,7 @@ interface ReflectionReport {
   ownerId: PlayerId;
   generatedAt: ISODate;
   selectedItemIds: string[];            // รายการที่ผู้เล่นเลือกส่งออก
-  format: 'txt' | 'json' | 'png';
+  format: 'txt' | 'json' | 'png' | 'pdf';   // txt/json เหลือไว้ให้ประวัติเก่าอ่านได้ · ส่งออกใหม่ใช้ png/pdf
   sections: {
     myPersonality: ReportItem[];
     myUnderstanding: ReportItem[];
@@ -508,9 +508,9 @@ interface MemoryScene {                 // Phase 2
 9. ไฟล์ภายนอกไม่น่าเชื่อถือ: `SharedAnswer.state = revealed` ที่มาจากไฟล์ซึ่งมีผู้เล่นมากกว่า 1 คน ถูกรีเซ็ตเป็น `awaiting_consent` และ consent ถูกล้าง (กันการแก้ไฟล์เพื่อเปิดคำตอบเอง) — ยกเว้นผู้เล่นทุกคนผ่าน PIN ตอน Import
 10. **MVP รองรับเฉพาะ `scope=full`** (แทนที่ทั้งหมด) · การรวมข้อมูล/แก้ id ชน (ข้อ 6) เป็น Phase 2
 
-### 11.3 Text Export (.txt)
+### 11.3 PDF Summary (แทน .txt/.json ตั้งแต่ 2026-11-23)
 
-UTF-8 · หัวเรื่องตามส่วนของ Report · ทุกบรรทัดมีป้ายแหล่งที่มา `[คุณบอก]` `[คุณคิด]` `[{other} บอก]` `[เกมสังเกต]` · ท้ายไฟล์: วันที่ + "สร้างจาก IF YOU WERE ME, AND I WERE YOU"
+หน้าเอกสารสำหรับพิมพ์ (`@media print`) แสดงเฉพาะรายการที่เลือก: ชื่อเรื่อง + วันที่ · หัวข้อตามส่วนของ Report · ทุกรายการมีป้ายแหล่งที่มา `[คุณบอก]` `[คุณคิด]` `[{other} บอก]` `[เกมสังเกต]` · ท้ายหน้า: วันที่ + "สร้างจาก IF YOU WERE ME, AND I WERE YOU" · ผู้เล่นกด "บันทึกเป็น PDF" → `window.print()` → เลือก "บันทึกเป็น PDF" ในหน้าพิมพ์ของเครื่อง · ตอนพิมพ์ซ่อนทุกอย่างของแอปยกเว้นเอกสารนี้
 
 ### 11.4 PNG Reflection Card
 
