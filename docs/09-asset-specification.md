@@ -139,6 +139,8 @@ Portrait ใช้ layer เดียวกับ Sprite (สร้างใน�
 | เพลงตอนจบ (`ending_theme`) | pad + arpeggio pentatonic ทุก 0.9 วินาที |
 | SFX: door_close, elevator_jolt, metal_creak, tools_above, door_pry, alarm_bell, phone_buzz, ui_reveal | oscillator/noise + envelope สั้น ๆ |
 
+**สวิตช์เงียบของ iPhone (เจ้าของตัดสิน 2026-11-23):** ปุ่มเสียงในเกมเป็นตัวตัดสิน — เปิดเสียงในเกมไว้ + เปิดวอลุ่ม = ได้ยิน แม้สวิตช์ข้างเครื่องอยู่ที่โหมดเงียบ (เหมือนดูวิดีโอ) · iOS 17+: `navigator.audioSession.type = 'playback'` · iOS ที่เก่ากว่า: เล่นไฟล์ WAV เงียบสั้น ๆ แบบวนซ้ำผ่าน `<audio>` ตั้งแต่การแตะที่เปิดเสียง ทำให้ iOS จัดหน้าเป็นประเภทเล่นสื่อ · ปิดเสียงในเกม/สลับแท็บ → หยุดไฟล์เงียบด้วย
+
 ความปลอดภัยของเสียง: DynamicsCompressor + master ceiling 0.45 × volume · elevator_jolt เบากว่าเสียงอื่น · เสียงหยุดเมื่อแท็บไม่แสดง · เบราว์เซอร์ที่ไม่มี WebAudio เล่นเกมได้ปกติ (ตั้งค่าแจ้งว่าไม่มีเสียง)
 
 | Key | Format | ความยาว | Loop | Priority |

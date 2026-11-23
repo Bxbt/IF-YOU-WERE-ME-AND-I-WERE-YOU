@@ -18,9 +18,17 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('ambient mapping', () => {
   it('explicit music wins; otherwise inferred from the background', () => {
-    expect(ambientFor('bg_apartment_evening', 'light', 'normal')).toEqual({ music: 'home', rain: 'light', hum: false });
+    expect(ambientFor('bg_apartment_evening', 'light', 'normal')).toEqual({
+      music: 'home',
+      rain: 'light',
+      hum: false,
+    });
     expect(ambientFor('bg_rooftop_night', 'none', 'normal')).toMatchObject({ music: 'night' });
-    expect(ambientFor('bg_elevator_emergency', 'none', 'emergency')).toEqual({ music: 'none', rain: 'none', hum: true });
+    expect(ambientFor('bg_elevator_emergency', 'none', 'emergency')).toEqual({
+      music: 'none',
+      rain: 'none',
+      hum: true,
+    });
     expect(ambientFor('bg_elevator_interior', 'none', 'normal').hum).toBe(false);
     expect(ambientFor('bg_rooftop_night', 'none', 'normal', 'ending_theme').music).toBe('ending');
     expect(ambientFor('bg_lobby_floor6', 'none', 'normal', 'none').music).toBe('none');
@@ -83,9 +91,24 @@ describe('controls', () => {
     render(<RouterProvider router={router} />);
     const slider = screen.getByRole('slider', { name: 'ความดัง' });
     expect(slider).toBeEnabled(); // on by default
-    await userEvent.click(screen.getByRole('group', { name: 'เสียงในเกม' }).querySelector('button:first-child')!);
+    await userEvent.click(
+      screen.getByRole('group', { name: 'เสียงในเกม' }).querySelector('button:first-child')!,
+    );
     expect(useGame.getState().save.settings.sound.enabled).toBe(false);
     expect(slider).toBeDisabled();
     vi.unstubAllGlobals();
+  });
+});
+
+describe('iPhone silent switch (docs/09 §5)', () => {
+  it('asks for the "playback" audio session while sound is on, and gives it back when off', async () => {
+    const { playThroughSilentSwitch } = await import('../../src/audio/engine');
+    const session = { type: 'auto' };
+    Object.defineProperty(navigator, 'audioSession', { value: session, configurable: true });
+    playThroughSilentSwitch(true);
+    expect(session.type).toBe('playback');
+    playThroughSilentSwitch(false);
+    expect(session.type).toBe('auto');
+    delete (navigator as unknown as { audioSession?: unknown }).audioSession;
   });
 });

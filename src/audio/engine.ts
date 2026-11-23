@@ -38,6 +38,71 @@ interface Layer {
   stop: () => void;
 }
 
+/**
+ * iPhone silent switch (docs/09 §5): Web Audio counts as "app sound", which iOS mutes when the ring
+ * switch is on silent. The in-game sound toggle should decide instead, like a video does. iOS 17+
+ * has the Audio Session API; older iOS switches to the media category while an <audio> element
+ * plays, so a short silent WAV loops in the background while sound is on.
+ */
+let keepAlive: HTMLAudioElement | null = null;
+
+function silentWavUrl(): string {
+  const rate = 8000;
+  const n = rate / 2; // 0.5 s
+  const bytes = new Uint8Array(44 + n);
+  const v = new DataView(bytes.buffer);
+  const str = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, 'RIFF');
+  v.setUint32(4, 36 + n, true);
+  str(8, 'WAVEfmt ');
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); // PCM
+  v.setUint16(22, 1, true); // mono
+  v.setUint32(24, rate, true);
+  v.setUint32(28, rate, true);
+  v.setUint16(32, 1, true);
+  v.setUint16(34, 8, true); // 8-bit
+  str(36, 'data');
+  v.setUint32(40, n, true);
+  bytes.fill(128, 44); // 8-bit silence
+  let bin = '';
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  return `data:audio/wav;base64,${btoa(bin)}`;
+}
+
+const isAppleTouch = () =>
+  typeof navigator !== 'undefined' &&
+  (/iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+/** Lets sound through the iPhone silent switch while the player has sound on. Call from a gesture. */
+export function playThroughSilentSwitch(on: boolean) {
+  if (typeof navigator === 'undefined') return;
+  const nav = navigator as Navigator & { audioSession?: { type: string } };
+  if (nav.audioSession) {
+    try {
+      nav.audioSession.type = on ? 'playback' : 'auto';
+    } catch {
+      /* not allowed here — fall through to nothing */
+    }
+    return;
+  }
+  if (!isAppleTouch() || typeof Audio === 'undefined') return;
+  if (!on) {
+    keepAlive?.pause();
+    return;
+  }
+  if (!keepAlive) {
+    keepAlive = new Audio(silentWavUrl());
+    keepAlive.loop = true;
+    keepAlive.setAttribute('playsinline', '');
+    keepAlive.setAttribute('aria-hidden', 'true');
+  }
+  void keepAlive.play().catch(() => {
+    /* needs a user gesture; the next tap (unlock) tries again */
+  });
+}
+
 type Ctor = typeof AudioContext;
 
 function audioCtor(): Ctor | null {
@@ -93,6 +158,7 @@ class SoundEngine {
   setEnabled(on: boolean) {
     this.enabled = on;
     if (!on) {
+      playThroughSilentSwitch(false);
       if (this.ctx && this.master) {
         this.master.gain.setTargetAtTime(0, this.ctx.currentTime, 0.15);
       }
@@ -100,6 +166,7 @@ class SoundEngine {
     }
     const ctx = this.ensure();
     if (!ctx || !this.master) return;
+    playThroughSilentSwitch(true);
     void ctx.resume?.();
     this.master.gain.setTargetAtTime(this.volume * MASTER_CEILING, ctx.currentTime, 0.3);
     this.apply();
@@ -107,7 +174,9 @@ class SoundEngine {
 
   /** Call from any user gesture: browsers keep a context suspended until one happens. */
   unlock() {
-    if (this.enabled && this.ctx?.state === 'suspended') void this.ctx.resume();
+    if (!this.enabled) return;
+    playThroughSilentSwitch(true);
+    if (this.ctx?.state === 'suspended') void this.ctx.resume();
   }
 
   setVolume(v: number) {
@@ -118,8 +187,13 @@ class SoundEngine {
 
   setPaused(paused: boolean) {
     if (!this.ctx) return;
-    if (paused) void this.ctx.suspend?.();
-    else if (this.enabled) void this.ctx.resume?.();
+    if (paused) {
+      void this.ctx.suspend?.();
+      playThroughSilentSwitch(false);
+    } else if (this.enabled) {
+      playThroughSilentSwitch(true);
+      void this.ctx.resume?.();
+    }
   }
 
   setAmbient(t: AmbientTarget) {
@@ -398,7 +472,13 @@ export function ambientFor(bg: string, rain: RainKey, light: string, music?: str
   const hum = bg.includes('elevator') && light !== 'normal';
   if (music) {
     const m: MusicKey =
-      music === 'ambient_home' ? 'home' : music === 'ambient_night' ? 'night' : music === 'ending_theme' ? 'ending' : 'none';
+      music === 'ambient_home'
+        ? 'home'
+        : music === 'ambient_night'
+          ? 'night'
+          : music === 'ending_theme'
+            ? 'ending'
+            : 'none';
     return { music: m, rain, hum };
   }
   const indoorsHome = /apartment|kitchen|living|cozy/.test(bg);
