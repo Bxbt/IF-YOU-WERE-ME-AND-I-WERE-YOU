@@ -12,7 +12,7 @@ async function makePlayer(page: Page, name: string, submit: string) {
 test('TC-LIVE-08: without a relay, live play is disabled with the reason shown', async ({ page }) => {
   await page.goto('/#/live');
   await expect(page.getByTestId('live-unavailable')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'สร้างห้องเล่นสด' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'สร้างห้อง' })).toHaveCount(0);
 });
 
 test('TC-LIVE-10: the partner joins by typing the room code', async ({ browser }, info) => {
@@ -23,7 +23,7 @@ test('TC-LIVE-10: the partner joins by typing the room code', async ({ browser }
   const a = await ctxA.newPage();
   const b = await ctxB.newPage();
   await a.goto('/#/live');
-  await makePlayer(a, 'ดาว', 'สร้างห้องเล่นสด');
+  await makePlayer(a, 'ดาว', 'สร้างห้อง');
   const code = (await a.getByTestId('live-invite-code').textContent())!;
   expect(code).toMatch(/^\w{5}-\w{5}$/);
 
@@ -36,7 +36,7 @@ test('TC-LIVE-10: the partner joins by typing the room code', async ({ browser }
   await b.reload();
   await b.getByTestId('live-code-input').fill(code.toLowerCase().replace('-', ' '));
   await tap(b.getByRole('button', { name: 'เข้าร่วมด้วยโค้ด' }));
-  await expect(b.getByText('ดาว ชวนคุณเล่นสด')).toBeVisible({ timeout: 15_000 });
+  await expect(b.getByText('ดาว ชวนคุณมาเล่นด้วยกัน')).toBeVisible({ timeout: 15_000 });
   await makePlayer(b, 'เมฆ', 'เข้าร่วม');
   await expect(b).toHaveURL(/#\/j\/jr_[^/]+\/chapters/);
   await expect(a).toHaveURL(/#\/j\/jr_[^/]+\/chapters/, { timeout: 15_000 });
@@ -55,12 +55,12 @@ test('TC-LIVE-07/09/11/12: invite → join → each reads at their own pace → 
   const b = await ctxB.newPage();
 
   await a.goto('/#/live');
-  await makePlayer(a, 'ดาว', 'สร้างห้องเล่นสด');
+  await makePlayer(a, 'ดาว', 'สร้างห้อง');
   const invite = await a.getByTestId('live-invite-url').inputValue();
   expect(invite).toContain('#/live?join=');
 
   await b.goto(invite.replace(/^https?:\/\/[^/]+/, LIVE));
-  await expect(b.getByText('ดาว ชวนคุณเล่นสด')).toBeVisible();
+  await expect(b.getByText('ดาว ชวนคุณมาเล่นด้วยกัน')).toBeVisible();
   expect(b.url()).not.toContain('join='); // the key leaves the address bar
   await makePlayer(b, 'เมฆ', 'เข้าร่วม');
   await expect(b).toHaveURL(/#\/j\/jr_[^/]+\/chapters/);
