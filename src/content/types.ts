@@ -61,6 +61,8 @@ export interface EnvSet {
   /** Synthesised sound (src/audio/engine.ts) — played only when the player turned sound on. */
   sfx?: string;
   music?: string;
+  /** Who stands in this scene, overriding the background's default (docs/09 §3.2a). */
+  cast?: ('in' | 'out' | 'A' | 'B')[];
 }
 
 export interface ChoiceOption {

@@ -18,6 +18,8 @@ export interface SceneEnv {
   steam: boolean;
   /** Elevator door on bg_lobby_floor6 (Ch2–Ch3). */
   door: 'closed' | 'ajar' | 'open';
+  /** Scene override of who stands on stage (docs/09 §3.2a); null = the background's default. */
+  cast: ('in' | 'out' | 'A' | 'B')[] | null;
 }
 
 export const DEFAULT_ENV: SceneEnv = {
@@ -29,6 +31,7 @@ export const DEFAULT_ENV: SceneEnv = {
   lamp: 'warm',
   steam: true,
   door: 'closed',
+  cast: null,
 };
 
 /** Background draw function: 320×180 logical canvas, `t` seconds (0 when motion is reduced). */

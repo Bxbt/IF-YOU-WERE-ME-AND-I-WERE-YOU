@@ -135,7 +135,7 @@ export const os3: ChapterContent = {
       ariaLabel: 'ทางเดินหน้าห้องตอนดึก มีคนหนึ่งยืนอยู่คนเดียว',
       controller: 'waiter',
       lines: [
-        E({ bg: 'bg_corridor', rain: 'none', light: 'normal' }),
+        E({ bg: 'bg_corridor', rain: 'none', light: 'normal', cast: ['out'] }),
         N('ทางเดินหน้าห้อง {out} ยืนอยู่คนเดียวก่อนเข้านอน'),
         M('out', '(อยากเป็นคนที่ทำตามที่พูดได้จริง ๆ)'),
         M('out', '(แต่ทุกครั้งที่จะปฏิเสธงาน ก็กลัวว่าจะเป็นคนแรกที่ถูกเลิกจ้าง)'),

@@ -212,6 +212,7 @@ export const ui = {
     revealed: 'เปิดแล้ว',
     playingAs: (name: string) => `คุณกำลังเล่นเป็น ${name}`,
     turnOf: (name: string) => `ตาของ ${name}`,
+    viewOf: (name: string) => `มุมของ ${name}`,
     playsAs: (who: string, role: string) => `${who} กำลังเล่นเป็น ${role}`,
     imaginedBanner: (name: string) =>
       `นี่คือสิ่งที่คุณจินตนาการว่า ${name} อาจรู้สึก — ไม่ใช่สิ่งที่ ${name} บอก`,

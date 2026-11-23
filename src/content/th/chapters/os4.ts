@@ -100,7 +100,7 @@ export const os4: ChapterContent = {
       ariaLabel: NIGHT,
       controller: 'waiter',
       lines: [
-        E({ bg: 'bg_living_room_night', rain: 'heavy' }),
+        E({ bg: 'bg_living_room_night', rain: 'heavy', cast: ['out'] }),
         M('out', '(ไม่รู้เลยว่ามีเรื่องค้างอยู่มากขนาดนี้)'),
         M(
           'out',

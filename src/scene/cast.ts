@@ -39,6 +39,7 @@ const STAGING: Record<string, Staging> = {
 
 /** Roles on stage for a background. In the lobby the elevator person joins once the door is open. */
 export function rolesFor(bg: string, env: SceneEnv): CastRole[] {
+  if (env.cast) return env.cast;
   const s = STAGING[bg];
   if (!s) return [];
   if (bg === 'bg_lobby_floor6' && env.door === 'open') return ['out', 'in'];
@@ -52,15 +53,21 @@ function slotX(i: number, n: number): number {
 }
 
 /** Draws the cast for one background. Emergency light tints people like the room. */
-export function drawCast(c: CanvasRenderingContext2D, bg: string, env: SceneEnv, cast: CastMember[], t: number) {
-  const s = STAGING[bg];
-  if (!s || cast.length === 0) return;
+export function drawCast(
+  c: CanvasRenderingContext2D,
+  bg: string,
+  env: SceneEnv,
+  cast: CastMember[],
+  t: number,
+) {
+  const feet = STAGING[bg]?.feet ?? 162;
+  if (cast.length === 0) return;
   const frame = Math.floor(t * 2) % 2;
   const tint =
     env.light === 'off' ? 'rgba(8,10,20,0.6)' : env.light === 'emergency' ? 'rgba(160,85,40,0.28)' : null;
   cast.forEach((m, i) => {
     const x = Math.round(slotX(i, cast.length) - 16);
-    const y = s.feet - 48;
+    const y = feet - 48;
     if (!tint) {
       drawSprite(c, m.appearance, x, y, frame, m.expression);
       return;

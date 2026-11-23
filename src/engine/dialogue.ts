@@ -208,6 +208,7 @@ export function applyEnv(env: SceneEnv, set: EnvSet): SceneEnv {
   if (set.lamp !== undefined) next.lamp = set.lamp;
   if (set.steam !== undefined) next.steam = set.steam;
   if (set.door !== undefined) next.door = set.door;
+  if (set.cast !== undefined) next.cast = set.cast;
   return next;
 }
 

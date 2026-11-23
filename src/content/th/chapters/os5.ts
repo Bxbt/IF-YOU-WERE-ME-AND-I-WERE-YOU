@@ -113,7 +113,7 @@ export const os5: ChapterContent = {
       ariaLabel: 'ห้องในอพาร์ตเมนต์ตอนค่ำ โคมไฟสีอุ่น อีกคนนั่งคิดอะไรอยู่คนเดียว',
       controller: 'waiter',
       lines: [
-        E({ bg: 'bg_apartment_evening', rain: 'none', lamp: 'warm' }),
+        E({ bg: 'bg_apartment_evening', rain: 'none', lamp: 'warm', cast: ['out'] }),
         M('out', '(ช่วงนี้ {in} ยิ้มน้อยลง)'),
         M('out', '(อยากให้ทุกอย่างกลับไปเหมือนเดิม แต่ไม่รู้ว่าต้องเริ่มจากตรงไหน)'),
         M('out', '(บางที การชวนไปกินข้าว ก็เป็นวิธีขอโทษแบบเดียวที่รู้จัก)'),

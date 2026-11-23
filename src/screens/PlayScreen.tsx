@@ -757,7 +757,9 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   const bannerText =
     role && controllerId && rolePlayer
       ? controllerId === rolePlayer.id
-        ? ui.labels.turnOf(rolePlayer.nickname)
+        ? step?.kind === 'choice'
+          ? ui.labels.turnOf(rolePlayer.nickname)
+          : ui.labels.viewOf(rolePlayer.nickname)
         : ui.labels.playsAs(nick(controllerId), rolePlayer.nickname)
       : undefined;
   // Open handoff before scenes marked handoffBefore (Ch2 parts) — not secret, so no PIN (docs/02 Ch2).

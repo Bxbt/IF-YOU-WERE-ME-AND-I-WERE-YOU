@@ -19,8 +19,31 @@ describe('scene cast (who stands in each scene)', () => {
   });
 
   it('every staged background exists in the registry', () => {
-    for (const bg of ['bg_apartment_evening', 'bg_apartment_kitchen', 'bg_corridor', 'bg_elevator_interior',
-      'bg_elevator_emergency', 'bg_lobby_floor6', 'bg_stairwell', 'bg_living_room_morning', 'bg_living_room_night',
-      'bg_rooftop_night']) expect(BACKGROUNDS[bg]).toBeDefined();
+    for (const bg of [
+      'bg_apartment_evening',
+      'bg_apartment_kitchen',
+      'bg_corridor',
+      'bg_elevator_interior',
+      'bg_elevator_emergency',
+      'bg_lobby_floor6',
+      'bg_stairwell',
+      'bg_living_room_morning',
+      'bg_living_room_night',
+      'bg_rooftop_night',
+    ])
+      expect(BACKGROUNDS[bg]).toBeDefined();
+  });
+
+  it("a scene can say who stands there: storyline 2's partner-only scenes show the partner", async () => {
+    expect(rolesFor('bg_corridor', { ...DEFAULT_ENV, cast: ['out'] })).toEqual(['out']);
+    const { envAt, expandScene, sceneById } = await import('../../src/engine/dialogue');
+    const { os3 } = await import('../../src/content/th/chapters/os3');
+    const st = { flags: {}, priorWarning: true, chosen: {} };
+    const sc = sceneById(os3, 'os3_s03')!;
+    const env = envAt(sc, expandScene(sc, st), 2);
+    expect(rolesFor(env.bg, env)).toEqual(['out']);
+    // ...and the override ends with the scene.
+    const next = sceneById(os3, 'os3_cards')!;
+    expect(envAt(next, expandScene(next, st), 1).cast).toBeNull();
   });
 });

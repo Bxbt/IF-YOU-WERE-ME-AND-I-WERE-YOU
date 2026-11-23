@@ -81,7 +81,7 @@
 | `ChoiceList` | 2–6 ปุ่มเรียงแนวตั้ง (สูงสุด 7 เมื่อมีตัวเลือกตามเงื่อนไข เช่น Ch3 c02 หลัง "ขอกอดได้ไหม" หรือรวมปุ่ม "พิมพ์เอง") แสดงทีละตัวแบบ stagger 60ms | idle, selected (กรอบหนา + เช็ค), disabled |
 | `MetaOptions` | แถวปุ่มเล็ก 4 ปุ่มใต้ตัวเลือก: ขึ้นอยู่กับสถานการณ์ · ไม่แน่ใจ · ไม่สะดวกตอบ · ข้าม | toggle exclusive กับตัวเลือกปกติ |
 | `FreeTextField` | textarea นับตัวอักษร (x/280) placeholder "เขียนด้วยคำพูดของคุณ (ไม่บังคับ)" | empty, typing, near-limit (≥ 260), at-limit |
-| `PerspectiveBanner` | แถบบอกว่ากำลังเล่นเป็นใคร: Portrait เล็ก + "คุณกำลังเล่นเป็น {name}" | own-role, partner-role-together, partner-role-imagined (เพิ่มข้อความ Imagined [02](02-story-script.md) §0.6) |
+| `PerspectiveBanner` | แถบบอกว่ากำลังเล่นเป็นใคร: Portrait เล็ก + "คุณกำลังเล่นเป็น {name}" · Together/Live: บนบทพูด/ความคิด = **"มุมของ {name}"** · ตอนต้องเลือก = **"ตาของ {name}"** (ป้าย "ตาของ" ใช้เฉพาะเมื่อมีสิ่งให้เลือกจริง) | own-role, partner-role-together, partner-role-imagined (เพิ่มข้อความ Imagined [02](02-story-script.md) §0.6) |
 | `AssumptionTag` | ป้ายเล็ก "สิ่งที่คุณคิด" / "สมมติฐาน" ไอคอน `MessageCircleQuestion` | — |
 | `PrivacyBadge` | ไอคอน `Lock` + "ส่วนตัว" / `Eye` + "เปิดแล้ว" / `Hourglass` + "รอ {other}" | private, waiting, consented, revealed |
 | `ProgressDots` | จุดแสดงตำแหน่งในบท/ชุดคำถาม (ตำแหน่ง ไม่ใช่คะแนน) | — |
