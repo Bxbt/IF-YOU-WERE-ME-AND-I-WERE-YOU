@@ -13,9 +13,9 @@ test('TC-OS-01/05: storyline tab → pick the teller → play os1 to the end; th
   await page.goto(`/#/j/${J}/chapters`);
 
   // Main tab first, as before.
-  await expect(page.getByRole('tab', { name: 'เรื่องหลัก' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tab', { name: /คืนที่ลิฟต์ค้าง/ })).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('article', { name: /The Incident/ })).toBeVisible();
-  await tap(page.getByRole('tab', { name: 'อีกด้านของเรื่อง' }));
+  await tap(page.getByRole('tab', { name: /อีกด้านของเรื่อง/ }));
   await expect(page).toHaveURL(/line=other/);
   await expect(page.getByRole('article', { name: /I Want to Be Loved, Too/ })).toBeVisible();
   await expect(page.getByRole('article', { name: /Choosing Myself/ })).toBeVisible();
@@ -46,6 +46,6 @@ test('TC-OS-01/05: storyline tab → pick the teller → play os1 to the end; th
   // "พักก่อน" goes back to the storyline tab.
   await tap(page.getByRole('button', { name: /พักก่อน/ }));
   await expect(page).toHaveURL(/chapters\?line=other/);
-  await expect(page.getByRole('tab', { name: 'อีกด้านของเรื่อง' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('tab', { name: /อีกด้านของเรื่อง/ })).toHaveAttribute('aria-selected', 'true');
   expect(errors).toEqual([]);
 });

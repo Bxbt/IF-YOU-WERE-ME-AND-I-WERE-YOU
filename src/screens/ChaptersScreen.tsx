@@ -101,23 +101,48 @@ export function ChaptersScreen() {
         />
       )}
       {/* M16: storyline tabs (docs/06 S5) */}
-      <div role="tablist" aria-label={ui.chapters.storylines} className="flex flex-wrap gap-2">
-        {(['main', 'other'] as const).map((l) => (
-          <button
-            key={l}
-            type="button"
-            role="tab"
-            id={`line-${l}`}
-            aria-selected={line === l}
-            aria-controls="chapter-list"
-            onClick={() => setParams(l === 'other' ? { line: 'other' } : {}, { replace: true })}
-            className={`btn px-3 text-sm ${line === l ? 'border-orange bg-orange/15' : 'btn-ghost'}`}
-          >
-            {ui.chapters.storyline[l]}
-          </button>
-        ))}
+      <div
+        role="tablist"
+        aria-label={ui.chapters.storylines}
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+      >
+        {(['main', 'other'] as const).map((l) => {
+          const on = line === l;
+          return (
+            <button
+              key={l}
+              type="button"
+              role="tab"
+              id={`line-${l}`}
+              aria-selected={on}
+              aria-controls="chapter-list"
+              onClick={() => setParams(l === 'other' ? { line: 'other' } : {}, { replace: true })}
+              className={`flex min-h-[72px] items-start gap-3 rounded-btn border-2 p-4 text-left transition-colors ${
+                on
+                  ? 'border-orange bg-orange/15 shadow-[0_0_12px_rgba(233,183,123,.35)]'
+                  : 'border-lavender/30 bg-navy hover:border-lavender/70'
+              }`}
+            >
+              <span
+                aria-hidden
+                className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                  on ? 'border-orange bg-orange text-navy' : 'border-lavender/50'
+                }`}
+              >
+                {on && <Check className="h-3 w-3" strokeWidth={3} />}
+              </span>
+              <span className="flex flex-col gap-1">
+                <span className={`text-lg font-semibold ${on ? 'text-cream' : 'text-cream/80'}`}>
+                  {ui.chapters.storyline[l]}
+                </span>
+                <span className="text-sm text-lavender">
+                  {ui.chapters.storylineSub[l](chaptersOf(l).length)}
+                </span>
+              </span>
+            </button>
+          );
+        })}
       </div>
-      {line === 'other' && <p className="m-0 text-sm text-lavender">{ui.chapters.otherIntro}</p>}
       {line === 'other' ? (
         <section className="panel flex flex-wrap items-center gap-3" aria-labelledby="teller-h">
           <div className="flex flex-1 flex-col">
