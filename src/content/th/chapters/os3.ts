@@ -126,11 +126,11 @@ export const os3: ChapterContent = {
     {
       id: 'os3_s03',
       background: 'bg_corridor',
-      ariaLabel: 'ทางเดินหน้าห้องตอนเช้า มีคนหนึ่งยืนรอลิฟต์อยู่คนเดียว',
+      ariaLabel: 'ทางเดินหน้าห้องตอนเช้า มีคนหนึ่งยืนอยู่คนเดียวก่อนออกไปทำงาน',
       controller: 'waiter',
       lines: [
         E({ bg: 'bg_corridor', rain: 'none', light: 'normal' }),
-        N('ทางเดินหน้าห้อง {out} ยืนรอลิฟต์อยู่คนเดียว'),
+        N('ทางเดินหน้าห้อง {out} ยืนอยู่คนเดียวก่อนออกไปทำงาน'),
         M('out', '(เรื่องนั้น เป็นเรื่องที่อยากย้อนกลับไปแก้ที่สุด)'),
         M('out', '(พยายามทำทุกอย่างให้เปิดเผย แต่บางวันก็รู้สึกเหมือนต้องพิสูจน์ตัวเองไม่จบ)'),
         M('out', '(เหนื่อยเหมือนกัน แต่ไม่รู้จะพูดยังไงไม่ให้ฟังเหมือนแก้ตัว)'),
@@ -174,6 +174,7 @@ export const os3: ChapterContent = {
     groups: [
       {
         role: 'insider',
+        label: '{in} อาจรู้สึก…',
         cards: [
           { id: 'os3_in_fear_hurt', text: 'กลัวเจ็บอีก' },
           { id: 'os3_in_want_believe', text: 'อยากเชื่อ' },
@@ -185,6 +186,7 @@ export const os3: ChapterContent = {
       },
       {
         role: 'waiter',
+        label: '{out} อาจรู้สึก…',
         cards: [
           { id: 'os3_out_regret', text: 'เสียใจกับเรื่องเดิม' },
           { id: 'os3_out_prove', text: 'อยากพิสูจน์' },

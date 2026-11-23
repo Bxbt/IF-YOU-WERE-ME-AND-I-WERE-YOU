@@ -818,9 +818,11 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         groups={content.emotionCards.groups.map((g) => ({
           label:
             (g.period ? `${g.period} · ` : '') +
-            (g.role === 'insider'
-              ? ui.play.cardsInsider(answerCtx.names.in)
-              : ui.play.cardsWaiter(answerCtx.names.out)),
+            (g.label
+              ? resolveTokens(g.label, answerCtx)
+              : g.role === 'insider'
+                ? ui.play.cardsInsider(answerCtx.names.in)
+                : ui.play.cardsWaiter(answerCtx.names.out)),
           cards: g.cards,
         }))}
         initial={journey.storyAnswers[key]?.selected ?? []}

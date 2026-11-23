@@ -821,6 +821,8 @@ SYS   IF YOU WERE ME, AND I WERE YOU
 
 **Backgrounds ใหม่** ([09](09-asset-specification.md) §2): `bg_bedroom_night` (ห้องนอนแสงสลัว ฝนไหลบนกระจก) · `bg_balcony_night` (ระเบียงว่าง ไฟเมือง) · `bg_bathroom_mirror` (กระจกในห้องน้ำ เงาสะท้อน) · `bg_street_sunrise` (ถนนเงียบตอนรุ่งสาง) · ใช้ของเดิม: `bg_apartment_evening`, `bg_apartment_kitchen`, `bg_living_room_night`, `bg_living_room_morning`, `bg_corridor`
 
+**หัวข้อกลุ่มการ์ดความรู้สึก:** "{in} อาจรู้สึก…" / "{out} อาจรู้สึก…" — ห้ามใช้หัวข้อของเรื่องลิฟต์ ("…ในลิฟต์", "…ที่รออยู่") · กำหนดใน content ของแต่ละบท (`emotionCards.groups[].label`)
+
 **ลำดับในไฟล์ Content (ทุกบท):** ฉากเรื่อง → (การ์ด/การตีความ ถ้ามี) → `osN_reflect` → `osN_end` → Transition · Reflection ส่วนตัวเสมอ · Meta options ทุกข้อเหมือน §0.2 ของ [03](03-question-bank.md)
 
 ---
@@ -1023,7 +1025,7 @@ DLG   {out} (sad): ยังคิดเรื่องข้อความอ�
 #### `os3_s03` (controller: waiter)
 ```
 ENV   bg_corridor
-NARR  ทางเดินหน้าห้อง {out} ยืนรอลิฟต์อยู่คนเดียว
+NARR  ทางเดินหน้าห้อง {out} ยืนอยู่คนเดียวก่อนออกไปทำงาน
 MONO  {out}: (เรื่องนั้น เป็นเรื่องที่อยากย้อนกลับไปแก้ที่สุด)
 MONO  {out}: (พยายามทำทุกอย่างให้เปิดเผย แต่บางวันก็รู้สึกเหมือนต้องพิสูจน์ตัวเองไม่จบ)
 MONO  {out}: (เหนื่อยเหมือนกัน แต่ไม่รู้จะพูดยังไงไม่ให้ฟังเหมือนแก้ตัว)

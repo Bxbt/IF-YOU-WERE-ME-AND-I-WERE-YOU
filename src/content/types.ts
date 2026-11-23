@@ -119,7 +119,15 @@ export interface ChapterContent {
   firstScene: string;
   scenes: SceneContent[];
   reflection: QuestionContent[];
-  emotionCards?: { groups: { role: RoleId; period?: string; cards: OptionContent[] }[] };
+  emotionCards?: {
+    groups: {
+      role: RoleId;
+      period?: string;
+      /** Heading of the group, with tokens ("{in} อาจรู้สึก…"); default = the elevator story's wording. */
+      label?: string;
+      cards: OptionContent[];
+    }[];
+  };
   /** Token {name} → text chosen by a flag value (docs/02 appendix A). */
   fragments?: Record<string, { flag: string; values: Record<string, string>; fallback: string }>;
   interpretations?: InterpretationSet[];

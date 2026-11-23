@@ -179,6 +179,7 @@ export const os5: ChapterContent = {
     groups: [
       {
         role: 'insider',
+        label: '{in} อาจรู้สึก…',
         cards: [
           { id: 'os5_in_numb', text: 'เหนื่อยจนไม่อยากรู้สึกอะไร' },
           { id: 'os5_in_miss_old', text: 'คิดถึงวันเก่า ๆ' },
@@ -190,6 +191,7 @@ export const os5: ChapterContent = {
       },
       {
         role: 'waiter',
+        label: '{out} อาจรู้สึก…',
         cards: [
           { id: 'os5_out_distant', text: 'รู้สึกว่าห่างกัน' },
           { id: 'os5_out_no_way', text: 'อยากแก้แต่ไม่รู้วิธี' },

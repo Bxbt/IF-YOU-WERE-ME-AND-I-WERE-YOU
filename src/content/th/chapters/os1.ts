@@ -177,6 +177,7 @@ export const os1: ChapterContent = {
     groups: [
       {
         role: 'insider',
+        label: '{in} อาจรู้สึก…',
         cards: [
           { id: 'os1_in_tired', text: 'เหนื่อย' },
           { id: 'os1_in_lonely', text: 'เหงา' },
@@ -188,6 +189,7 @@ export const os1: ChapterContent = {
       },
       {
         role: 'waiter',
+        label: '{out} อาจรู้สึก…',
         cards: [
           { id: 'os1_out_busy', text: 'ยุ่งจนไม่ทันสังเกต' },
           { id: 'os1_out_trust', text: 'คิดว่าอีกคนไหว' },

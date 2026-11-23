@@ -111,6 +111,7 @@ function texts(ch: ChapterContent): { text: string; speaker?: string }[] {
     out.push({ text: f.fallback }, ...Object.values(f.values).map((text) => ({ text })));
   for (const e of ch.ending ?? []) out.push({ text: e.en }, { text: e.th ?? '' });
   for (const o of (ch.emotionCards?.groups ?? []).flatMap((g) => g.cards)) out.push({ text: o.text });
+  for (const g of ch.emotionCards?.groups ?? []) if (g.label) out.push({ text: g.label });
   return out;
 }
 
@@ -263,6 +264,14 @@ describe('TC-PLAY-06 content lint (docs/10 §4)', () => {
             expect(vals[r.token], `${choiceId}.${o.id}`).not.toMatch(/[{}]/);
           }
         }
+  });
+
+  it('storyline 2 never borrows the elevator story: no "ลิฟต์", card headings set per chapter', () => {
+    for (const ch of chapters.filter((c) => c.id.startsWith('os'))) {
+      for (const { text } of texts(ch)) expect(text.includes('ลิฟต์'), `${ch.id}: ${text}`).toBe(false);
+      for (const g of ch.emotionCards?.groups ?? [])
+        expect(g.label, `${ch.id} ${g.role} card heading`).toBeTruthy();
+    }
   });
 
   it('every MIRROR line names a known question; STATEMENTS/INTERPRETATION have their content', () => {
