@@ -3,6 +3,7 @@ import { ui } from '../content/th/ui';
 import {
   HAIR,
   HAIR_STYLE_NAMES,
+  LEGS_NAMES,
   OUTFIT,
   OUTFIT_NAMES,
   PRESETS,
@@ -126,6 +127,12 @@ export function AvatarPicker({ value, onChange }: { value: Appearance; onChange:
         colors={OUTFIT}
         value={value.outfitColor}
         onChange={(i) => set('outfitColor', i as Appearance['outfitColor'])}
+      />
+      <Options
+        legend={ui.player.legs}
+        labels={LEGS_NAMES}
+        value={value.legs === 'short' ? 1 : 0}
+        onChange={(i) => set('legs', i === 1 ? 'short' : 'long')}
       />
       <Options
         legend={ui.player.glasses}

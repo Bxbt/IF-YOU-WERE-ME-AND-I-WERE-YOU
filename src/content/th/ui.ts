@@ -252,6 +252,7 @@ export const ui = {
     hairColor: 'สีผม',
     outfit: 'เสื้อ',
     outfitColor: 'สีเสื้อ',
+    legs: 'กางเกง',
     glasses: 'แว่นตา',
     glassesOn: 'ใส่',
     glassesOff: 'ไม่ใส่',

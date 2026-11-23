@@ -17,7 +17,8 @@ const OUTLINE = '#171c2f';
 const EYE = '#1d1a26';
 
 export const SKIN = ['#f6d7c3', '#eac2a0', '#d9a57f', '#b9805c', '#8f5e41', '#6b432e'];
-export const HAIR = ['#2a2430', '#4a3328', '#7a5236', '#9a4a3a', '#d9b26a', '#a49bcb', '#d9a3a7', '#8eacc8'];
+// 8 = salmon pink, 9 = slate navy: the pair on the cover art (docs/09 §3.1).
+export const HAIR = ['#2a2430', '#4a3328', '#7a5236', '#9a4a3a', '#d9b26a', '#a49bcb', '#d9a3a7', '#8eacc8', '#d98478', '#4b5478'];
 export const OUTFIT = [
   '#f3ebdd',
   '#d9a3a7',
@@ -27,8 +28,10 @@ export const OUTFIT = [
   '#4b4f7a',
   '#9fb89a',
   '#3c3f52',
+  '#d98a7e', // 8 = cover pink hoodie
 ];
-export const HAIR_STYLE_NAMES = ['สั้น', 'บ็อบ', 'ยาว', 'มัดจุก'];
+export const HAIR_STYLE_NAMES = ['สั้น', 'บ็อบ', 'ยาว', 'มัดจุก', 'ฟูชี้'];
+export const LEGS_NAMES = ['ขายาว', 'ขาสั้น'];
 export const OUTFIT_NAMES = ['เสื้อยืด', 'ฮู้ดดี้', 'คาร์ดิแกน'];
 
 export const PRESETS: Record<Appearance['preset'], Appearance> = {
@@ -36,7 +39,18 @@ export const PRESETS: Record<Appearance['preset'], Appearance> = {
   p2: { preset: 'p2', skin: 3, hairStyle: 2, hairColor: 0, outfit: 2, outfitColor: 3, accessory: 'none' },
   p3: { preset: 'p3', skin: 2, hairStyle: 1, hairColor: 3, outfit: 1, outfitColor: 4, accessory: 'glasses' },
   p4: { preset: 'p4', skin: 4, hairStyle: 3, hairColor: 2, outfit: 0, outfitColor: 6, accessory: 'none' },
+  // The pair on the cover art (cover.jpg), redrawn with primitives.
+  p5: { preset: 'p5', skin: 0, hairStyle: 1, hairColor: 8, outfit: 1, outfitColor: 8, accessory: 'none', legs: 'short' },
+  p6: { preset: 'p6', skin: 0, hairStyle: 4, hairColor: 9, outfit: 1, outfitColor: 3, accessory: 'none' },
 };
+
+/** A pointed tuft (spiky hair): rows widen every 2px. `outline` draws the 1px border version. */
+function spike(c: Ctx, sx: number, ty: number, h: number, col: string, outline = false) {
+  for (let i = 0; i < h; i++) {
+    const half = Math.floor(i / 2) + (outline ? 1 : 0);
+    rect(c, sx - half, ty + i - (outline ? 1 : 0), 1 + 2 * half, 1, col);
+  }
+}
 
 export function shade(hex: string, amount: number): string {
   const n = parseInt(hex.slice(1), 16);
@@ -110,8 +124,18 @@ export function drawSprite(
 
   // legs + shoes
   rect(c, X(11), Y(36), 10, 9, OUTLINE);
-  rect(c, X(12), Y(36), 3, 8, '#3a3f5c');
-  rect(c, X(17), Y(36), 3, 8, '#3a3f5c');
+  if (a.legs === 'short') {
+    // shorts, bare legs, socks
+    rect(c, X(12), Y(36), 8, 3, '#3a3f5c');
+    for (const lx of [12, 17]) {
+      rect(c, X(lx), Y(39), 3, 3, k.skin);
+      rect(c, X(lx), Y(42), 3, 2, '#e6eef6');
+    }
+    rect(c, X(15), Y(39), 2, 5, OUTLINE);
+  } else {
+    rect(c, X(12), Y(36), 3, 8, '#3a3f5c');
+    rect(c, X(17), Y(36), 3, 8, '#3a3f5c');
+  }
   rect(c, X(11), Y(44), 5, 2, OUTLINE);
   rect(c, X(16), Y(44), 5, 2, OUTLINE);
 
@@ -157,11 +181,28 @@ export function drawSprite(
 
 function drawSpriteHair(c: Ctx, style: number, k: Colors, ox: number, oy: number) {
   const r = (x: number, y: number, w: number, h: number, col: string) => rect(c, ox + x, oy + y, w, h, col);
+  const tufts: [number, number, number][] = [
+    [11, 3, 4],
+    [15, 1, 5],
+    [19, 2, 4],
+    [22, 5, 3],
+  ];
+  if (style === 4) for (const [x, y, h] of tufts) spike(c, ox + x, oy + y, h, OUTLINE, true);
   // shared cap
   ellipse(c, ox + 16, oy + 9, 8, 5, OUTLINE);
   ellipse(c, ox + 16, oy + 9, 7, 4, k.hair);
+  if (style === 4) for (const [x, y, h] of tufts) spike(c, ox + x, oy + y, h + 2, k.hair);
   r(11, 6, 5, 1, k.hairLight);
-  if (style === 0) {
+  if (style === 4) {
+    r(8, 9, 3, 6, k.hair);
+    r(21, 9, 3, 6, k.hair);
+    r(7, 11, 1, 2, k.hair);
+    r(24, 11, 1, 2, k.hair);
+    r(11, 10, 10, 2, k.hair); // messy fringe
+    r(12, 12, 1, 1, k.hair);
+    r(15, 12, 2, 1, k.hair);
+    r(19, 12, 1, 1, k.hair);
+  } else if (style === 0) {
     r(9, 9, 2, 5, k.hair);
     r(21, 9, 2, 4, k.hair);
     r(12, 10, 6, 2, k.hair); // fringe
@@ -231,11 +272,30 @@ export function drawPortrait(c: Ctx, a: Appearance, exprIn: string = 'neutral') 
   rect(c, 18, 36, 3, 4, k.skinShade);
 
   // hair
+  const h = a.hairStyle;
+  const tufts: [number, number, number][] = [
+    [19, 8, 6],
+    [26, 3, 8],
+    [34, 2, 8],
+    [41, 5, 7],
+    [47, 11, 5],
+  ];
+  if (h === 4) for (const [x, y, n] of tufts) spike(c, x, y, n, OUTLINE, true);
   ellipse(c, 32, 20, 17, 11, OUTLINE);
   ellipse(c, 32, 20, 16, 10, k.hair);
+  if (h === 4) for (const [x, y, n] of tufts) spike(c, x, y, n + 3, k.hair);
   rect(c, 22, 12, 10, 2, k.hairLight);
-  const h = a.hairStyle;
-  if (h === 0) {
+  if (h === 4) {
+    rect(c, 15, 20, 6, 14, k.hair);
+    rect(c, 43, 20, 6, 13, k.hair);
+    rect(c, 14, 24, 1, 4, k.hair);
+    rect(c, 49, 24, 1, 4, k.hair);
+    rect(c, 20, 22, 24, 4, k.hair); // messy fringe
+    rect(c, 22, 26, 2, 2, k.hair);
+    rect(c, 28, 26, 3, 1, k.hair);
+    rect(c, 34, 26, 2, 2, k.hair);
+    rect(c, 40, 26, 2, 1, k.hair);
+  } else if (h === 0) {
     rect(c, 16, 20, 5, 10, k.hair);
     rect(c, 43, 20, 5, 9, k.hair);
     rect(c, 22, 22, 12, 4, k.hair);

@@ -34,13 +34,15 @@ export const Meta = z.enum(['depends', 'not_sure', 'prefer_not', 'skipped']).nul
 // ---------- Player (§3) ----------
 
 export const Appearance = z.object({
-  preset: z.enum(['p1', 'p2', 'p3', 'p4']),
+  preset: z.enum(['p1', 'p2', 'p3', 'p4', 'p5', 'p6']),
   skin: z.number().int().min(0).max(5),
-  hairStyle: z.number().int().min(0).max(3),
-  hairColor: z.number().int().min(0).max(7),
+  hairStyle: z.number().int().min(0).max(4),
+  hairColor: z.number().int().min(0).max(9),
   outfit: z.number().int().min(0).max(2),
-  outfitColor: z.number().int().min(0).max(7),
+  outfitColor: z.number().int().min(0).max(8),
   accessory: z.enum(['none', 'glasses']),
+  /** Absent = long (older saves). docs/07 §3. */
+  legs: z.enum(['long', 'short']).optional(),
 });
 
 export const PinRecord = z.object({

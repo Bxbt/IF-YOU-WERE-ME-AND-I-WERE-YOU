@@ -77,7 +77,7 @@ PNG sprite sheet + JSON atlas (รูปแบบ TexturePacker/Aseprite JSON) �
 | stand_side_by_side | ใช้ idle ×2 | — | — | — | P0 |
 | switch_seats (ch4) | ใช้ walk + sit | — | — | — | P0 |
 
-Layer ที่ต้องทำต่อเฟรม (MVP, audit H-6): body ×1 แบบ (สีผิว 6 = palette swap) · outfit ×3 แบบ (สี 8 = palette swap) · hair ×4 ทรง (สี 8 = palette swap) · accessory ×1 (แว่น) · ทรงผม/เสื้อเพิ่มเติม และหมวก = P1
+Layer ที่ต้องทำต่อเฟรม (MVP, audit H-6): body ×1 แบบ (สีผิว 6 = palette swap) · outfit ×3 แบบ (สี 8 = palette swap) · hair ×5 ทรง (สี 10 = palette swap; ทรง 4 ฟูชี้ + สี 8/9 มาจากภาพปก) · legs ×2 (ขายาว/ขาสั้น+ถุงเท้า) · accessory ×1 (แว่น) · Preset p5/p6 = ตัวละครบนภาพปก (`cover.jpg`) วาดใหม่ด้วย canvas ไม่ใช้ไฟล์ภาพ · ทรงผม/เสื้อเพิ่มเติม และหมวก = P1
 
 **MVP ตัดออก:** `reach_out` (P1) · `hug_pair` ทำเป็น 1 เฟรม · `walk` ใช้ 4 เฟรมเฉพาะทิศขวา แล้ว flip แนวนอนสำหรับทิศซ้าย
 

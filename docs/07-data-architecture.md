@@ -68,13 +68,14 @@ interface Player {
 }
 
 interface Appearance {
-  preset: 'p1'|'p2'|'p3'|'p4';        // MVP 4 preset (audit H-6) — เพิ่มได้แบบ MINOR
+  preset: 'p1'|…|'p6';                // MVP 4 preset (audit H-6) + p5/p6 = ตัวละครบนภาพปก (MINOR, 2026-11-23)
   skin: 0|1|2|3|4|5;                   // palette swap
-  hairStyle: 0|1|2|3;                  // MVP 4 ทรง
-  hairColor: 0|1|2|3|4|5|6|7;          // palette swap
+  hairStyle: 0|1|2|3|4;                // 4 = ฟูชี้ (ภาพปก)
+  hairColor: 0|…|9;                    // palette swap · 8 = ชมพูอมส้ม, 9 = กรมเข้ม (ภาพปก)
   outfit: 0|1|2;                       // MVP 3 แบบ
-  outfitColor: 0|1|2|3|4|5|6|7;        // palette swap
+  outfitColor: 0|…|8;                  // palette swap · 8 = ชมพูอมส้ม (ภาพปก)
   accessory: 'none'|'glasses';         // hat = P1
+  legs?: 'long'|'short';               // ไม่มี = 'long' (ข้อมูลเก่าใช้ได้ต่อ) · 'short' = ขาสั้น + ถุงเท้า
 }
 ```
 
