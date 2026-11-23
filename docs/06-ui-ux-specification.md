@@ -102,11 +102,11 @@
 |---|---|
 | Purpose | เปิดเกม สร้างบรรยากาศ เข้าสู่ Flow หลัก |
 | Layout | พื้นหลัง `bg_title` เต็มจอ (ดาวเคลื่อนช้า, ทางเรืองแสงระหว่างตัวละครสองตัวที่ยืนห่างกัน) · กลางจอ: "IF YOU WERE ME" / "AND I WERE YOU" (Silkscreen) + tagline · ด้านล่าง: ปุ่ม 4 ปุ่มแนวตั้ง · มุมขวาบน: SoundToggle (แสดงเฉพาะเมื่อ `FEATURE_SOUND=true` — MVP ซ่อน) · มุมซ้ายล่าง: เวอร์ชัน |
-| Components | PixelButton ×4, SoundToggle, particles layer |
+| Components | PixelButton ×4, SoundToggle, StarField (ดาวระยิบระยับ + ดาวตก) |
 | Buttons | เริ่มการเดินทางใหม่ → S1a (ถ้ามี Journey `active` อยู่ → Dialog เก็บเป็น archived/ยกเลิก) · เล่นต่อ → Journey `active` (Phase 2: S1b) · สร้างตัวตนของฉัน → S3 (โหมดสร้างผู้เล่นอิสระ) · เกี่ยวกับเกมนี้ → S11 · ลิงก์เล็ก "ตั้งค่า" → S10 |
 | States | ไม่มี Save → "เล่นต่อ" disabled + tooltip "ยังไม่มีการเดินทางที่บันทึกไว้" · Storage unavailable → แบนเนอร์ G9 · Save เสีย → แบนเนอร์ "พบปัญหาในข้อมูลที่บันทึก" + ปุ่มไป S18 |
 | Responsive | sm: ตัวละครเล็กลง ปุ่มเต็มความกว้าง (max 360px) · lg: ปุ่มกว้าง 320px ชิดกลาง |
-| Motion | ดาว parallax 2 ชั้น, particles ลอยขึ้น — ปิดเมื่อ reduced motion |
+| Motion | ชั้น canvas โปร่งใสบนภาพปก (`StarField`, pixel 3px ตามสไตล์ภาพปก, สี cream/lavender/orange): ดาวกะพริบช้า ๆ (บางดวงเป็นรูป + เหมือนดาวบนปก) อยู่ครึ่งบนของจอ · ดาวตกเฉียงลงหนึ่งดวงทุก 7–12 วินาที (ไม่กะพริบเร็ว — AX-7) · ≤30 fps · หยุดเมื่อแท็บถูกซ่อน · **ปิดทั้งหมดเมื่อ reduced motion** (ไม่ render canvas) |
 | Sound | ปุ่มเปิด/ปิดเสียงมุมขวาบน **ค่าเริ่มต้นเปิด** (เสียงเริ่มหลังการแตะครั้งแรก) · ปรับความดัง/ปิดใน S10 |
 
 ### S1a — Safety Intro

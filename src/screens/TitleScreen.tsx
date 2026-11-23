@@ -4,6 +4,7 @@ import { ui } from '../content/th/ui';
 import { useAmbient } from '../audio/useSound';
 import { PixelButton } from '../components/PixelButton';
 import { SoundToggle } from '../components/Misc';
+import { StarField } from '../components/StarField';
 import { useGame } from '../store/game';
 import { FEATURES } from '../lib/features';
 import { APP_VERSION } from '../persistence/exportImport';
@@ -39,6 +40,7 @@ export function TitleScreen() {
         aria-hidden
         className="absolute inset-0 bg-gradient-to-b from-navy/30 via-transparent to-navy/80"
       />
+      <StarField />
 
       <div className="absolute right-3 top-3 z-20 flex gap-2">
         <SoundToggle />
