@@ -43,6 +43,8 @@ export const Appearance = z.object({
   accessory: z.enum(['none', 'glasses']),
   /** Absent = long (older saves). docs/07 §3. */
   legs: z.enum(['long', 'short']).optional(),
+  /** Absent = none. Drawn in a darker shade of the hair colour. */
+  facialHair: z.enum(['none', 'stubble', 'mustache', 'beard']).optional(),
 });
 
 export const PinRecord = z.object({
@@ -60,7 +62,9 @@ export const Player = z.object({
   createdBy: playerId.nullable(),
   nickname: z.string().trim().min(1).max(20),
   sentenceEnding: z.enum(['', 'ครับ', 'ค่ะ', 'นะ']),
-  addressStyle: z.enum(['เธอ', 'ตัวเอง', 'name']),
+  addressStyle: z.enum(['เธอ', 'ตัวเอง', 'name', 'custom']),
+  /** addressStyle 'custom': the player's own word for their partner (docs/07 §3). */
+  addressCustom: z.string().trim().min(1).max(12).optional(),
   pronouns: z.string().max(20).optional(),
   bio: z.string().max(140).optional(),
   appearance: Appearance,

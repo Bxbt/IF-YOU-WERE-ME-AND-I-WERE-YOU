@@ -59,7 +59,8 @@ interface Player {
   createdBy: PlayerId | null;       // imagined: id ของผู้เล่นที่สร้าง
   nickname: string;                 // 1–20 ตัวอักษร (trim)
   sentenceEnding: '' | 'ครับ' | 'ค่ะ' | 'นะ';  // A-04
-  addressStyle: 'เธอ' | 'ตัวเอง' | 'name';     // คำเรียกคู่ในบทพูด
+  addressStyle: 'เธอ' | 'ตัวเอง' | 'name' | 'custom';  // คำเรียกคู่ในบทพูด ({you})
+  addressCustom?: string;               // เมื่อ addressStyle='custom': คำที่ผู้เล่นพิมพ์เอง 1–12 ตัว เช่น "ที่รัก" (2026-11-23)
   pronouns?: string;                // ≤ 20 ไม่ใช้ในตรรกะใด
   bio?: string;                     // ≤ 140
   appearance: Appearance;
@@ -77,6 +78,7 @@ interface Appearance {
   outfitColor: 0|…|8;                  // palette swap · 8 = ชมพูอมส้ม (ภาพปก)
   accessory: 'none'|'glasses';         // hat = P1
   legs?: 'long'|'short';               // ไม่มี = 'long' (ข้อมูลเก่าใช้ได้ต่อ) · 'short' = ขาสั้น + ถุงเท้า
+  facialHair?: 'none'|'stubble'|'mustache'|'beard';  // ไม่มี = 'none' · สีตาม hairColor (2026-11-23)
 }
 ```
 

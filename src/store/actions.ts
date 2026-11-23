@@ -10,6 +10,7 @@ import { useGame } from './game';
 import type { MetaValue } from '../content/types';
 
 export type PlayerInput = Pick<Player, 'nickname' | 'sentenceEnding' | 'addressStyle' | 'appearance'> & {
+  addressCustom?: string;
   pronouns?: string;
   bio?: string;
 };
@@ -20,6 +21,9 @@ function clean(input: PlayerInput): PlayerInput {
   else out.pronouns = out.pronouns.trim();
   if (!out.bio?.trim()) delete out.bio;
   else out.bio = out.bio.trim();
+  // The custom word is kept only while "พิมพ์เอง" is chosen.
+  if (out.addressStyle !== 'custom' || !out.addressCustom?.trim()) delete out.addressCustom;
+  else out.addressCustom = out.addressCustom.trim();
   return out;
 }
 

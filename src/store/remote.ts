@@ -31,7 +31,14 @@ export const remotePartner = (j: GameSession) => j.playerIds[1];
 
 export const InvitationData = z.object({
   journeyId: z.string().regex(/^jr_[A-Za-z0-9_-]{6,}$/),
-  inviter: Player.pick({ nickname: true, sentenceEnding: true, addressStyle: true }).extend({ appearance: Appearance }),
+  inviter: Player.pick({
+    nickname: true,
+    sentenceEnding: true,
+    addressStyle: true,
+    addressCustom: true,
+  }).extend({
+    appearance: Appearance,
+  }),
 });
 export type InvitationData = z.infer<typeof InvitationData>;
 
@@ -68,7 +75,12 @@ async function envelope<T>(scope: Scope, data: T): Promise<Envelope<T>> {
   };
 }
 
-export type RemoteFileError = 'not_json' | 'wrong_format' | 'wrong_scope' | 'checksum_mismatch' | 'invalid_data';
+export type RemoteFileError =
+  | 'not_json'
+  | 'wrong_format'
+  | 'wrong_scope'
+  | 'checksum_mismatch'
+  | 'invalid_data';
 
 export async function parseRemoteFile(
   text: string,
@@ -86,7 +98,8 @@ export async function parseRemoteFile(
   }
   if (!env || env.format !== EXPORT_FORMAT) return { ok: false, error: 'wrong_format' };
   if (env.scope !== 'invitation' && env.scope !== 'sealed') return { ok: false, error: 'wrong_scope' };
-  if ((await sha256Base64(JSON.stringify(env.data))) !== env.checksum) return { ok: false, error: 'checksum_mismatch' };
+  if ((await sha256Base64(JSON.stringify(env.data))) !== env.checksum)
+    return { ok: false, error: 'checksum_mismatch' };
   if (env.scope === 'invitation') {
     const r = InvitationData.safeParse(env.data);
     return r.success ? { ok: true, scope: 'invitation', data: r.data } : { ok: false, error: 'invalid_data' };
@@ -106,6 +119,7 @@ export function buildInvitation(save: SaveRoot, jid: string): Promise<Envelope<I
       nickname: me.nickname,
       sentenceEnding: me.sentenceEnding,
       addressStyle: me.addressStyle,
+      ...(me.addressCustom ? { addressCustom: me.addressCustom } : {}),
       appearance: me.appearance,
     },
   });
@@ -202,7 +216,11 @@ export async function buildSealed(
   const key = j.remote?.myRevealKey ?? newRevealKey();
   const { ciphertext, iv } = await sealJson({ answers }, key);
   const file = await envelope('sealed', { journeyId: j.id, questionIds, ciphertext, iv });
-  const next = { ...j, remote: { kind: 'sealed' as const, ...j.remote, myRevealKey: key }, updatedAt: nowIso() };
+  const next = {
+    ...j,
+    remote: { kind: 'sealed' as const, ...j.remote, myRevealKey: key },
+    updatedAt: nowIso(),
+  };
   return { save: { ...save, journeys: { ...save.journeys, [jid]: next } }, file };
 }
 
@@ -220,7 +238,12 @@ export function importSealed(
     remote: {
       kind: 'sealed',
       ...j.remote,
-      partnerSealed: { questionIds: data.questionIds, ciphertext: data.ciphertext, iv: data.iv, importedAt: t },
+      partnerSealed: {
+        questionIds: data.questionIds,
+        ciphertext: data.ciphertext,
+        iv: data.iv,
+        importedAt: t,
+      },
     },
     updatedAt: t,
   };
@@ -289,7 +312,10 @@ export async function revealWithKey(
       },
     };
   }
-  return { ok: true, save: { ...save, journeys: { ...save.journeys, [jid]: { ...j, mirrorItems: items, updatedAt: t } } } };
+  return {
+    ok: true,
+    save: { ...save, journeys: { ...save.journeys, [jid]: { ...j, mirrorItems: items, updatedAt: t } } },
+  };
 }
 
 /** Questions where the partner's real answer is on this device (after reveal). */

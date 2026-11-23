@@ -18,7 +18,18 @@ const EYE = '#1d1a26';
 
 export const SKIN = ['#f6d7c3', '#eac2a0', '#d9a57f', '#b9805c', '#8f5e41', '#6b432e'];
 // 8 = salmon pink, 9 = slate navy: the pair on the cover art (docs/09 §3.1).
-export const HAIR = ['#2a2430', '#4a3328', '#7a5236', '#9a4a3a', '#d9b26a', '#a49bcb', '#d9a3a7', '#8eacc8', '#d98478', '#4b5478'];
+export const HAIR = [
+  '#2a2430',
+  '#4a3328',
+  '#7a5236',
+  '#9a4a3a',
+  '#d9b26a',
+  '#a49bcb',
+  '#d9a3a7',
+  '#8eacc8',
+  '#d98478',
+  '#4b5478',
+];
 export const OUTFIT = [
   '#f3ebdd',
   '#d9a3a7',
@@ -32,6 +43,8 @@ export const OUTFIT = [
 ];
 export const HAIR_STYLE_NAMES = ['สั้น', 'บ็อบ', 'ยาว', 'มัดจุก', 'ฟูชี้'];
 export const LEGS_NAMES = ['ขายาว', 'ขาสั้น'];
+export const FACIAL_HAIR: NonNullable<Appearance['facialHair']>[] = ['none', 'stubble', 'mustache', 'beard'];
+export const FACIAL_HAIR_NAMES = ['ไม่มี', 'จาง ๆ', 'หนวด', 'เครา'];
 export const OUTFIT_NAMES = ['เสื้อยืด', 'ฮู้ดดี้', 'คาร์ดิแกน'];
 
 export const PRESETS: Record<Appearance['preset'], Appearance> = {
@@ -40,7 +53,16 @@ export const PRESETS: Record<Appearance['preset'], Appearance> = {
   p3: { preset: 'p3', skin: 2, hairStyle: 1, hairColor: 3, outfit: 1, outfitColor: 4, accessory: 'glasses' },
   p4: { preset: 'p4', skin: 4, hairStyle: 3, hairColor: 2, outfit: 0, outfitColor: 6, accessory: 'none' },
   // The pair on the cover art (cover.jpg), redrawn with primitives.
-  p5: { preset: 'p5', skin: 0, hairStyle: 1, hairColor: 8, outfit: 1, outfitColor: 8, accessory: 'none', legs: 'short' },
+  p5: {
+    preset: 'p5',
+    skin: 0,
+    hairStyle: 1,
+    hairColor: 8,
+    outfit: 1,
+    outfitColor: 8,
+    accessory: 'none',
+    legs: 'short',
+  },
   p6: { preset: 'p6', skin: 0, hairStyle: 4, hairColor: 9, outfit: 1, outfitColor: 3, accessory: 'none' },
 };
 
@@ -89,7 +111,8 @@ function hairMass(c: Ctx, k: Colors, cx: number, cy: number, rx: number, ry: num
   ellipse(c, cx, cy, rx + 1, ry + 1, OUTLINE);
   for (const [x, y, r] of bumps) ellipse(c, x, y, r, r, k.hairShade);
   ellipse(c, cx, cy, rx, ry, k.hairShade);
-  for (const [x, y, r] of bumps) if (y < cy + ry * 0.3) ellipse(c, x - 0.5, y - 0.5, r - 0.6, r - 0.6, k.hair);
+  for (const [x, y, r] of bumps)
+    if (y < cy + ry * 0.3) ellipse(c, x - 0.5, y - 0.5, r - 0.6, r - 0.6, k.hair);
   ellipse(c, cx - 0.5, cy - 1, rx - 1.2, ry - 1.4, k.hair);
   ellipse(c, cx - rx * 0.35, cy - ry * 0.5, Math.max(1, rx * 0.2), Math.max(0.8, ry * 0.12), k.hairLight);
 }
@@ -201,6 +224,7 @@ export function drawSprite(
   rect(c, X(10), Y(16 + b), 2, 1, k.skinShade);
 
   drawSpriteHair(c, a.hairStyle, k, X(0), Y(b));
+  drawSpriteFacialHair(c, a.facialHair, k, X(0), Y(b));
   drawSpriteFace(c, expression, X(0), Y(b));
   if (a.accessory === 'glasses') {
     rect(c, X(11), Y(13), 4, 3, OUTLINE);
@@ -215,7 +239,15 @@ function drawSpriteHair(c: Ctx, style: number, k: Colors, ox: number, oy: number
   const r = (x: number, y: number, w: number, h: number, col: string) => rect(c, ox + x, oy + y, w, h, col);
   if (style === 4) {
     // fluffy: a big round mass with soft tufts all round
-    hairMass(c, k, ox + 16, oy + 8, 9.5, 6.5, rimTufts(ox + 16, oy + 8, 9.5, 6.5, 1.8, [-165, -130, -100, -70, -40, -10, 20, 160]));
+    hairMass(
+      c,
+      k,
+      ox + 16,
+      oy + 8,
+      9.5,
+      6.5,
+      rimTufts(ox + 16, oy + 8, 9.5, 6.5, 1.8, [-165, -130, -100, -70, -40, -10, 20, 160]),
+    );
     ellipseFrom(c, ox + 16, oy + 13, 7, 7, k.skin, oy + 12);
     r(8, 11, 2, 4, k.hair); // sideburns, tapered
     r(9, 15, 1, 1, k.hair);
@@ -266,6 +298,26 @@ function drawSpriteHair(c: Ctx, style: number, k: Colors, ox: number, oy: number
     r(20, 9, 2, 4, k.hair);
     r(12, 10, 4, 1, k.hair);
   }
+}
+
+/** Facial hair on the 32×48 sprite, under the face so the mouth stays visible. */
+function drawSpriteFacialHair(c: Ctx, kind: Appearance['facialHair'], k: Colors, ox: number, oy: number) {
+  if (!kind || kind === 'none') return;
+  const r = (x: number, y: number, w: number, h: number, col: string) => rect(c, ox + x, oy + y, w, h, col);
+  if (kind === 'stubble') {
+    for (let y = 16; y <= 19; y++)
+      for (let x = 11; x <= 21; x++)
+        if ((x + y) % 2 === 0 && !(y === 17 && x >= 14 && x <= 17)) r(x, y, 1, 1, k.hairShade);
+    return;
+  }
+  if (kind === 'beard') {
+    r(9, 14, 2, 4, k.hairShade); // sideburns into the beard
+    r(21, 14, 2, 4, k.hairShade);
+    r(10, 17, 12, 2, k.hair);
+    r(11, 19, 10, 1, k.hair);
+    r(12, 20, 8, 1, k.hairShade);
+  }
+  r(13, 16, 6, 1, k.hairShade); // mustache
 }
 
 function drawSpriteFace(c: Ctx, e: Expression, ox: number, oy: number) {
@@ -319,7 +371,15 @@ export function drawPortrait(c: Ctx, a: Appearance, exprIn: string = 'neutral') 
   // hair
   const h = a.hairStyle;
   if (h === 4) {
-    hairMass(c, k, 32, 18, 19, 13.5, rimTufts(32, 18, 19, 13.5, 3, [-170, -145, -120, -97, -75, -52, -28, -5, 18, 162, 185]));
+    hairMass(
+      c,
+      k,
+      32,
+      18,
+      19,
+      13.5,
+      rimTufts(32, 18, 19, 13.5, 3, [-170, -145, -120, -97, -75, -52, -28, -5, 18, 162, 185]),
+    );
     ellipseFrom(c, 32, 30, 15, 16, k.skin, 25);
     rect(c, 16, 22, 4, 8, k.hair); // sideburns, tapered
     rect(c, 17, 30, 2, 3, k.hair);
@@ -371,6 +431,8 @@ export function drawPortrait(c: Ctx, a: Appearance, exprIn: string = 'neutral') 
     rect(c, 43, 20, 4, 8, k.hair);
     rect(c, 22, 22, 8, 3, k.hair);
   }
+
+  drawPortraitFacialHair(c, a.facialHair, k);
 
   // face
   const eyeY = 31;
@@ -429,4 +491,28 @@ export function drawPortrait(c: Ctx, a: Appearance, exprIn: string = 'neutral') 
     }
     rect(c, 29, 30, 6, 1, OUTLINE);
   }
+}
+
+/** Facial hair on the 64×64 portrait (inside the face ellipse), drawn before the mouth. */
+function drawPortraitFacialHair(c: Ctx, kind: Appearance['facialHair'], k: Colors) {
+  if (!kind || kind === 'none') return;
+  const inFace = (x: number, y: number) => ((x + 0.5 - 32) / 15) ** 2 + ((y + 0.5 - 30) / 16) ** 2 <= 1;
+  const mouth = (x: number, y: number) => y >= 39 && y <= 42 && x >= 28 && x <= 35;
+  if (kind === 'stubble') {
+    for (let y = 37; y <= 46; y++)
+      for (let x = 17; x <= 47; x++)
+        if ((x + y) % 2 === 0 && inFace(x, y) && !mouth(x, y)) rect(c, x, y, 1, 1, k.hairShade);
+    return;
+  }
+  if (kind === 'beard') {
+    for (let y = 33; y <= 46; y++)
+      for (let x = 16; x <= 48; x++) {
+        if (!inFace(x, y) || mouth(x, y)) continue;
+        const side = x < 21 || x > 43;
+        if (side || y >= 40) rect(c, x, y, 1, 1, y >= 44 || side ? k.hairShade : k.hair);
+      }
+  }
+  rect(c, 26, 38, 12, 2, k.hairShade); // mustache
+  rect(c, 25, 39, 2, 1, k.hairShade);
+  rect(c, 37, 39, 2, 1, k.hairShade);
 }

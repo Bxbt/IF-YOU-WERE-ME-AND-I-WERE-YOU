@@ -312,7 +312,11 @@ export function buildTokenContext(save: SaveRoot, j: GameSession): TokenContext 
   const inP = insiderIsA ? A : B;
   const outP = insiderIsA ? B : A;
   const address = (p: typeof A, partner: typeof A) =>
-    p?.addressStyle === 'name' ? (partner?.nickname ?? '') : (p?.addressStyle ?? 'เธอ');
+    p?.addressStyle === 'name'
+      ? (partner?.nickname ?? '')
+      : p?.addressStyle === 'custom'
+        ? p.addressCustom?.trim() || 'เธอ'
+        : (p?.addressStyle ?? 'เธอ');
   return {
     names: {
       A: nameA,

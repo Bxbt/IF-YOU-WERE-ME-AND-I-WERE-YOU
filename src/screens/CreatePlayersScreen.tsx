@@ -84,6 +84,7 @@ const toInput = (p: Player): PlayerInput => ({
   nickname: p.nickname,
   sentenceEnding: p.sentenceEnding,
   addressStyle: p.addressStyle,
+  addressCustom: p.addressCustom,
   appearance: p.appearance,
 });
 

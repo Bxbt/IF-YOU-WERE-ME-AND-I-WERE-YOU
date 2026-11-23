@@ -1,6 +1,8 @@
-import { Check } from 'lucide-react';
+import { Check, Dices } from 'lucide-react';
 import { ui } from '../content/th/ui';
 import {
+  FACIAL_HAIR,
+  FACIAL_HAIR_NAMES,
   HAIR,
   HAIR_STYLE_NAMES,
   LEGS_NAMES,
@@ -76,11 +78,37 @@ function Options({
   );
 }
 
+const pick = <T,>(xs: readonly T[], rnd: () => number): T => xs[Math.floor(rnd() * xs.length)]!;
+
+/** "สุ่มรูปลักษณ์" (docs/06 S3): every layer at random within its range; the preset key is kept. */
+export function randomAppearance(base: Appearance, rnd: () => number = Math.random): Appearance {
+  const idx = (n: number) => Math.floor(rnd() * n);
+  return {
+    preset: base.preset,
+    skin: idx(SKIN.length) as Appearance['skin'],
+    hairStyle: idx(HAIR_STYLE_NAMES.length) as Appearance['hairStyle'],
+    hairColor: idx(HAIR.length) as Appearance['hairColor'],
+    outfit: idx(OUTFIT_NAMES.length) as Appearance['outfit'],
+    outfitColor: idx(OUTFIT.length) as Appearance['outfitColor'],
+    accessory: rnd() < 0.3 ? 'glasses' : 'none',
+    legs: rnd() < 0.3 ? 'short' : 'long',
+    facialHair: rnd() < 0.6 ? 'none' : pick(FACIAL_HAIR.slice(1), rnd),
+  };
+}
+
 /** AvatarPicker — presets + per-layer tweaks (docs/06 S3, MVP ranges per docs/07 §3). */
 export function AvatarPicker({ value, onChange }: { value: Appearance; onChange: (a: Appearance) => void }) {
   const set = <K extends keyof Appearance>(k: K, v: Appearance[K]) => onChange({ ...value, [k]: v });
   return (
     <div className="flex flex-col gap-5">
+      <button
+        type="button"
+        onClick={() => onChange(randomAppearance(value))}
+        className="btn btn-ghost self-start px-3 text-sm"
+      >
+        <Dices aria-hidden className="h-5 w-5" />
+        {ui.player.randomize}
+      </button>
       <fieldset className="m-0 border-0 p-0">
         <legend className="mb-2 p-0 text-sm font-medium">{ui.player.preset}</legend>
         <div className="flex flex-wrap gap-3">
@@ -133,6 +161,12 @@ export function AvatarPicker({ value, onChange }: { value: Appearance; onChange:
         labels={LEGS_NAMES}
         value={value.legs === 'short' ? 1 : 0}
         onChange={(i) => set('legs', i === 1 ? 'short' : 'long')}
+      />
+      <Options
+        legend={ui.player.facialHair}
+        labels={FACIAL_HAIR_NAMES}
+        value={Math.max(0, FACIAL_HAIR.indexOf(value.facialHair ?? 'none'))}
+        onChange={(i) => set('facialHair', FACIAL_HAIR[i]!)}
       />
       <Options
         legend={ui.player.glasses}

@@ -83,12 +83,18 @@ export function PlayerForm({
   const errId = useId();
   const nameEmpty = v.nickname.trim().length === 0;
   const sameName = !!otherNickname && v.nickname.trim() === otherNickname.trim() && !nameEmpty;
+  const customId = useId();
+  const customEmpty = v.addressStyle === 'custom' && !v.addressCustom?.trim();
 
   function submit(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
     if (nameEmpty) {
       document.getElementById(nameId)?.focus();
+      return;
+    }
+    if (customEmpty) {
+      document.getElementById(customId)?.focus();
       return;
     }
     onSubmit(v);
@@ -152,6 +158,27 @@ export function PlayerForm({
             options={ui.player.addressStyles}
             onChange={(x) => setV({ ...v, addressStyle: x })}
           />
+          {v.addressStyle === 'custom' && (
+            <div className="flex flex-col gap-1">
+              <label htmlFor={customId} className="text-sm font-medium">
+                {ui.player.addressCustom}
+              </label>
+              <input
+                id={customId}
+                value={v.addressCustom ?? ''}
+                maxLength={12}
+                aria-invalid={touched && customEmpty}
+                aria-describedby={touched && customEmpty ? `${customId}-err` : undefined}
+                onChange={(e) => setV({ ...v, addressCustom: e.target.value })}
+                className={inputCls}
+              />
+              {touched && customEmpty && (
+                <p id={`${customId}-err`} className="m-0 text-sm text-orange">
+                  {ui.player.addressCustomEmpty}
+                </p>
+              )}
+            </div>
+          )}
           <label className="flex flex-col gap-1 text-sm font-medium">
             {ui.player.pronouns}
             <input

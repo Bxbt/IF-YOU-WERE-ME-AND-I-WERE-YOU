@@ -28,3 +28,42 @@ describe('default appearance (docs/06 S3)', () => {
     expect(Appearance.safeParse(old).success).toBe(true);
   });
 });
+
+describe('สุ่มรูปลักษณ์, หนวดเครา, คำเรียกคู่แบบพิมพ์เอง (docs/06 S3, docs/07 §3)', () => {
+  it('a random look is always valid and keeps the preset key', async () => {
+    const { randomAppearance } = await import('../../src/components/AvatarPicker');
+    const { PRESETS } = await import('../../src/scene/draw/character');
+    const { Appearance } = await import('../../src/persistence/schema');
+    let seed = 1;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+    const seen = new Set<string>();
+    for (let i = 0; i < 200; i++) {
+      const a = randomAppearance(PRESETS.p2, rnd);
+      expect(Appearance.safeParse(a).success).toBe(true);
+      expect(a.preset).toBe('p2');
+      seen.add(a.facialHair ?? 'none');
+    }
+    expect([...seen].sort()).toEqual(['beard', 'mustache', 'none', 'stubble']);
+  });
+
+  it('{you} uses the custom word; it is dropped when another style is chosen', async () => {
+    const { buildTokenContext } = await import('../../src/store/story');
+    const { sampleSave } = await import('../fixtures/factory');
+    const s = sampleSave();
+    const j = s.journeys.jr_journey001!;
+    s.players.pl_playerA01 = { ...s.players.pl_playerA01!, addressStyle: 'custom', addressCustom: 'ที่รัก' };
+    expect(buildTokenContext(s, j).address.in).toBe('ที่รัก');
+    const { createPlayer } = await import('../../src/store/actions');
+    const { useGame } = await import('../../src/store/game');
+    const { createEmptySave } = await import('../../src/persistence/schema');
+    useGame.setState({ save: createEmptySave() });
+    const id = createPlayer({
+      nickname: 'ฟ้า',
+      sentenceEnding: '',
+      addressStyle: 'เธอ',
+      addressCustom: 'แก',
+      appearance: s.players.pl_playerA01!.appearance,
+    });
+    expect(useGame.getState().save.players[id]?.addressCustom).toBeUndefined();
+  });
+});

@@ -11,14 +11,22 @@ export function EditPlayerScreen() {
   const player = useGame((s) => s.save.players[playerId]);
   const navigate = useNavigate();
   if (!player) return <Navigate to="/profile" replace />;
-  const { nickname, sentenceEnding, addressStyle, appearance, pronouns, bio } = player;
+  const { nickname, sentenceEnding, addressStyle, addressCustom, appearance, pronouns, bio } = player;
 
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8">
       <ScreenHeader title="" backTo="/profile" />
       <PlayerForm
         heading={ui.player.editHeading}
-        initial={{ nickname, sentenceEnding, addressStyle, appearance: { ...appearance }, pronouns, bio }}
+        initial={{
+          nickname,
+          sentenceEnding,
+          addressStyle,
+          addressCustom,
+          appearance: { ...appearance },
+          pronouns,
+          bio,
+        }}
         imagined={player.kind === 'imagined'}
         submitLabel={ui.player.save}
         onSubmit={(v) => {
