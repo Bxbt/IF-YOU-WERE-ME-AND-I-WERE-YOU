@@ -7,7 +7,7 @@
  */
 import type { ChapterContent } from '../content/types';
 import type { SaveRoot } from '../persistence/schema';
-import { playerForRole } from '../store/story';
+import { playerForRole, roleView } from '../store/story';
 
 export type TagIndex = Map<string, string>;
 
@@ -35,7 +35,7 @@ export function observedSignals(save: SaveRoot, playerId: string, idx: TagIndex)
     for (const p of Object.values(j.chapterProgress)) {
       for (const e of p.choiceLog) {
         if (e.byPlayerId !== playerId) continue;
-        const own = e.asRole === 'self' || playerForRole(j, e.asRole) === playerId;
+        const own = e.asRole === 'self' || playerForRole(roleView(j, p.chapterId), e.asRole) === playerId;
         if (!own) continue;
         const tag = idx.get(`${e.choiceId}:${e.optionId}`);
         if (!tag) continue;

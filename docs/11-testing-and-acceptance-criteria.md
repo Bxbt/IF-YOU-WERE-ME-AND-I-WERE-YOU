@@ -217,6 +217,17 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-MEM-04 | P2 | C | ลบความทรงจำ | หายจาก save และ backup |
 | TC-MEM-05 | P2 | C | คู่เปิดลิงก์ความทรงจำที่ยังไม่แชร์ | ถูกพากลับ ไม่เห็นเนื้อหา |
 
+## 13c. เส้นเรื่องที่ 2 "อีกด้านของเรื่อง" (M16)
+
+| ID | Phase | Type | ขั้นตอน | Expected Result |
+|---|---|---|---|---|
+| TC-OS-01 | M16 | E | S5 → แท็บ "อีกด้านของเรื่อง" → เริ่ม os1 โดยยังไม่เลือกคนเล่า | ไป S20 ก่อน · เลือกแล้วเข้า os1 · `{in}` = ชื่อคนเล่า |
+| TC-OS-02 | M16 | U | Flag ของ os* กับ ch* | ไม่ปนกัน (buildStoryState อ่านเฉพาะเส้นเรื่องเดียวกัน) · Scenario ไม่ถูกใช้ใน os* |
+| TC-OS-03 | M16 | U | เปลี่ยนคนเล่า | os1–os6 รีเซ็ต · ch1–ch5 และคำตอบท้ายบทไม่เปลี่ยน |
+| TC-OS-04 | M16 | U/C | Content lint ทุกบท os* | ผ่านกฎเดียวกับ ch* (ไม่มีคำต้องห้าม ทุกเส้นทางเล่นจบ token ครบ ฉากมี ariaLabel) · os6 ทั้ง 4 ทางจบได้ |
+| TC-OS-05 | M16 | E | เล่น os1 จนจบ (Solo) | ผ่านตัวเลือก การ์ด Reflection · Transition มีปุ่มไป os2 · ข้อมูลเดิมของ ch* ไม่เปลี่ยน |
+| TC-OS-06 | M16 | U | Save เก่าที่ไม่มี `otherSide` / ChapterId ใหม่ | โหลดได้ · S5 แท็บแรกเหมือนเดิม |
+
 ## 14. Safety & Content
 
 | ID | Phase | Type | ขั้นตอน | Expected Result |

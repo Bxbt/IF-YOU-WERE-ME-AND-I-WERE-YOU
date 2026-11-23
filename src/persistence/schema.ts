@@ -25,7 +25,7 @@ export const DimensionId = z.enum([
   'D11',
   'D12',
 ]);
-export const ChapterId = z.enum(['ch1', 'ch2', 'ch3', 'ch4', 'ch5']);
+export const ChapterId = z.enum(['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'os1', 'os2', 'os3', 'os4', 'os5', 'os6']);
 export const Role = z.enum(['insider', 'waiter']);
 export const Layer = z.enum(['self', 'perceived']);
 export const Mode = z.enum(['solo', 'together', 'remote_sealed', 'remote_online']);
@@ -218,12 +218,20 @@ export const RemoteLink = z.object({
   localPlayerId: playerId.optional(),
 });
 
+/** M16 — who tells storyline 2 (role `insider` in os1–os6). docs/07 §5.1. */
+export const OtherSideConfig = z.object({
+  tellerPlayerId: playerId,
+  randomized: z.boolean(),
+  setAt: isoDate,
+});
+
 export const GameSession = z.object({
   id: journeyId,
   mode: Mode,
   playerIds: z.tuple([playerId, playerId]),
   status: z.enum(['active', 'completed', 'archived']),
   scenario: ScenarioConfig.optional(),
+  otherSide: OtherSideConfig.optional(),
   chapterProgress: z.record(ChapterProgress),
   storyAnswers: z.record(StoryAnswer),
   mirrorItems: z.record(SharedAnswer),

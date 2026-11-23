@@ -13,6 +13,7 @@ import { drawLobbyFloor6 } from './draw/lobby';
 import { drawLivingRoomMorning, drawLivingRoomNight } from './draw/livingRoom';
 import { drawRooftopNight } from './draw/rooftop';
 import { drawBlack, drawStairwell } from './draw/stairwell';
+import { drawBalconyNight, drawBathroomMirror, drawBedroomNight, drawStreetSunrise } from './draw/otherSide';
 
 export interface BackgroundDef {
   key: string;
@@ -27,6 +28,35 @@ export interface BackgroundDef {
 const titleStars = makeStars();
 
 const LIST: BackgroundDef[] = [
+  // M16 — storyline 2 "อีกด้านของเรื่อง" (docs/09 §2)
+  {
+    key: 'bg_bedroom_night',
+    draw: drawBedroomNight,
+    fallback: '#171c2f',
+    ariaLabel: 'ห้องนอนแสงสลัว ไฟหัวเตียงดวงเล็ก ฝนไหลลงกระจกหน้าต่าง',
+    priority: 'P1',
+  },
+  {
+    key: 'bg_balcony_night',
+    draw: drawBalconyNight,
+    fallback: '#202440',
+    ariaLabel: 'ระเบียงว่างตอนกลางคืน ไฟเมืองเปิดอยู่เกือบทุกบาน',
+    priority: 'P1',
+  },
+  {
+    key: 'bg_bathroom_mirror',
+    draw: drawBathroomMirror,
+    fallback: '#5f6f8c',
+    ariaLabel: 'กระจกในห้องน้ำตอนเช้า แสงอ่อน ๆ ลอดหน้าต่างบานเล็ก',
+    priority: 'P1',
+  },
+  {
+    key: 'bg_street_sunrise',
+    draw: drawStreetSunrise,
+    fallback: '#a49bcb',
+    ariaLabel: 'ถนนเงียบตอนรุ่งสาง พระอาทิตย์กำลังขึ้นที่ปลายถนน',
+    priority: 'P1',
+  },
   {
     key: 'bg_title',
     draw: (c, t) => {

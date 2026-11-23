@@ -40,7 +40,8 @@ type JourneyId = string;          // "jr_" + nanoid(12)
 type QuestionId = `Q${string}` | `M${string}` | string; // Q01–Q36, M01–M07, r1_1, w3_1, cs1, ...
 type OptionId = string;           // "q13_hug"
 type DimensionId = 'D01'|'D02'|'D03'|'D04'|'D05'|'D06'|'D07'|'D08'|'D09'|'D10'|'D11'|'D12';
-type ChapterId = 'ch1'|'ch2'|'ch3'|'ch4'|'ch5';
+type ChapterId = 'ch1'|'ch2'|'ch3'|'ch4'|'ch5'
+  | 'os1'|'os2'|'os3'|'os4'|'os5'|'os6';   // M16: เส้นเรื่องที่ 2 "อีกด้านของเรื่อง" (MINOR — save เก่าใช้ได้)
 type Role = 'insider' | 'waiter';
 type Layer = 'self' | 'perceived';
 type Mode = 'solo' | 'together' | 'remote_sealed' | 'remote_online';
@@ -148,7 +149,16 @@ interface ScenarioConfig {
   randomized: boolean;
   setAt: ISODate;
 }
+
+// M16 — เส้นเรื่องที่ 2: ใครเป็นคนเล่า (บทบาท insider ใน os1–os6; อีกคน = waiter)
+interface OtherSideConfig {
+  tellerPlayerId: PlayerId;
+  randomized: boolean;
+  setAt: ISODate;
+}
 ```
+
+Flag ของ `os*` อ่าน/เขียนเฉพาะบท `os*` (และ Ch1–Ch5 อ่านเฉพาะ Ch1–Ch5) · เปลี่ยนคนเล่า → รีเซ็ตความคืบหน้า os1–os6 แบบเดียวกับ Scenario · Live merge: `otherSide` ใช้ค่าที่ `setAt` ใหม่กว่า
 
 ### 5.2 Content (อยู่ในโค้ด `src/content/` — ไม่อยู่ใน Save)
 
@@ -259,6 +269,7 @@ interface GameSession {
   playerIds: [PlayerId, PlayerId];      // [A, B] — solo: B = imagined
   status: 'active' | 'completed' | 'archived';
   scenario?: ScenarioConfig;
+  otherSide?: OtherSideConfig;          // M16
   chapterProgress: Record<ChapterId, ChapterProgress>;
   storyAnswers: Record<StoryAnswerKey, StoryAnswer>;
   mirrorItems: Record<MirrorKey, SharedAnswer>;

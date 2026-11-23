@@ -228,8 +228,16 @@ export function mergeJourney(L: Journey, P: NonNullable<SlotPayload['journey']>,
   const scenario =
     L.scenario && P.scenario ? (P.scenario.setAt > L.scenario.setAt ? P.scenario : L.scenario) : (L.scenario ?? P.scenario);
 
+  const otherSide =
+    L.otherSide && P.otherSide
+      ? P.otherSide.setAt > L.otherSide.setAt
+        ? P.otherSide
+        : L.otherSide
+      : (L.otherSide ?? P.otherSide);
+
   return {
     ...L,
+    ...(otherSide ? { otherSide } : {}),
     status: L.status === 'archived' ? 'archived' : L.status === 'completed' || P.status === 'completed' ? 'completed' : L.status,
     ...(scenario ? { scenario } : {}),
     chapterProgress,

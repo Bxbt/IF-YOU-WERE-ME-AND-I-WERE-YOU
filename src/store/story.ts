@@ -2,7 +2,7 @@
  * Story progress mutations (docs/07 §6, docs/05 §2 G1–G6, §6). Pure `(save) => save` builders are
  * exported for tests; the `*Now` wrappers apply them through the store (autosave, docs/05 G1).
  */
-import type { ChapterId, RoleId } from '../content/types';
+import type { ChapterId, RoleId, StorylineId } from '../content/types';
 import type { GameSession, SaveRoot } from '../persistence/schema';
 import type { StoryState, TokenContext } from '../engine/dialogue';
 import type { AnswerInput } from './actions';
@@ -14,8 +14,55 @@ import { useGame } from './game';
 type Progress = GameSession['chapterProgress'][string];
 type StoryAnswerT = GameSession['storyAnswers'][string];
 
-const CHAPTER_ORDER: ChapterId[] = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5'];
+const MAIN_ORDER: ChapterId[] = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5'];
+const OTHER_ORDER: ChapterId[] = ['os1', 'os2', 'os3', 'os4', 'os5', 'os6'];
+const CHAPTER_ORDER: ChapterId[] = [...MAIN_ORDER, ...OTHER_ORDER];
 const SCENARIO_CHAPTERS: ChapterId[] = ['ch1', 'ch2', 'ch3'];
+
+/** M16: which storyline a chapter belongs to (docs/02 เส้นเรื่องที่ 2). */
+export const storylineOf = (ch: ChapterId): StorylineId => (ch.startsWith('os') ? 'other' : 'main');
+
+/**
+ * The journey as a chapter sees it (docs/07 §5.1). In storyline 2 the teller holds the `insider`
+ * role, so every role helper (tokens, banner, who chooses) works unchanged. Read-only view — never
+ * write it back.
+ */
+export function roleView(j: GameSession, ch: ChapterId): GameSession {
+  if (storylineOf(ch) !== 'other') return j;
+  const teller = j.otherSide?.tellerPlayerId ?? j.playerIds[0];
+  return {
+    ...j,
+    scenario: { insiderPlayerId: teller, priorWarning: true, randomized: !!j.otherSide?.randomized, setAt: j.otherSide?.setAt ?? j.createdAt },
+  };
+}
+
+export interface TellerInput {
+  tellerPlayerId: string;
+  randomized: boolean;
+}
+
+/** os1–os6 progress that a teller change would reset. */
+export function tellerResetsProgress(j: GameSession): boolean {
+  return OTHER_ORDER.some((c) => {
+    const p = j.chapterProgress[c];
+    return !!p && (p.status !== 'not_started' || Object.keys(p.flags).length > 0);
+  });
+}
+
+/** Changing the teller resets os1–os6 progress; answers stay (docs/07 §5.1). */
+export function setTeller(save: SaveRoot, jid: string, input: TellerInput): SaveRoot {
+  return withJourney(save, jid, (j, t) => {
+    const changed = !!j.otherSide && j.otherSide.tellerPlayerId !== input.tellerPlayerId;
+    const chapterProgress = { ...j.chapterProgress };
+    if (changed) {
+      for (const c of OTHER_ORDER) {
+        const p = chapterProgress[c];
+        if (p) chapterProgress[c] = { ...emptyProgress(c), playCount: p.playCount };
+      }
+    }
+    return { ...j, chapterProgress, otherSide: { ...input, setAt: t } };
+  });
+}
 
 export function emptyProgress(chapterId: ChapterId): Progress {
   return { chapterId, status: 'not_started', flags: {}, choiceLog: [], skippedScenes: [], playCount: 0 };
@@ -203,10 +250,11 @@ export function removeStoryAnswer(save: SaveRoot, jid: string, playerId: string,
 
 // ---------- Derived state ----------
 
-/** Flags of every chapter (in order) with the current chapter last, plus this play's choices. */
+/** Flags of every chapter of the same storyline (in order) with the current chapter last, plus this play's choices. */
 export function buildStoryState(j: GameSession, ch: ChapterId): StoryState {
   const flags: Record<string, string> = {};
-  for (const c of CHAPTER_ORDER) if (c !== ch) Object.assign(flags, j.chapterProgress[c]?.flags ?? {});
+  const order = storylineOf(ch) === 'other' ? OTHER_ORDER : MAIN_ORDER;
+  for (const c of order) if (c !== ch) Object.assign(flags, j.chapterProgress[c]?.flags ?? {});
   const cur = j.chapterProgress[ch];
   Object.assign(flags, cur?.flags ?? {});
   const chosen: Record<string, string> = {};

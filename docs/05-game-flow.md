@@ -17,6 +17,7 @@
 | S4 | Personality Setup | `#/profile/:playerId/:layer` | MVP |
 | S5 | Chapter Selection | `#/j/:journeyId/chapters` | MVP |
 | S5a | Scenario Setup | `#/j/:journeyId/scenario` | MVP |
+| S20 | เลือกคนเล่า (เส้นเรื่องที่ 2) | `#/j/:journeyId/teller?next=…` | M16 |
 | S6 | Narrative Gameplay | `#/j/:journeyId/play/:chapterId` | MVP |
 | S7 | Perspective Mirror | `#/j/:journeyId/mirror/:questionId` (ภายใน Ch3/Ch4 ใช้เป็น overlay) | MVP |
 | S8 | Personality Comparison | `#/j/:journeyId/compare` | MVP |
@@ -47,7 +48,7 @@
 | G5 Skip scene | จาก S14 → "ข้ามฉากนี้" → ไปฉากถัดไปตามลำดับ Flag ที่ไม่ได้ตั้งใช้ fallback ([02](02-story-script.md) ภาคผนวก B) |
 | G6 Skip chapter | จาก S14 หรือ S5 → "ข้ามบทนี้" → สถานะ `skipped` → บทถัดไปเปิดได้ |
 | G7 Skip question | ทุกคำถามมี Meta `ข้าม` |
-| G8 Chapter access | ทุกบทเปิดเล่นได้ตั้งแต่ต้น แต่ S5 แนะนำลำดับ 1→5 · ถ้ายังไม่มี Scenario (ข้าม Ch1) → เข้า Ch1–Ch3 ต้องผ่าน S5a ก่อน (Ch4, Ch5 ไม่ใช้ Scenario จึงไม่ต้อง) |
+| G8 Chapter access | ทุกบทเปิดเล่นได้ตั้งแต่ต้น แต่ S5 แนะนำลำดับ 1→5 · ถ้ายังไม่มี Scenario (ข้าม Ch1) → เข้า Ch1–Ch3 ต้องผ่าน S5a ก่อน (Ch4, Ch5 ไม่ใช้ Scenario จึงไม่ต้อง) · เส้นเรื่องที่ 2 (`os1`–`os6`, แท็บ "อีกด้านของเรื่อง" ใน S5) ไม่ใช้ Scenario แต่ต้องมีคนเล่า → ถ้ายังไม่เลือก ผ่าน S20 ก่อน · Flag ของสองเส้นเรื่องไม่ปนกัน |
 | G9 Storage unavailable | ถ้า localStorage เขียนไม่ได้ → แบนเนอร์ถาวร "ตอนนี้ความคืบหน้าจะไม่ถูกบันทึก (โหมดส่วนตัวของเบราว์เซอร์?) — ส่งออกไฟล์ก่อนปิดหน้า" · เกมยังเล่นได้ด้วย state ในหน่วยความจำ |
 | G10 Corrupt save | อ่าน save ไม่ได้/Schema ไม่ผ่าน → S18 (ห้ามลบอัตโนมัติ) |
 | G11 Exit | ออกจากเกมกลางบท → ไม่ถามยืนยัน (เพราะ Autosave) ยกเว้นกำลังพิมพ์ข้อความอิสระที่ยังไม่บันทึก |

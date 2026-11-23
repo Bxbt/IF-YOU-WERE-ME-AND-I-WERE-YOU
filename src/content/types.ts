@@ -24,7 +24,11 @@ export type MetaValue = 'depends' | 'not_sure' | 'prefer_not' | 'skipped';
 
 // ---------- Story content (docs/07 §5.2) ----------
 
-export type ChapterId = 'ch1' | 'ch2' | 'ch3' | 'ch4' | 'ch5';
+export type MainChapterId = 'ch1' | 'ch2' | 'ch3' | 'ch4' | 'ch5';
+/** M16 — storyline 2 "อีกด้านของเรื่อง" (docs/02). */
+export type OtherSideChapterId = 'os1' | 'os2' | 'os3' | 'os4' | 'os5' | 'os6';
+export type ChapterId = MainChapterId | OtherSideChapterId;
+export type StorylineId = 'main' | 'other';
 export type RoleId = 'insider' | 'waiter';
 export type Expression =
   | 'neutral'

@@ -55,6 +55,8 @@ import {
   emptyProgress,
   markSceneSkipped,
   playerForRole,
+  roleView,
+  storylineOf,
   recordChoice,
   removeStoryAnswer,
   saveStoryAnswer,
@@ -103,8 +105,10 @@ import type { GameSession, SaveRoot } from '../persistence/schema';
 export function PlayScreen() {
   const { journeyId = '', chapterId = '' } = useParams();
   const location = useLocation();
-  const journey = useGame((s) => s.save.journeys[journeyId]);
+  const rawJourney = useGame((s) => s.save.journeys[journeyId]);
   const meta = CHAPTER_BY_ID[chapterId as ChapterId];
+  // Storyline 2: the teller holds the insider role (docs/07 §5.1) — a read-only view of the journey.
+  const journey = useMemo(() => (rawJourney && meta ? roleView(rawJourney, meta.id) : rawJourney), [rawJourney, meta]);
   const [content, setContent] = useState<ChapterContent | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -139,6 +143,14 @@ export function PlayScreen() {
     return (
       <Navigate
         to={`/j/${journey.id}/scenario?next=${encodeURIComponent(location.pathname + location.search)}`}
+        replace
+      />
+    );
+  }
+  if (meta.needsTeller && !journey.otherSide) {
+    return (
+      <Navigate
+        to={`/j/${journey.id}/teller?next=${encodeURIComponent(location.pathname + location.search)}`}
         replace
       />
     );
@@ -540,7 +552,7 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     );
   }, [pos, content, state, moveTo, journey.id, ch]);
 
-  const chaptersHref = `/j/${journey.id}/chapters`;
+  const chaptersHref = `/j/${journey.id}/chapters${storylineOf(ch) === 'other' ? '?line=other' : ''}`;
 
   // Esc opens the pause menu (docs/05 G4).
   useEffect(() => {

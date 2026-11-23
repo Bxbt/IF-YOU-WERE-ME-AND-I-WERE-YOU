@@ -31,6 +31,10 @@ const STAGING: Record<string, Staging> = {
   bg_living_room_morning: { roles: ['A', 'B'], feet: 156 },
   bg_living_room_night: { roles: ['A', 'B'], feet: 156 },
   bg_rooftop_night: { roles: ['A', 'B'], feet: 160 },
+  // M16: storyline 2 — the teller (in) alone; the bedroom stays empty (the teller lies in bed).
+  bg_balcony_night: { roles: ['in'], feet: 162 },
+  bg_bathroom_mirror: { roles: ['in'], feet: 174 },
+  bg_street_sunrise: { roles: ['in'], feet: 172 },
 };
 
 /** Roles on stage for a background. In the lobby the elevator person joins once the door is open. */

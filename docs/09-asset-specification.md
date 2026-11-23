@@ -54,6 +54,10 @@ PNG sprite sheet + JSON atlas (รูปแบบ TexturePacker/Aseprite JSON) �
 | `bg_living_room_morning` | ch4_s01 | room, window_light | แสงเช้าเคลื่อนช้า | P0 |
 | `bg_living_room_night` | ch4 ช่วงท้าย, S4 (เบลอ) | palette variant ของ morning | — | P0 |
 | `bg_rooftop_night` | ch5 | sky, stars, city_far, garden, fairy_lights | ดาวกระพริบ, ไฟสายวิบวับ, pan ขึ้นตอนจบ | P0 |
+| `bg_bedroom_night` | os1, os3 | wall, bed, bedside_lamp, window_rain, city_blur | หยดฝนไหลบนกระจก · ไฟหัวเตียงตาม `lamp` · แสงโทรศัพท์ | P1 (M16) |
+| `bg_balcony_night` | os2, os3, os6 | sky, city_lights, railing, sliding_door, plant | ไฟเมืองกะพริบช้า ๆ · ฝนตาม `rain` | P1 (M16) |
+| `bg_bathroom_mirror` | os5 | tiles, mirror, reflection_silhouette, sink, morning_light | ไอน้ำจาง ๆ บนกระจก | P1 (M16) |
+| `bg_street_sunrise` | os5, os6 | sky_gradient, sun, buildings, street, lamp_posts | แสงอาทิตย์ค่อย ๆ สว่าง · ไฟถนนดับทีละดวง | P1 (M16) |
 | `bg_building_exterior_rain` | ch1_end | building, rain | ฝน, zoom out (CSS transform) | P1 |
 | `bg_cozy_room_blur` | S4, S8, S9 พื้นหลัง | = `bg_living_room_night` + CSS blur | — | P0 (ไม่ต้องวาดใหม่) |
 | `bg_memory_generic` | S16 | 3 แบบ: café, park_bench, bedroom | — | P2 |

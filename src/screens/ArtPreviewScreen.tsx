@@ -26,6 +26,11 @@ const GALLERY: { key: string; env: Partial<SceneEnv> }[] = [
   { key: 'bg_living_room_night', env: { lamp: 'warm' } },
   { key: 'bg_rooftop_night', env: {} },
   { key: 'bg_stairwell', env: { lamp: 'warm' } },
+  // M16 — storyline 2
+  { key: 'bg_bedroom_night', env: { lamp: 'warm', rain: 'light' } },
+  { key: 'bg_balcony_night', env: {} },
+  { key: 'bg_bathroom_mirror', env: {} },
+  { key: 'bg_street_sunrise', env: {} },
 ];
 
 const EXPRESSIONS: Expression[] = ['neutral', 'happy', 'sad', 'worried', 'relieved'];

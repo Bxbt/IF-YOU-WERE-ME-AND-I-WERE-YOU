@@ -15,6 +15,7 @@ import { QuestionnaireScreen } from './screens/QuestionnaireScreen';
 import { AnswersScreen } from './screens/AnswersScreen';
 import { ChaptersScreen } from './screens/ChaptersScreen';
 import { ScenarioScreen } from './screens/ScenarioScreen';
+import { TellerScreen } from './screens/TellerScreen';
 import { PlayScreen } from './screens/PlayScreen';
 import { NotFoundScreen } from './screens/NotFoundScreen';
 import { ErrorScreen } from './screens/ErrorScreen';
@@ -76,6 +77,7 @@ export const routes = [
   },
   { path: '/j/:journeyId/chapters', element: <ChaptersScreen />, errorElement },
   { path: '/j/:journeyId/scenario', element: <ScenarioScreen />, errorElement },
+  { path: '/j/:journeyId/teller', element: <TellerScreen />, errorElement },
   { path: '/j/:journeyId/play/:chapterId', element: <PlayScreen />, errorElement },
   {
     path: '/j/:journeyId/compare',
