@@ -13,6 +13,7 @@ import {
   type PlayerInput,
 } from '../store/actions';
 import { useGame } from '../store/game';
+import { ownPlayers } from '../live/merge';
 import { PixelButton } from '../components/PixelButton';
 import { SpriteView } from '../scene/CharacterCanvas';
 import type { Player, SaveRoot } from '../persistence/schema';
@@ -25,9 +26,7 @@ function knownSelves(save: SaveRoot): Player[] {
     if (!lastUsed.has(id) || lastUsed.get(id)! < j.lastPlayedAt) lastUsed.set(id, j.lastPlayedAt);
   }
   const key = (p: Player) => lastUsed.get(p.id) ?? p.createdAt;
-  return Object.values(save.players)
-    .filter((p) => p.kind === 'real')
-    .sort((a, b) => (key(a) < key(b) ? 1 : -1));
+  return ownPlayers(save).sort((a, b) => (key(a) < key(b) ? 1 : -1));
 }
 
 /** Picks one of the existing real players, or asks for a new one (docs/06 S3). */
@@ -189,7 +188,10 @@ export function CreatePlayersScreen() {
         <p className="m-0 text-sm text-lavender">{ui.player.linkBody(ownerName, partnerName)}</p>
         <div className="flex flex-wrap gap-2">
           {imaginedWithThoughts(save, link.owner).map((p) => (
-            <PixelButton key={p.id} onClick={() => nextLink({ owner: link.owner, imagined: p.id, real: link.partner })}>
+            <PixelButton
+              key={p.id}
+              onClick={() => nextLink({ owner: link.owner, imagined: p.id, real: link.partner })}
+            >
               {ui.player.linkUse(p.nickname)}
             </PixelButton>
           ))}

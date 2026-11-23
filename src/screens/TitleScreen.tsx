@@ -6,6 +6,7 @@ import { PixelButton } from '../components/PixelButton';
 import { SoundToggle } from '../components/Misc';
 import { StarField } from '../components/StarField';
 import { useGame } from '../store/game';
+import { ownPlayers } from '../live/merge';
 import { FEATURES } from '../lib/features';
 import { APP_VERSION } from '../persistence/exportImport';
 import { currentJourney } from '../store/actions';
@@ -20,7 +21,7 @@ export function TitleScreen() {
   const journey = useGame((s) => currentJourney(s.save));
   const hasActive = !!journey;
   const journeyCount = useGame((s) => Object.keys(s.save.journeys).length);
-  const hasPlayers = useGame((s) => Object.values(s.save.players).some((p) => p.kind === 'real'));
+  const hasPlayers = useGame((s) => ownPlayers(s.save).length > 0);
 
   const continueReason = !hasActive ? ui.title.continueNoSave : null;
   const createReason = FEATURES.characterCreation ? null : ui.title.createSelfNotReady;

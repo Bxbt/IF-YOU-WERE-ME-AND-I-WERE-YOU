@@ -15,10 +15,10 @@ import { PlayerForm, emptyPlayerInput } from '../components/PlayerForm';
 import { useGame } from '../store/game';
 import { createPlayer } from '../store/actions';
 import { newJourneyId, nowIso } from '../lib/ids';
-import type { GameSession, SaveRoot } from '../persistence/schema';
+import type { GameSession } from '../persistence/schema';
 import { decryptJson, newRoomCode, normalizeRoomCode, parseJoin, roomFromCode } from '../live/crypto';
 import { claimSlot, getRoom, leaveSlot, liveAvailable } from '../live/api';
-import { linkOf, remoteFor, SlotPayload, type LiveLink } from '../live/merge';
+import { linkOf, ownPlayers, remoteFor, SlotPayload, type LiveLink } from '../live/merge';
 import {
   clearPendingLink,
   readPendingLink,
@@ -61,13 +61,10 @@ export function LiveStatusLine({ partnerName }: { partnerName: string }) {
   );
 }
 
-function realPlayers(save: SaveRoot) {
-  return Object.values(save.players).filter((p) => p.kind === 'real');
-}
 
 /** Pick an existing real player, or make a new one. */
 function ChooseSelf({ submitLabel, busy, onChosen }: { submitLabel: string; busy: boolean; onChosen: (id: string) => void }) {
-  const [players] = useState(() => realPlayers(useGame.getState().save));
+  const [players] = useState(() => ownPlayers(useGame.getState().save));
   const [creating, setCreating] = useState(players.length === 0);
   const [initial] = useState(() => emptyPlayerInput());
   if (creating)

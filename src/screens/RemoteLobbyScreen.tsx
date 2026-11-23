@@ -2,7 +2,7 @@
  * S17 Remote Lobby — Phase 3A Sealed Exchange (docs/06 S17, docs/08 §6.1). Live play (3C) has its
  * own lobby, S19 `/live`.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Copy, Download, KeyRound, Upload } from 'lucide-react';
 import { ui } from '../content/th/ui';
@@ -11,6 +11,7 @@ import { PixelButton } from '../components/PixelButton';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { PlayerGate } from '../components/PlayerGate';
 import { useGame } from '../store/game';
+import { ownPlayers } from '../live/merge';
 import { downloadText } from '../lib/download';
 import { exportFileName } from '../persistence/exportImport';
 import { formatKey } from '../engine/sealed';
@@ -106,7 +107,8 @@ function CreateTab() {
 
 function JoinTab() {
   const navigate = useNavigate();
-  const players = useGame((s) => Object.values(s.save.players).filter((p) => p.kind === 'real'));
+  const save = useGame((s) => s.save);
+  const players = useMemo(() => ownPlayers(save), [save]);
   const [invite, setInvite] = useState<InvitationData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selfId, setSelfId] = useState<string | undefined>(players[0]?.id);
@@ -140,7 +142,10 @@ function JoinTab() {
         </p>
       )}
       {invite && (
-        <div className="flex flex-col gap-3 rounded-btn border-2 border-orange p-3" data-testid="invite-preview">
+        <div
+          className="flex flex-col gap-3 rounded-btn border-2 border-orange p-3"
+          data-testid="invite-preview"
+        >
           <p className="m-0 font-semibold">{t.joinFrom(invite.inviter.nickname)}</p>
           {players.length === 0 ? (
             <>
@@ -155,7 +160,12 @@ function JoinTab() {
                 <legend className="mb-1 text-sm">{t.joinAs}</legend>
                 {players.map((p) => (
                   <label key={p.id} className="flex items-center gap-2">
-                    <input type="radio" name="join-self" checked={selfId === p.id} onChange={() => setSelfId(p.id)} />
+                    <input
+                      type="radio"
+                      name="join-self"
+                      checked={selfId === p.id}
+                      onChange={() => setSelfId(p.id)}
+                    />
                     {p.nickname}
                   </label>
                 ))}
@@ -230,7 +240,11 @@ function RemoteJourneyPanel({ journey }: { journey: GameSession }) {
   }
 
   return (
-    <section className="panel flex flex-col gap-4" aria-labelledby={`rj-${journey.id}`} data-testid="remote-journey">
+    <section
+      className="panel flex flex-col gap-4"
+      aria-labelledby={`rj-${journey.id}`}
+      data-testid="remote-journey"
+    >
       <h2 id={`rj-${journey.id}`} className="m-0 text-lg font-semibold">
         {t.current} · {t.with(partnerName)}
       </h2>
@@ -239,7 +253,12 @@ function RemoteJourneyPanel({ journey }: { journey: GameSession }) {
           {iInvited && (
             <div className="flex flex-col gap-2">
               <p className="m-0 font-semibold">{t.step1}</p>
-              <PixelButton variant="ghost" className="self-start" icon={<Download aria-hidden className="h-5 w-5" />} onClick={exportInvite}>
+              <PixelButton
+                variant="ghost"
+                className="self-start"
+                icon={<Download aria-hidden className="h-5 w-5" />}
+                onClick={exportInvite}
+              >
                 {t.exportInvite}
               </PixelButton>
             </div>
@@ -255,7 +274,12 @@ function RemoteJourneyPanel({ journey }: { journey: GameSession }) {
             <p className="m-0 text-sm">{ownCount > 0 ? t.sealedCount(ownCount) : t.noMirror}</p>
             {ownCount > 0 && (
               <>
-                <PixelButton variant="ghost" className="self-start" icon={<Download aria-hidden className="h-5 w-5" />} onClick={exportSealed}>
+                <PixelButton
+                  variant="ghost"
+                  className="self-start"
+                  icon={<Download aria-hidden className="h-5 w-5" />}
+                  onClick={exportSealed}
+                >
                   {t.exportSealed}
                 </PixelButton>
                 <p className="m-0 text-[13px] text-lavender">{t.editWarn}</p>
@@ -282,15 +306,28 @@ function RemoteJourneyPanel({ journey }: { journey: GameSession }) {
               showKey ? (
                 <div className="flex flex-col gap-2">
                   <p className="m-0 text-sm">{t.keyLabel}</p>
-                  <code className="self-start rounded-btn bg-navy px-3 py-2 text-lg tracking-widest" data-testid="my-key">
+                  <code
+                    className="self-start rounded-btn bg-navy px-3 py-2 text-lg tracking-widest"
+                    data-testid="my-key"
+                  >
                     {formatKey(key)}
                   </code>
-                  <PixelButton variant="ghost" className="self-start text-sm" icon={<Copy aria-hidden className="h-4 w-4" />} onClick={copy}>
+                  <PixelButton
+                    variant="ghost"
+                    className="self-start text-sm"
+                    icon={<Copy aria-hidden className="h-4 w-4" />}
+                    onClick={copy}
+                  >
                     {copied ? t.copied : t.copy}
                   </PixelButton>
                 </div>
               ) : (
-                <PixelButton variant="ghost" className="self-start" icon={<KeyRound aria-hidden className="h-5 w-5" />} onClick={() => setConfirmKey(true)}>
+                <PixelButton
+                  variant="ghost"
+                  className="self-start"
+                  icon={<KeyRound aria-hidden className="h-5 w-5" />}
+                  onClick={() => setConfirmKey(true)}
+                >
                   {t.showKey}
                 </PixelButton>
               )
@@ -327,14 +364,20 @@ function RemoteJourneyPanel({ journey }: { journey: GameSession }) {
             </p>
           )}
           {revealed.length > 0 && (
-            <section className="flex flex-col gap-3 border-t border-lavender/20 pt-3" aria-labelledby={`rv-${journey.id}`}>
+            <section
+              className="flex flex-col gap-3 border-t border-lavender/20 pt-3"
+              aria-labelledby={`rv-${journey.id}`}
+            >
               <h3 id={`rv-${journey.id}`} className="m-0 text-base font-semibold">
                 {t.revealedHeading(partnerName)}
               </h3>
               {revealed.map(({ question, partnerSelf, myGuess, mySelf }) => {
                 const cat = categorize(myGuess, partnerSelf);
                 return (
-                  <article key={question.id} className="flex flex-col gap-1 rounded-btn border-2 border-lavender/30 bg-navy p-3">
+                  <article
+                    key={question.id}
+                    className="flex flex-col gap-1 rounded-btn border-2 border-lavender/30 bg-navy p-3"
+                  >
                     <p className="m-0 font-semibold">{question.self}</p>
                     <p className="m-0 text-sm">
                       {t.theyAnswered(partnerName)}: {describeAnswer(question, partnerSelf)}
@@ -348,7 +391,9 @@ function RemoteJourneyPanel({ journey }: { journey: GameSession }) {
                       </p>
                     )}
                     {myGuess && cat !== 'excluded' && (
-                      <span className="self-start rounded-full border border-orange/60 px-2 text-[13px]">{t.match[cat]}</span>
+                      <span className="self-start rounded-full border border-orange/60 px-2 text-[13px]">
+                        {t.match[cat]}
+                      </span>
                     )}
                   </article>
                 );

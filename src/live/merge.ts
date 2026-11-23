@@ -337,11 +337,26 @@ export function mergePartner(save: SaveRoot, link: LiveLink, p: SlotPayload): Sa
 /** Players whose private pages live on another device (the partner in any live journey). */
 export function livePartnerIds(save: SaveRoot): Set<string> {
   const out = new Set<string>();
+  const locals = new Set<string>();
   for (const j of Object.values(save.journeys)) {
     const local = j.mode === 'remote_online' ? j.remote?.localPlayerId : undefined;
-    if (local) for (const id of j.playerIds) if (id !== local) out.add(id);
+    if (!local) continue;
+    locals.add(local);
+    for (const id of j.playerIds) if (id !== local) out.add(id);
   }
+  // Someone who was this device's own player in another room is still this device's player.
+  for (const id of locals) out.delete(id);
   return out;
+}
+
+/**
+ * The real players that belong to this device — never a partner received through online play,
+ * even after playing in the same room (docs/06 "ตัวตนของเครื่องนี้"). Used wherever the game asks
+ * "คุณคือใคร".
+ */
+export function ownPlayers(save: SaveRoot): SaveRoot['players'][string][] {
+  const away = livePartnerIds(save);
+  return Object.values(save.players).filter((p) => p.kind === 'real' && !away.has(p.id));
 }
 
 /** `decline:<startedAt>` — "ขอเวลาก่อน" for one chapter invitation (one run of the chapter). docs/07. */

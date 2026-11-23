@@ -10,6 +10,7 @@ import {
 import {
   buildPayload,
   mergePartner,
+  ownPlayers,
   remoteFor,
   stampSeq,
   type LiveLink,
@@ -220,6 +221,26 @@ describe('Live merge', () => {
     const b = mergePartner(finishLiveRead(run(device(1)), JID, 'ch1', B, false), linkFor(1), payloadOf(a, 0));
     expect(progress(b).livePos?.[A]?.end).toBe(true);
     expect(progress(finishLiveRead(b, JID, 'ch1', B, false)).status).toBe('completed');
+  });
+
+  it("'คุณคือใคร' lists only this device's own players, never the online partner", () => {
+    const a = device(0); // this device is A; B arrived through the room
+    expect(ownPlayers(a).map((p) => p.id)).toEqual([A]);
+    // Still true after leaving the room (the journey is archived but stays remote_online).
+    const left = { ...a, journeys: { [JID]: { ...a.journeys[JID]!, status: 'archived' as const } } };
+    expect(ownPlayers(left).map((p) => p.id)).toEqual([A]);
+    // A player who was this device's own player in another room stays listed.
+    const other = {
+      ...a.journeys[JID]!,
+      id: 'jr_liveJRN02',
+      remote: remoteFor({ ...linkFor(1), journeyId: 'jr_liveJRN02' }),
+    };
+    const both = { ...a, journeys: { ...a.journeys, jr_liveJRN02: other } };
+    expect(
+      ownPlayers(both)
+        .map((p) => p.id)
+        .sort(),
+    ).toEqual([A, B].sort());
   });
 
   it('TC-LIVE-03: the higher syncSeq wins; a tie goes to slot 0 on both devices', () => {

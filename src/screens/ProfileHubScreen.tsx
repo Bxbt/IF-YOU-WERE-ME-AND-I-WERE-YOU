@@ -9,7 +9,7 @@ import { useGame } from '../store/game';
 import { PinSetup } from '../components/PinSetup';
 import { ObservedSection } from '../components/ObservedSection';
 import { recordPinAttempt, removePin, setPin } from '../store/pinActions';
-import { livePartnerIds } from '../live/merge';
+import { livePartnerIds, ownPlayers } from '../live/merge';
 import { currentJourney, getAnswers, profileKey } from '../store/actions';
 import { FULL_SET, progress } from '../engine/personality';
 import type { Player } from '../persistence/schema';
@@ -90,7 +90,7 @@ export function ProfileHubScreen() {
   const journey = currentJourney(save);
   // Live (3C): the partner's private pages stay on the partner's device (docs/08 §6.3).
   const away = livePartnerIds(save);
-  const allReal = Object.values(save.players).filter((p) => p.kind === 'real' && !away.has(p.id));
+  const allReal = ownPlayers(save);
   // docs/06 S3 Profile Hub: the active journey's players; everyone else goes in a folded section.
   const real = journey
     ? journey.playerIds.map((id) => save.players[id]).filter((p): p is Player => p?.kind === 'real' && !away.has(p.id))
