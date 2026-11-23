@@ -343,21 +343,25 @@ export function rewriteTokens(
   ch: ChapterContent,
   s: StoryState,
   customText: (storyItem: string) => string | undefined,
+  /**
+   * Resolves tokens inside a chosen option ("ฉันรู้ว่า{you}ห่วง") as spoken by the choice's owner —
+   * the value is pasted into another line, so it is not resolved again there. The player's own
+   * words (custom) are kept exactly as written.
+   */
+  resolve: (text: string, owner: 'insider' | 'waiter') => string = (t) => t,
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const r of ch.rewrites ?? []) {
     const v = s.flags[r.flag];
-    const original = () => {
-      const c = findChoice(ch, r.originalChoiceId);
-      const o = c?.options.find((x) => x.id === s.chosen[r.originalChoiceId]);
-      return o ? optionText(o, s) : NOT_SAID;
+    const said = (choiceId: string, optionId: string | undefined) => {
+      const c = findChoice(ch, choiceId);
+      const o = c?.options.find((x) => x.id === optionId);
+      return c && o ? resolve(optionText(o, s), c.owner) : NOT_SAID;
     };
     if (v === 'custom') out[r.token] = customText(r.storyItem)?.trim() || NOT_SAID;
-    else if (v === undefined || v === 'unchanged') out[r.token] = original();
-    else {
-      const o = findChoice(ch, r.choiceId)?.options.find((x) => x.id === v);
-      out[r.token] = o ? optionText(o, s) : NOT_SAID;
-    }
+    else if (v === undefined || v === 'unchanged')
+      out[r.token] = said(r.originalChoiceId, s.chosen[r.originalChoiceId]);
+    else out[r.token] = said(r.choiceId, v);
   }
   return out;
 }

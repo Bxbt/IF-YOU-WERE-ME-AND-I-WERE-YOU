@@ -40,6 +40,12 @@ beforeEach(() => {
 describe('ChoiceList + MetaOptions', () => {
   it('uses aria-pressed and disables options at maxSelect (AX-10, TC-SKIP-04)', async () => {
     render(<Harness />);
+    // The limit is shown from the start, above the options (under the question).
+    const hint = screen.getByText('เลือกได้สูงสุด 2 ข้อ');
+    expect(
+      hint.compareDocumentPosition(screen.getByRole('group', { name: 'คำถาม' })) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     await userEvent.click(screen.getByRole('button', { name: /กอด/ }));
     await userEvent.click(screen.getByRole('button', { name: /ฟัง/ }));
     expect(screen.getByRole('button', { name: /กอด/ })).toHaveAttribute('aria-pressed', 'true');

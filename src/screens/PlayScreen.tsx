@@ -108,7 +108,10 @@ export function PlayScreen() {
   const rawJourney = useGame((s) => s.save.journeys[journeyId]);
   const meta = CHAPTER_BY_ID[chapterId as ChapterId];
   // Storyline 2: the teller holds the insider role (docs/07 §5.1) — a read-only view of the journey.
-  const journey = useMemo(() => (rawJourney && meta ? roleView(rawJourney, meta.id) : rawJourney), [rawJourney, meta]);
+  const journey = useMemo(
+    () => (rawJourney && meta ? roleView(rawJourney, meta.id) : rawJourney),
+    [rawJourney, meta],
+  );
   const [content, setContent] = useState<ChapterContent | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -305,7 +308,9 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
   const [privatePhase, setPrivatePhase] = useState<'handoff' | 'answer'>('handoff');
   const [showReturn, setShowReturn] = useState(false);
   /** Shared-screen reveal after both players answered a mirror / statements step (M10). */
-  const [reveal, setReveal] = useState<{ keys: string[]; mode: 'single' | 'group' | 'statements' } | null>(null);
+  const [reveal, setReveal] = useState<{ keys: string[]; mode: 'single' | 'group' | 'statements' } | null>(
+    null,
+  );
   const [handedOff, setHandedOff] = useState<string[]>([]);
   useEffect(() => setPrivatePhase('handoff'), [stepKey, answeringId]);
 
@@ -318,10 +323,14 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         ...Object.fromEntries(
           Object.entries(fragmentTokens(content, state)).map(([k, v]) => [k, resolveTokens(v, baseCtx)]),
         ),
-        ...rewriteTokens(content, state, (item) =>
-          journey.playerIds
-            .map((pid) => journey.storyAnswers[storyAnswerKey(pid, item)]?.freeText)
-            .find(Boolean),
+        ...rewriteTokens(
+          content,
+          state,
+          (item) =>
+            journey.playerIds
+              .map((pid) => journey.storyAnswers[storyAnswerKey(pid, item)]?.freeText)
+              .find(Boolean),
+          (text, owner) => resolveTokens(text, baseCtx, owner === 'insider' ? 'in' : 'out'),
         ),
       },
     }),
@@ -452,7 +461,20 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       }
       next();
     } else setPrivatePhase('handoff');
-  }, [together, live, view, next, remaining, answeringId, journey.id, ch, stepKey, step, progress.revealMode, content.statements]);
+  }, [
+    together,
+    live,
+    view,
+    next,
+    remaining,
+    answeringId,
+    journey.id,
+    ch,
+    stepKey,
+    step,
+    progress.revealMode,
+    content.statements,
+  ]);
 
   // ----- Live: advance when everyone has sent, and offer the reveal on both devices -----
   const everyoneSent = live && !view && isPrivate && pendingEntry?.playerIds.length === 0;
@@ -460,7 +482,9 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
     if (everyoneSent) next();
   }, [everyoneSent, stepKey, next]);
 
-  const doneItems = live ? (progress.pendingPrivateSteps ?? []).filter((x) => x.playerIds.length === 0).map((x) => x.itemId) : [];
+  const doneItems = live
+    ? (progress.pendingPrivateSteps ?? []).filter((x) => x.playerIds.length === 0).map((x) => x.itemId)
+    : [];
   const doneKey = doneItems.join('|');
   const seenDone = useRef<Set<string> | null>(null);
   useEffect(() => {
@@ -477,8 +501,10 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
       const st = sc ? expandScene(sc, state)[Number(li)] : undefined;
       if (st?.kind === 'mirror') {
         const qid = st.questionId;
-        if (ch !== 'ch4' || progress.revealMode !== 'end_of_chapter') setReveal({ keys: [qid], mode: 'single' });
-        else if (qid === MIRRORS[MIRRORS.length - 1]!.id) setReveal({ keys: MIRRORS.map((m) => m.id), mode: 'group' });
+        if (ch !== 'ch4' || progress.revealMode !== 'end_of_chapter')
+          setReveal({ keys: [qid], mode: 'single' });
+        else if (qid === MIRRORS[MIRRORS.length - 1]!.id)
+          setReveal({ keys: MIRRORS.map((m) => m.id), mode: 'group' });
       } else if (st?.kind === 'statements') {
         setReveal({ keys: (content.statements ?? []).map((x) => x.id), mode: 'statements' });
       }
@@ -945,7 +971,12 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         }
       />
     );
-  } else if (step?.kind === 'choice' && live && !view && controllerFor(journey, ch, step.line.owner) !== localId) {
+  } else if (
+    step?.kind === 'choice' &&
+    live &&
+    !view &&
+    controllerFor(journey, ch, step.line.owner) !== localId
+  ) {
     body = (
       <div className="flex flex-col gap-3">
         {renderLine(lineBefore(steps, pos!.lineIndex), true)}
@@ -1044,7 +1075,12 @@ function Player({ journey, content }: { journey: GameSession; content: ChapterCo
         {waitingEnter ? (
           <div className="panel flex flex-col items-center gap-2 text-center" data-testid="live-wait-enter">
             <p role="status" className="m-0 font-semibold">
-              {ui.live.waitEnter(readyEntry!.playerIds.filter((x) => x !== localId).map(nick).join(', '))}
+              {ui.live.waitEnter(
+                readyEntry!.playerIds
+                  .filter((x) => x !== localId)
+                  .map(nick)
+                  .join(', '),
+              )}
             </p>
             <p className="m-0 text-sm text-lavender">{ui.live.waitEnterHint}</p>
           </div>

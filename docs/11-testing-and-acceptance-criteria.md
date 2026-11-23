@@ -41,7 +41,7 @@ Fixture: `tests/fixtures/save-empty.json`, `save-solo-midch2.json`, `save-solo-c
 | TC-SKIP-01 | MVP | C | S4 ไม่เลือกอะไรเลย | ปุ่ม "ถัดไป" disabled |
 | TC-SKIP-02 | MVP | C | S4 พิมพ์ข้อความอิสระอย่างเดียว | "ถัดไป" ใช้ได้ · บันทึก `selected=[]`, `meta=null`, มี `freeText` |
 | TC-SKIP-03 | MVP | C | เลือกตัวเลือก 2 ข้อ แล้วกด "ไม่แน่ใจ" | ตัวเลือกถูกล้าง · `meta=not_sure` |
-| TC-SKIP-04 | MVP | C | Q13 (`maxSelect=2`) เลือกข้อที่ 3 | ข้อที่เหลือ disabled + ข้อความ "เลือกได้สูงสุด 2 ข้อ" |
+| TC-SKIP-04 | MVP | C | Q13 (`maxSelect=2`) เลือกข้อที่ 3 | ข้อความ "เลือกได้สูงสุด 2 ข้อ" แสดงตั้งแต่ต้นใต้คำถาม · เลือกครบแล้วข้อที่เหลือ disabled |
 | TC-SKIP-05 | MVP | E | กด "ข้าม" ทุกข้อของ Quick set | สรุป "ข้าม 12 ข้อ" · ปุ่มกลับไปตอบข้อที่ข้ามทำงาน |
 | TC-SKIP-06 | MVP | E | S14 → ข้ามฉาก ch2_a1 | ไปฉาก ch2_a2 · Part B ch2_b2 ใช้ fallback (ไม่สุ่มค่า `in_msg`) |
 | TC-SKIP-07 | MVP | E | ข้าม Ch1 ทั้งบท แล้วเลือก Ch3 | ต้องผ่าน S5a ก่อน · Ch3 เล่นได้ด้วย fallback |

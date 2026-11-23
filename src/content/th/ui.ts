@@ -178,6 +178,7 @@ export const ui = {
       skipped: 'ข้าม',
     },
     maxReached: (n: number) => `เลือกได้สูงสุด ${n} ข้อ`,
+    pickOne: 'เลือก 1 ข้อ',
     freeTextToggle: 'เพิ่มคำอธิบาย',
     freeTextPlaceholder: 'เขียนด้วยคำพูดของคุณ (ไม่บังคับ)',
     counter: (n: number, max: number) => `${n}/${max}`,

@@ -14,6 +14,8 @@ import {
   visibleOptions,
   optionText,
   resolveTokens,
+  rewriteTokens,
+  findChoice,
   sceneById,
   startOfChapter,
   type StoryState,
@@ -239,6 +241,28 @@ describe('TC-PLAY-06 content lint (docs/10 §4)', () => {
         const out = resolveTokens(text, { ...CTX, extra }, speaker);
         expect(out, text).not.toMatch(/[{}]/);
       }
+  });
+
+  it('every value pasted by a rewrite token resolves too (Ch3 "ฉันรู้ว่า{you}ห่วง")', () => {
+    for (const ch of chapters)
+      for (const r of ch.rewrites ?? [])
+        for (const choiceId of [r.choiceId, r.originalChoiceId]) {
+          const c = findChoice(ch, choiceId)!;
+          for (const o of c.options) {
+            const state: StoryState = {
+              flags: choiceId === r.choiceId ? { [r.flag]: o.id } : {},
+              priorWarning: true,
+              chosen: { [choiceId]: o.id },
+            };
+            const vals = rewriteTokens(
+              ch,
+              state,
+              () => undefined,
+              (t, owner) => resolveTokens(t, CTX, owner === 'insider' ? 'in' : 'out'),
+            );
+            expect(vals[r.token], `${choiceId}.${o.id}`).not.toMatch(/[{}]/);
+          }
+        }
   });
 
   it('every MIRROR line names a known question; STATEMENTS/INTERPRETATION have their content', () => {

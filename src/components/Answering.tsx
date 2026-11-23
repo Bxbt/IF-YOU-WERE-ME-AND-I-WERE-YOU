@@ -18,15 +18,14 @@ interface ChoiceListProps {
 export function ChoiceList({ label, options, maxSelect, draft, onChange }: ChoiceListProps) {
   const reduced = useReducedMotion();
   const hintId = useId();
-  const atMax = maxSelect > 1 && draft.selected.length >= maxSelect;
+  const atMax = draft.selected.length >= maxSelect;
   return (
     <div>
-      <div
-        role="group"
-        aria-label={label}
-        aria-describedby={atMax ? hintId : undefined}
-        className="flex flex-col gap-2"
-      >
+      {/* Always shown, right under the question (docs/04 §3.2). */}
+      <p id={hintId} className={`m-0 mb-2 text-[13px] ${atMax ? 'text-orange' : 'text-lavender'}`}>
+        {maxSelect > 1 ? ui.answer.maxReached(maxSelect) : ui.answer.pickOne}
+      </p>
+      <div role="group" aria-label={label} aria-describedby={hintId} className="flex flex-col gap-2">
         {options.map((o, i) => {
           const selected = draft.selected.includes(o.id);
           const disabled = isOptionDisabled(draft, o, maxSelect);
@@ -53,11 +52,6 @@ export function ChoiceList({ label, options, maxSelect, draft, onChange }: Choic
           );
         })}
       </div>
-      {atMax && (
-        <p id={hintId} className="m-0 mt-2 text-[13px] text-lavender">
-          {ui.answer.maxReached(maxSelect)}
-        </p>
-      )}
     </div>
   );
 }
