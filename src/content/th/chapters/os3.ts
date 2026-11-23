@@ -1,14 +1,15 @@
 /**
  * Storyline 2, Chapter 3 — The Trust That Never Fully Healed. Transcribed from docs/02 (OS3).
- * The past event is never named (docs/02 เส้นเรื่องที่ 2 rules) — players fill it in themselves.
+ * Trust broken by promises to change that end the same way again (owner decision 2026-11-23) —
+ * no third person, no checking phones. Both sides have their reasons; nobody is the villain.
  * {in} = the teller, {out} = their partner. Every "เธอ" meaning the partner is {you} (A-22).
  * Change the script in docs/02 first, then here.
  */
 import type { ChapterContent } from '../../types';
-import { D, E, M, N, S, SAFE, SYS, is } from './lines';
+import { D, E, M, N, S, SAFE, SYS } from './lines';
 
-const BEDROOM = 'ห้องนอนตอนตีหนึ่ง ไฟดับ มีแต่แสงจากหน้าจอโทรศัพท์ ฝนตกหนักขึ้น';
-const MORNING = 'ห้องนั่งเล่นตอนเช้า แดดอ่อน ๆ หลังคืนที่ฝนตก';
+const BEDROOM = 'ห้องนอนตอนกลางคืน ไฟหัวเตียงดวงเล็ก ฝนตกปรอย ๆ นอกหน้าต่าง';
+const ROOM = 'ห้องในอพาร์ตเมนต์ตอนค่ำ โคมไฟสีอุ่น คนหนึ่งแต่งตัวรอออกไปข้างนอก';
 
 export const os3: ChapterContent = {
   id: 'os3',
@@ -23,14 +24,14 @@ export const os3: ChapterContent = {
       ariaLabel: BEDROOM,
       controller: 'insider',
       lines: [
-        E({ bg: 'bg_bedroom_night', rain: 'medium', lamp: 'off' }),
+        E({ bg: 'bg_bedroom_night', rain: 'light', lamp: 'warm' }),
         N('ไม่ใช่ทุกความทรงจำของความรักจะสวยงาม'),
-        N('บางเรื่องผ่านมานานแล้ว แต่ยังทิ้งรอยไว้'),
-        N('ตีหนึ่ง โทรศัพท์ของ {out} บนโต๊ะข้างเตียงสว่างขึ้น'),
-        E({ sfx: 'phone_buzz' }),
-        S('หน้าจอล็อก', 'ข้อความใหม่ 1 ข้อความ'),
-        M('in', '(แค่ข้อความเดียว ทำไมใจถึงเต้นแรงขนาดนี้)'),
-        M('in', '(เพราะครั้งก่อน ก็เริ่มจากเรื่องที่ไม่มีใครเล่าให้ฟังเหมือนกัน)'),
+        N('บางเรื่องไม่ได้แตกในครั้งเดียว แต่ค่อย ๆ ร้าวทีละนิด'),
+        N('พรุ่งนี้คือวันที่นัดกันไว้ตั้งแต่เดือนก่อน — มื้อเย็นที่ร้านเดิม ร้านที่เจอกันครั้งแรก'),
+        S('ความทรงจำ', '"ขอโทษนะ งานด่วนจริง ๆ ครั้งหน้าไม่มีแบบนี้แล้ว"'),
+        S('ความทรงจำ', '"สัญญาเลย ต่อไปจะไม่เอางานมาก่อนเราอีก"'),
+        D('out', 'พรุ่งนี้หกโมงเย็นนะ ไปแน่นอน สัญญา'),
+        M('in', '(ประโยคนี้… เคยได้ยินมาแล้วกี่ครั้งนะ)'),
         {
           type: 'CHOICE',
           id: 'os3_c01',
@@ -38,36 +39,29 @@ export const os3: ChapterContent = {
           options: [
             {
               id: 'a',
-              text: 'ปลุก {out} ขึ้นมาถาม',
-              setFlags: { os_buzz: 'wake' },
-              responseLines: [
-                D('out', 'หืม… ข้อความจากกลุ่มงานน่ะ ดูได้เลย', 'worried'),
-                M('in', '(บอกว่าดูได้ แต่ทำไมใจยังไม่สงบ)'),
-              ],
+              text: '"อืม" (แล้วหันไปอีกทาง)',
+              setFlags: { os_promise: 'quiet' },
+              responseLines: [M('in', '(ไม่อยากหวัง จะได้ไม่ต้องผิดหวัง)')],
             },
             {
               id: 'b',
-              text: 'พลิกตัวไปอีกทาง พยายามหลับ',
-              setFlags: { os_buzz: 'turn_away' },
-              responseLines: [
-                M('in', '(ถ้าถาม ก็กลัวถูกมองว่าไม่ไว้ใจ)'),
-                M('in', '(ถ้าไม่ถาม ก็ต้องนอนกับคำถามนี้ทั้งคืน)'),
-              ],
+              text: '"ครั้งที่แล้วก็พูดแบบนี้"',
+              setFlags: { os_promise: 'last_time' },
+              responseLines: [D('out', '…รู้ ครั้งนี้จะไม่เป็นแบบนั้นแล้ว', 'sad'), M('in', '(อยากเชื่อนะ)')],
             },
             {
               id: 'c',
-              text: 'เอื้อมมือไปหยิบโทรศัพท์ แล้ววางลงที่เดิม',
-              setFlags: { os_buzz: 'almost' },
-              responseLines: [M('in', '(ไม่อยากเป็นคนแบบนี้)'), M('in', '(แต่ก็ไม่อยากเจ็บแบบเดิมอีก)')],
+              text: '"ถ้าไปไม่ได้ บอกตรง ๆ ตั้งแต่ตอนนี้ก็ได้นะ"',
+              setFlags: { os_promise: 'say_now' },
+              responseLines: [D('out', 'ไปได้ ไม่มีอะไรแน่นอน', 'worried'), M('in', '(ขอให้จริงเถอะ)')],
             },
             {
               id: 'd',
-              text: 'ลุกไปนั่งที่ระเบียงคนเดียว',
-              setFlags: { os_buzz: 'balcony' },
+              text: '"ขอบคุณนะ หวังว่าครั้งนี้จะจริง"',
+              setFlags: { os_promise: 'hope' },
               responseLines: [
-                E({ bg: 'bg_balcony_night', rain: 'medium' }),
-                N('ฝนยังไม่หยุด ไฟเมืองพร่าเลือนอยู่หลังม่านฝน'),
-                M('in', '(เวลาผ่านไปแล้ว แต่ความรู้สึกปลอดภัยไม่ได้กลับมาตามเวลา)'),
+                D('out', 'จริงสิ', 'happy'),
+                M('in', '(หวังมาหลายครั้งแล้ว แต่ก็ยังหวังอยู่ดี)'),
               ],
             },
           ],
@@ -77,14 +71,18 @@ export const os3: ChapterContent = {
     },
     {
       id: 'os3_s02',
-      background: 'bg_living_room_morning',
-      ariaLabel: MORNING,
+      background: 'bg_apartment_evening',
+      ariaLabel: ROOM,
       controller: 'insider',
       lines: [
-        E({ bg: 'bg_living_room_morning', rain: 'none' }),
-        N('เช้าวันต่อมา'),
-        D('out', 'เมื่อคืนเหมือนไม่ได้นอนเลยนะ'),
-        D('out', 'ยังคิดเรื่องข้อความอยู่ใช่ไหม', 'sad', is('os_buzz', 'wake')),
+        E({ bg: 'bg_apartment_evening', rain: 'none', lamp: 'warm' }),
+        N('เย็นวันต่อมา ห้าโมงครึ่ง {in} แต่งตัวเสร็จแล้ว'),
+        E({ sfx: 'phone_buzz' }),
+        S('ข้อความจาก {out}', 'ขอโทษจริง ๆ หัวหน้าเรียกประชุมด่วน ไปไม่ทันแล้ว เลื่อนเป็นวันเสาร์ได้ไหม'),
+        M('in', '(ไม่ได้โกรธที่งานเยอะ)'),
+        M('in', '(แต่เหนื่อยที่ต้องเชื่อคำว่า "ครั้งหน้า" ใหม่อีกครั้ง)'),
+        N('สี่ทุ่ม ประตูห้องเปิด'),
+        D('out', 'ขอโทษนะ ครั้งนี้มันไม่ไหวจริง ๆ', 'sad'),
         {
           type: 'CHOICE',
           id: 'os3_c02',
@@ -92,30 +90,38 @@ export const os3: ChapterContent = {
           options: [
             {
               id: 'a',
-              text: '"เรื่องเมื่อก่อน มันยังไม่หายไปไหนเลย"',
-              setFlags: { os_past: 'name_it' },
+              text: '"ไม่เป็นไร"',
+              setFlags: { os_after: 'fine' },
               responseLines: [
-                D('out', 'มันจบไปแล้วนะ ตอนนี้ไม่มีอะไรจริง ๆ', 'sad'),
-                M('in', '(อยากเชื่อนะ)'),
-                M('in', '(แต่ใจมันยังจำได้)'),
+                D('out', 'ขอบคุณที่เข้าใจนะ'),
+                M('in', '(ไม่ได้เข้าใจ แค่เหนื่อยเกินกว่าจะพูด)'),
               ],
             },
             {
               id: 'b',
-              text: '"ไม่มีอะไร นอนไม่หลับเฉย ๆ"',
-              setFlags: { os_past: 'hide' },
+              text: '"ฉันไม่อยากได้คำสัญญาแล้ว อยากเห็นว่ามันเปลี่ยนจริง"',
+              setFlags: { os_after: 'show_me' },
               responseLines: [
-                D('out', 'อืม ถ้ามีอะไรบอกได้นะ'),
-                M('in', '(ถ้าบอกได้ง่ายขนาดนั้น คงบอกไปนานแล้ว)'),
+                D('out', '…ยุติธรรมแล้ว', 'sad'),
+                M('in', '(ไม่ได้อยากให้รู้สึกผิด แค่อยากให้รู้ว่ามันหนักแค่ไหน)'),
               ],
             },
             {
               id: 'c',
-              text: '"{you}เข้าใจไหม ว่าการเชื่อใหม่อีกครั้งมันยากแค่ไหน"',
-              setFlags: { os_past: 'ask' },
+              text: '"{you}เข้าใจไหม ว่าการเชื่อใหม่ทุกครั้งมันยากแค่ไหน"',
+              setFlags: { os_after: 'ask' },
               responseLines: [
-                D('out', '…ไม่รู้หรอกว่ายากแค่ไหน แต่ไม่อยากให้{you}ต้องเจ็บอีก', 'worried'),
-                M('in', '(ประโยคนี้ช่วยได้นิดหนึ่ง)'),
+                D('out', '…ไม่เคยคิดว่ามันสะสมขนาดนี้', 'worried'),
+                M('in', '(ดีที่อย่างน้อยวันนี้ได้พูด)'),
+              ],
+            },
+            {
+              id: 'd',
+              text: '"ครั้งหน้าอย่าสัญญา ถ้าไม่แน่ใจว่าทำได้"',
+              setFlags: { os_after: 'no_promise' },
+              responseLines: [
+                D('out', '…ได้ จะบอกตามจริงว่าทำได้แค่ไหน', 'thinking'),
+                M('in', '(คำว่า "ไม่แน่ใจ" ยังเจ็บน้อยกว่า "สัญญา" ที่ไม่เป็นจริง)'),
               ],
             },
           ],
@@ -126,46 +132,46 @@ export const os3: ChapterContent = {
     {
       id: 'os3_s03',
       background: 'bg_corridor',
-      ariaLabel: 'ทางเดินหน้าห้องตอนเช้า มีคนหนึ่งยืนอยู่คนเดียวก่อนออกไปทำงาน',
+      ariaLabel: 'ทางเดินหน้าห้องตอนดึก มีคนหนึ่งยืนอยู่คนเดียว',
       controller: 'waiter',
       lines: [
         E({ bg: 'bg_corridor', rain: 'none', light: 'normal' }),
-        N('ทางเดินหน้าห้อง {out} ยืนอยู่คนเดียวก่อนออกไปทำงาน'),
-        M('out', '(เรื่องนั้น เป็นเรื่องที่อยากย้อนกลับไปแก้ที่สุด)'),
-        M('out', '(พยายามทำทุกอย่างให้เปิดเผย แต่บางวันก็รู้สึกเหมือนต้องพิสูจน์ตัวเองไม่จบ)'),
-        M('out', '(เหนื่อยเหมือนกัน แต่ไม่รู้จะพูดยังไงไม่ให้ฟังเหมือนแก้ตัว)'),
-        N('สองคนกลัวคนละอย่าง คนหนึ่งกลัวเจ็บซ้ำ อีกคนกลัวว่าจะไม่มีวันได้ความไว้ใจกลับคืนมา'),
+        N('ทางเดินหน้าห้อง {out} ยืนอยู่คนเดียวก่อนเข้านอน'),
+        M('out', '(อยากเป็นคนที่ทำตามที่พูดได้จริง ๆ)'),
+        M('out', '(แต่ทุกครั้งที่จะปฏิเสธงาน ก็กลัวว่าจะเป็นคนแรกที่ถูกเลิกจ้าง)'),
+        M('out', '(รู้ตัวว่าคำขอโทษของเราเริ่มไม่มีความหมาย และนั่นทำให้ไม่รู้จะเริ่มแก้ตรงไหน)'),
+        N('คนหนึ่งเหนื่อยที่ต้องเชื่อใหม่ทุกครั้ง อีกคนเหนื่อยที่ทำตามคำพูดของตัวเองไม่ได้'),
         SAFE(
-          'ความไม่ไว้ใจเป็นความรู้สึกที่มีที่มา — แต่ถ้าในความสัมพันธ์มีการบังคับตรวจโทรศัพท์ จำกัดการเจอคน หรือข่มขู่ นั่นไม่ใช่สิ่งที่ใครต้องทนอยู่คนเดียว ดูช่องทางขอความช่วยเหลือได้ที่หน้า "เกี่ยวกับ"',
+          'การผิดสัญญาซ้ำ ๆ ทำให้เหนื่อยได้จริง — แต่ถ้ามันมาพร้อมการทำร้าย ข่มขู่ หรือควบคุม นั่นไม่ใช่สิ่งที่ใครต้องทนอยู่คนเดียว ดูช่องทางขอความช่วยเหลือได้ที่หน้า "เกี่ยวกับ"',
         ),
       ],
       next: 'os3_cards',
     },
     {
       id: 'os3_cards',
-      background: 'bg_living_room_morning',
-      ariaLabel: MORNING,
+      background: 'bg_bedroom_night',
+      ariaLabel: BEDROOM,
       controller: 'narrator',
-      lines: [E({ bg: 'bg_living_room_morning', rain: 'none' }), { type: 'EMOTION_CARDS' }],
+      lines: [E({ bg: 'bg_bedroom_night', rain: 'light', lamp: 'warm' }), { type: 'EMOTION_CARDS' }],
       next: 'os3_reflect',
     },
     {
       id: 'os3_reflect',
-      background: 'bg_living_room_morning',
-      ariaLabel: MORNING,
+      background: 'bg_bedroom_night',
+      ariaLabel: BEDROOM,
       controller: 'narrator',
-      lines: [E({ bg: 'bg_living_room_morning', rain: 'none' }), { type: 'REFLECTION' }],
+      lines: [E({ bg: 'bg_bedroom_night', rain: 'light' }), { type: 'REFLECTION' }],
       next: 'os3_end',
     },
     {
       id: 'os3_end',
-      background: 'bg_living_room_morning',
-      ariaLabel: MORNING,
+      background: 'bg_bedroom_night',
+      ariaLabel: 'ห้องนอนมืดลง ไฟหัวเตียงดับแล้ว',
       controller: 'narrator',
       lines: [
-        E({ bg: 'bg_living_room_morning', rain: 'none' }),
-        N('ความไว้ใจไม่ได้กลับมาเพียงเพราะเวลาผ่านไป'),
-        N('แต่อาจค่อย ๆ กลับมา จากเรื่องเล็ก ๆ ที่ทำซ้ำทุกวัน'),
+        E({ bg: 'bg_bedroom_night', rain: 'none', lamp: 'off' }),
+        N('ความไว้ใจไม่ได้กลับมาเพราะคำสัญญาใหม่'),
+        N('แต่อาจค่อย ๆ กลับมา จากเรื่องเล็ก ๆ ที่ทำได้จริงซ้ำทุกวัน'),
       ],
       next: null,
     },
@@ -176,11 +182,11 @@ export const os3: ChapterContent = {
         role: 'insider',
         label: '{in} อาจรู้สึก…',
         cards: [
-          { id: 'os3_in_fear_hurt', text: 'กลัวเจ็บอีก' },
-          { id: 'os3_in_want_believe', text: 'อยากเชื่อ' },
-          { id: 'os3_in_confused', text: 'สับสน' },
-          { id: 'os3_in_on_guard', text: 'เหนื่อยที่ต้องคอยระวัง' },
-          { id: 'os3_in_blame_self', text: 'โทษตัวเองที่ยังคิดอยู่' },
+          { id: 'os3_in_tired_trust', text: 'เหนื่อยที่ต้องเชื่อใหม่' },
+          { id: 'os3_in_disappointed', text: 'ผิดหวัง' },
+          { id: 'os3_in_no_hope', text: 'ไม่อยากหวังอีก' },
+          { id: 'os3_in_understand_work', text: 'เข้าใจเรื่องงาน' },
+          { id: 'os3_in_blame_self', text: 'โทษตัวเองที่ยังเชื่อ' },
           { id: 'os3_in_still_love', text: 'ยังรัก' },
         ],
       },
@@ -188,11 +194,11 @@ export const os3: ChapterContent = {
         role: 'waiter',
         label: '{out} อาจรู้สึก…',
         cards: [
-          { id: 'os3_out_regret', text: 'เสียใจกับเรื่องเดิม' },
-          { id: 'os3_out_prove', text: 'อยากพิสูจน์' },
-          { id: 'os3_out_worn', text: 'เหนื่อยที่ต้องพิสูจน์' },
+          { id: 'os3_out_guilty', text: 'รู้สึกผิด' },
+          { id: 'os3_out_pressure', text: 'กดดันจากงาน' },
+          { id: 'os3_out_want_change', text: 'อยากเปลี่ยนให้ได้' },
           { id: 'os3_out_fear_loss', text: 'กลัวเสียไป' },
-          { id: 'os3_out_lost', text: 'ไม่รู้จะทำยังไง' },
+          { id: 'os3_out_lost', text: 'ไม่รู้จะเริ่มตรงไหน' },
         ],
       },
     ],
@@ -202,9 +208,9 @@ export const os3: ChapterContent = {
       id: 'ro3_1',
       self: 'อะไรช่วยให้คุณรู้สึกปลอดภัยที่จะเชื่อใจใครสักคนอีกครั้ง',
       options: [
-        { id: 'ro3_1_share', text: 'เล่าเรื่องต่าง ๆ ให้ฟังเองโดยไม่ต้องถาม' },
         { id: 'ro3_1_consistent', text: 'ทำตามที่พูดซ้ำ ๆ จนเห็นเอง' },
-        { id: 'ro3_1_no_anger', text: 'ไม่โกรธเมื่อฉันถาม' },
+        { id: 'ro3_1_honest_limit', text: 'บอกตรง ๆ ว่าทำไม่ได้ แทนการสัญญา' },
+        { id: 'ro3_1_small', text: 'เริ่มจากสัญญาเล็ก ๆ ที่ทำได้จริง' },
         { id: 'ro3_1_time', text: 'ให้เวลาโดยไม่เร่ง' },
         { id: 'ro3_1_talk', text: 'คุยเรื่องเดิมได้โดยไม่ทะเลาะ' },
       ],
@@ -214,7 +220,7 @@ export const os3: ChapterContent = {
     },
     {
       id: 'ro3_2',
-      self: '(ไม่บังคับ) มีเรื่องไหนที่ผ่านมานานแล้ว แต่คุณยังรู้สึกถึงมันอยู่บ้าง',
+      self: '(ไม่บังคับ) มีคำสัญญาไหนที่คุณยังรออยู่ — หรือที่คุณเองยังทำไม่ได้',
       options: [],
       maxSelect: 1,
       freeText: true,
