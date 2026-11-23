@@ -125,7 +125,7 @@ test('TC-PLAY-03: Ch2 Solo — partner part shows the imagined banner, own part 
   await noSeriousA11y(page);
   // Part C timeline appears with both columns.
   await playThrough(page, () => page.getByRole('heading', { name: 'เส้นเวลาของสองคน' }).isVisible());
-  await expect(page.getByText('ดาว (ในลิฟต์)').first()).toBeVisible();
+  await expect(page.getByText('ดาว (ติดฝนอยู่)').first()).toBeVisible();
   await expect(page.getByText('เมฆ (ข้างนอก)').first()).toBeVisible();
   await noOverflow(page);
   await noSeriousA11y(page);

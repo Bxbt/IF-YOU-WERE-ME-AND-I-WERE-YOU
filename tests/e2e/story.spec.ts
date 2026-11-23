@@ -53,7 +53,7 @@ test('Ch1 plays from chapter selection through scenario setup to the end (M4 exi
   await noSeriousA11y(page);
   await page.getByRole('button', { name: /พักก่อน/ }).click();
   await expect(page.getByRole('article', { name: /The Incident/ }).getByText('จบแล้ว')).toBeVisible();
-  await expect(page.getByText(/ดาว ติดลิฟต์ · มีการเตือนก่อนหน้า/)).toBeVisible();
+  await expect(page.getByText(/ดาว ติดฝนอยู่ข้างล่าง · มีการเตือนเรื่องแบตก่อนออกไป/)).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -63,7 +63,9 @@ test('TC-RES-01 (Ch1): reload mid-chapter → Title "เล่นต่อ" retu
   await seedSave(page, seed({ scenario: 'me' }));
   await page.goto(`/#/j/${J}/play/ch1?start=1`);
   await expect(page.getByTestId('play')).toHaveAttribute('data-scene', 'ch1_s01');
-  await playThrough(page, () => page.getByText('ทางเดินชั้นแปดเงียบ', { exact: false }).first().isVisible());
+  await playThrough(page, () =>
+    page.getByText('ร้านสะดวกซื้อหน้าตึก แอร์เย็นเฉียบ', { exact: false }).first().isVisible(),
+  );
   await page.getByRole('button', { name: 'ถัดไป' }).click();
   const line = await page.locator('[data-line-variant] [aria-live]').first().textContent();
 
@@ -80,7 +82,7 @@ test('TC-RES-01 (Ch1): reload mid-chapter → Title "เล่นต่อ" retu
   expect(saved.status).toBe('in_progress');
 });
 
-test('TC-PLAY-02 (Ch1): when the partner is in the elevator, insider scenes show the imagined banner', async ({
+test('TC-PLAY-02 (Ch1): when the partner went downstairs, insider scenes show the imagined banner', async ({
   page,
 }) => {
   await seedSave(page, seed({ scenario: 'other' }));

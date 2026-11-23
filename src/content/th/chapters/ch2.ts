@@ -27,26 +27,26 @@ export const ch2: ChapterContent = {
         { type: 'SYS', text: 'บทที่ 2 · Walk in My Shoes' },
         { type: 'NARR', text: 'สามสิบนาทีเดียวกัน' },
         { type: 'NARR', text: 'แต่มองจากสองที่' },
-        { type: 'SYS', text: 'ตอนนี้คุณจะเล่นเป็น: {in} — คนที่ติดอยู่ในลิฟต์' },
+        { type: 'SYS', text: 'ตอนนี้คุณจะเล่นเป็น: {in} — คนที่ติดฝนอยู่ข้างล่าง' },
       ],
       next: 'ch2_a1',
     },
-    // ---------- Part A — มุมมองคนในลิฟต์ ----------
+    // ---------- Part A — มุมมองคนที่ติดฝนอยู่ข้างล่าง ----------
     {
       id: 'ch2_a1',
       handoffBefore: true,
-      background: 'bg_elevator_emergency',
-      ariaLabel: 'ในลิฟต์ที่ค้างอยู่ มีแต่แสงไฟฉุกเฉินสีส้ม อากาศเริ่มอบ',
+      background: 'bg_convenience_store',
+      ariaLabel: 'ในร้านสะดวกซื้อหน้าตึก ฝนเทลงมาด้านนอกกระจก',
       controller: 'insider',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_elevator_emergency', light: 'emergency', haze: 1 } },
-        { type: 'NARR', text: 'ห้านาทีแรกผ่านไป อากาศเริ่มอบ' },
-        { type: 'MONO', speaker: 'in', text: 'ไม่เป็นไร ช่างกำลังมา ยามบอกแล้ว' },
+        { type: 'ENV', set: { bg: 'bg_convenience_store', rain: 'heavy', light: 'normal' } },
+        { type: 'NARR', text: 'ห้านาทีแรกผ่านไป ฝนยังไม่มีทีท่าจะซา' },
+        { type: 'MONO', speaker: 'in', text: 'ไม่เป็นไร เดี๋ยวฝนก็หยุด' },
         { type: 'MONO', speaker: 'in', text: '{out} คงสงสัยแล้วว่าทำไมยังไม่ขึ้นไป' },
         {
           type: 'SYS',
           title: 'โทรศัพท์',
-          text: 'สัญญาณ ▂ · มีข้อความใหม่จาก {out} 1 ข้อความ (โหลดไม่ขึ้น)',
+          text: 'แบตเตอรี่ 1% · มีข้อความใหม่จาก {out} 1 ข้อความ (โหลดไม่ขึ้น)',
         },
         {
           type: 'CHOICE',
@@ -55,21 +55,21 @@ export const ch2: ChapterContent = {
           options: [
             {
               id: 'a',
-              text: '"ลิฟต์ค้าง ไม่เป็นไรนะ ไม่ต้องห่วง"',
+              text: '"ติดฝนอยู่ร้านข้างล่าง ไม่เป็นไรนะ ไม่ต้องห่วง"',
               setFlags: { in_msg: 'reassure_other' },
               tag: 'D01:downplay',
               responseLines: [{ type: 'SYS', title: 'โทรศัพท์', text: 'กำลังส่ง…' }],
             },
             {
               id: 'b',
-              text: '"ติดลิฟต์ กลัวมากเลย"',
+              text: '"ติดฝนอยู่ข้างล่าง แบตจะหมดแล้ว ใจไม่ดีเลย"',
               setFlags: { in_msg: 'honest_fear' },
               tag: 'D01:open',
               responseLines: [{ type: 'SYS', title: 'โทรศัพท์', text: 'กำลังส่ง…' }],
             },
             {
               id: 'c',
-              text: '"ช่วยด้วย"',
+              text: '"ลงมารับหน่อยได้ไหม"',
               setFlags: { in_msg: 'help' },
               tag: 'D04:seek',
               responseLines: [{ type: 'SYS', title: 'โทรศัพท์', text: 'กำลังส่ง…' }],
@@ -95,20 +95,21 @@ export const ch2: ChapterContent = {
             ],
           },
         },
+        { type: 'SYS', title: 'โทรศัพท์', text: 'แบตเตอรี่ 0% · เครื่องดับ' },
       ],
       next: 'ch2_a2',
     },
     {
       id: 'ch2_a2',
-      background: 'bg_elevator_emergency',
-      ariaLabel: 'ในลิฟต์มืดลงชั่วครู่ ก่อนไฟฉุกเฉินสีส้มจะติดขึ้นอีกครั้ง',
+      background: 'bg_convenience_store',
+      ariaLabel: 'ฟ้าผ่าสว่างวาบนอกกระจก ไฟในร้านกะพริบ',
       controller: 'insider',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_elevator_emergency', light: 'off', haze: 1, sfx: 'metal_creak' } },
-        { type: 'NARR', text: 'ไฟดับไปสามวินาที ก่อนไฟฉุกเฉินจะติดขึ้นอีกครั้ง' },
-        { type: 'ENV', set: { light: 'emergency', haze: 2 } },
-        { type: 'MONO', speaker: 'in', expression: 'scared', text: 'ถ้ามันร่วงลงไปล่ะ' },
-        { type: 'MONO', speaker: 'in', text: 'ถ้า {out} ไม่รู้เลยว่าเราอยู่ในนี้' },
+        { type: 'ENV', set: { bg: 'bg_convenience_store', rain: 'heavy', light: 'flicker' } },
+        { type: 'NARR', text: 'ฟ้าผ่าดังสนั่น ไฟในร้านกะพริบอยู่ครู่หนึ่ง' },
+        { type: 'ENV', set: { light: 'normal' } },
+        { type: 'MONO', speaker: 'in', expression: 'scared', text: 'ถ้า {out} คิดว่าเราเป็นอะไรไปล่ะ' },
+        { type: 'MONO', speaker: 'in', text: 'ไม่มีทางบอกได้เลยว่าเราอยู่ตรงนี้' },
         { type: 'MONO', speaker: 'in', text: '…อย่าคิด อย่าคิด' },
         {
           type: 'CHOICE',
@@ -117,33 +118,33 @@ export const ch2: ChapterContent = {
           options: [
             {
               id: 'a',
-              text: 'นั่งลงกับพื้น กอดเข่าตัวเอง',
+              text: 'นั่งลงที่ม้านั่งหน้ากระจก กอดเข่าตัวเอง',
               setFlags: { in_cope: 'hold_self' },
               tag: 'D09:withdraw',
               responseLines: [{ type: 'MONO', speaker: 'in', text: 'ขอแค่อยู่นิ่ง ๆ' }],
             },
             {
               id: 'b',
-              text: 'กดอินเตอร์คอม คุยกับยามไปเรื่อย ๆ',
+              text: 'ชวนพนักงานในร้านคุยไปเรื่อย ๆ',
               setFlags: { in_cope: 'talk' },
               tag: 'D09:connect',
               responseLines: [
-                { type: 'DLG', speaker: 'ยาม (อินเตอร์คอม)', text: 'ยังอยู่ตรงนี้นะครับ ไม่ไปไหน' },
+                { type: 'DLG', speaker: 'พนักงานร้าน', text: 'นั่งรอในร้านได้เลยครับ ไม่ต้องรีบ' },
               ],
             },
             {
               id: 'c',
-              text: 'เปิดดูรูปเก่า ๆ ในโทรศัพท์',
+              text: 'นึกถึงวันที่เคยติดฝนด้วยกัน',
               setFlags: { in_cope: 'memories' },
               tag: 'D09:comfort_memory',
-              responseLines: [{ type: 'NARR', text: 'รูปทริปทะเลเมื่อปีก่อน' }],
+              responseLines: [{ type: 'NARR', text: 'วันที่ติดฝนที่ป้ายรถเมล์ แล้วหัวเราะกันจนตัวเปียก' }],
             },
             {
               id: 'd',
               text: 'นับลมหายใจ เข้าสี่ ค้างสี่ ออกสี่',
               setFlags: { in_cope: 'breathe' },
               tag: 'D09:self_regulate',
-              responseLines: [{ type: 'ENV', set: { haze: 1 } }],
+              responseLines: [{ type: 'MONO', speaker: 'in', text: 'หายใจช้าลงหน่อยแล้ว' }],
             },
           ],
         },
@@ -152,19 +153,18 @@ export const ch2: ChapterContent = {
     },
     {
       id: 'ch2_a3',
-      background: 'bg_elevator_emergency',
-      ariaLabel: 'ในลิฟต์ที่ไฟฉุกเฉินสีส้ม มีเสียงเครื่องมือดังมาจากด้านบน',
+      background: 'bg_convenience_store',
+      ariaLabel: 'ในร้านสะดวกซื้อ พนักงานยื่นสายชาร์จมาให้',
       controller: 'insider',
       lines: [
         {
           type: 'ENV',
-          set: { bg: 'bg_elevator_emergency', light: 'emergency', haze: 2, sfx: 'tools_above' },
+          set: { bg: 'bg_convenience_store', rain: 'medium', light: 'normal' },
         },
-        { type: 'ENV', set: { haze: 1 }, when: { flag: 'in_cope', eq: 'breathe' } },
-        { type: 'NARR', text: 'มีเสียงเครื่องมือดังมาจากด้านบน' },
-        { type: 'DLG', speaker: 'ช่าง (อินเตอร์คอม)', text: 'อีกนิดเดียวนะครับ กำลังงัดประตูชั้นหก' },
+        { type: 'NARR', text: 'พนักงานยื่นสายชาร์จมาให้' },
+        { type: 'DLG', speaker: 'พนักงานร้าน', text: 'เสียบชาร์จตรงนี้ได้เลยครับ อีกสักพักเครื่องก็ติด' },
         { type: 'MONO', speaker: 'in', text: 'อีกนิดเดียว' },
-        { type: 'MONO', speaker: 'in', text: 'พอออกไปได้ สิ่งแรกที่อยากได้คือ…' },
+        { type: 'MONO', speaker: 'in', text: 'พอกลับไปถึงห้อง สิ่งแรกที่อยากได้คือ…' },
         {
           type: 'CHOICE',
           id: 'ch2_ca3',
@@ -173,13 +173,13 @@ export const ch2: ChapterContent = {
             { id: 'a', text: 'อ้อมกอด', setFlags: { in_need: 'hug' }, tag: 'D05:physical' },
             {
               id: 'b',
-              text: 'ใครสักคนที่ฟังว่ามันน่ากลัวแค่ไหน',
+              text: 'ใครสักคนที่ฟังว่าเมื่อกี้มันใจไม่ดีแค่ไหน',
               setFlags: { in_need: 'listen' },
               tag: 'D05:listen',
             },
             {
               id: 'c',
-              text: 'น้ำเย็นสักแก้ว กับความเงียบสักพัก',
+              text: 'ผ้าเช็ดตัวแห้ง ๆ กับความเงียบสักพัก',
               setFlags: { in_need: 'space' },
               tag: 'D07:space',
             },
@@ -191,9 +191,8 @@ export const ch2: ChapterContent = {
             },
           ],
         },
-        // docs/02: "light: white_strip" (light from floor 6 through the pried door) → door ajar.
-        { type: 'ENV', set: { door: 'ajar', sfx: 'door_pry' } },
-        { type: 'NARR', text: 'ช่องประตูค่อย ๆ เปิดกว้างขึ้น' },
+        { type: 'ENV', set: { rain: 'light', sfx: 'phone_buzz' } },
+        { type: 'NARR', text: 'ฝนเริ่มซาลง หน้าจอโทรศัพท์สว่างขึ้นอีกครั้ง' },
       ],
       next: 'ch2_b1',
     },
@@ -206,10 +205,10 @@ export const ch2: ChapterContent = {
       controller: 'waiter',
       lines: [
         { type: 'ENV', set: { bg: 'bg_apartment_kitchen', rain: 'heavy' } },
-        { type: 'SYS', text: 'ตอนนี้คุณจะเล่นเป็น: {out} — คนที่รออยู่ข้างนอก' },
+        { type: 'SYS', text: 'ตอนนี้คุณจะเล่นเป็น: {out} — คนที่รออยู่ในห้อง' },
         { type: 'SYS', text: 'ย้อนกลับไปที่ T+5 นาที' },
-        { type: 'MONO', speaker: 'out', text: 'อาจไม่ใช่ {in} ก็ได้' },
-        { type: 'MONO', speaker: 'out', expression: 'worried', text: 'แต่ถ้าไม่ใช่ ทำไมยังไม่กลับมา' },
+        { type: 'MONO', speaker: 'out', text: 'คงหลบฝนอยู่ในร้านแหละ… มั้ง' },
+        { type: 'MONO', speaker: 'out', expression: 'worried', text: 'แต่ถ้าใช่ ทำไมโทรไม่ติด' },
         { type: 'SYS', title: 'โทรศัพท์', text: 'โทรหา {in} — ไม่สามารถติดต่อได้' },
         {
           type: 'CHOICE',
@@ -218,21 +217,21 @@ export const ch2: ChapterContent = {
           options: [
             {
               id: 'a',
-              text: 'วิ่งลงบันไดไปดู',
+              text: 'รีบลงไปดูที่ล็อบบี้',
               setFlags: { out_act: 'go' },
               tag: 'D09:act',
-              responseLines: [{ type: 'NARR', text: 'บันไดหนีไฟจากชั้นแปด เสียงฝีเท้าดังก้อง' }],
+              responseLines: [{ type: 'NARR', text: 'ลงมาถึงล็อบบี้ ข้างนอกมีแต่ม่านฝน' }],
             },
             {
               id: 'b',
-              text: 'โทรหานิติบุคคล',
+              text: 'โทรหายามหน้าตึก',
               setFlags: { out_act: 'call_office' },
               tag: 'D06:solve',
               responseLines: [
                 {
                   type: 'DLG',
-                  speaker: 'นิติบุคคล (โทรศัพท์)',
-                  text: 'ตอนนี้ยังไม่ทราบชื่อผู้ติดค่ะ ช่างกำลังไปค่ะ',
+                  speaker: 'ยามหน้าตึก (โทรศัพท์)',
+                  text: 'เห็นเดินไปทางร้านสะดวกซื้อครับ ฝนหนักมาก ยังไม่เห็นกลับเลยครับ',
                 },
               ],
             },
@@ -250,7 +249,7 @@ export const ch2: ChapterContent = {
               tag: 'D09:self_regulate',
               responseLines: [
                 { type: 'MONO', speaker: 'out', text: 'ห้านาที… รออีกห้านาที' },
-                { type: 'NARR', text: 'แต่นั่งได้ไม่ถึงนาที ก็ลุกเดินลงบันได' },
+                { type: 'NARR', text: 'แต่นั่งได้ไม่ถึงนาที ก็ลุกลงไปที่ล็อบบี้' },
               ],
             },
           ],
@@ -260,16 +259,20 @@ export const ch2: ChapterContent = {
     },
     {
       id: 'ch2_b2',
-      background: 'bg_lobby_floor6',
-      ariaLabel: 'โถงหน้าลิฟต์ชั้นหก ยามยืนอยู่หน้าประตูลิฟต์ที่ปิดอยู่',
+      background: 'bg_building_entrance',
+      ariaLabel: 'ล็อบบี้ชั้นล่าง ประตูกระจกปิดอยู่ ข้างนอกฝนตกหนัก ยามยืนอยู่ข้างประตู',
       controller: 'waiter',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_lobby_floor6', door: 'closed' } },
-        { type: 'DLG', speaker: 'ยาม', text: 'คนที่ติดอยู่บอกว่าชื่อ {in} ครับ' },
+        { type: 'ENV', set: { bg: 'bg_building_entrance', door: 'closed', rain: 'heavy' } },
+        {
+          type: 'DLG',
+          speaker: 'ยาม',
+          text: 'ร้านสะดวกซื้อหน้าตึกโทรมาบอกครับ มีคนชื่อ {in} ติดฝนอยู่ที่นั่น',
+        },
         {
           type: 'SYS',
           title: 'โทรศัพท์',
-          text: 'ข้อความจาก {in} (ส่งเมื่อ 10 นาทีก่อน): "ลิฟต์ค้าง ไม่เป็นไรนะ ไม่ต้องห่วง"',
+          text: 'ข้อความจาก {in} (ส่งเมื่อ 10 นาทีก่อน): "ติดฝนอยู่ร้านข้างล่าง ไม่เป็นไรนะ ไม่ต้องห่วง"',
           when: { flag: 'in_msg', eq: 'reassure_other' },
         },
         {
@@ -281,7 +284,7 @@ export const ch2: ChapterContent = {
         {
           type: 'SYS',
           title: 'โทรศัพท์',
-          text: 'ข้อความจาก {in} (ส่งเมื่อ 10 นาทีก่อน): "ติดลิฟต์ กลัวมากเลย"',
+          text: 'ข้อความจาก {in} (ส่งเมื่อ 10 นาทีก่อน): "ติดฝนอยู่ข้างล่าง แบตจะหมดแล้ว ใจไม่ดีเลย"',
           when: { flag: 'in_msg', eq: 'honest_fear' },
         },
         {
@@ -294,7 +297,7 @@ export const ch2: ChapterContent = {
         {
           type: 'SYS',
           title: 'โทรศัพท์',
-          text: 'ข้อความจาก {in} (ส่งเมื่อ 10 นาทีก่อน): "ช่วยด้วย"',
+          text: 'ข้อความจาก {in} (ส่งเมื่อ 10 นาทีก่อน): "ลงมารับหน่อยได้ไหม"',
           when: { flag: 'in_msg', eq: 'help' },
         },
         {
@@ -317,7 +320,7 @@ export const ch2: ChapterContent = {
           text: '(ก้มมองโทรศัพท์ในมืออีกครั้ง)',
           when: { flag: 'in_msg', unset: true },
         },
-        { type: 'MONO', speaker: 'out', text: 'บอกแล้วแท้ ๆ ว่าลิฟต์ตัวนี้…', when: PW },
+        { type: 'MONO', speaker: 'out', text: 'บอกแล้วแท้ ๆ ว่าเอาสายชาร์จไปด้วย…', when: PW },
         { type: 'MONO', speaker: 'out', text: '…ไม่ใช่เวลาจะมาคิดแบบนี้', when: PW },
         { type: 'MONO', speaker: 'out', text: 'ทำไมต้องเป็นวันนี้ ทำไมต้องเป็น {in}', when: NO_PW },
         {
@@ -327,11 +330,11 @@ export const ch2: ChapterContent = {
           options: [
             {
               id: 'a',
-              text: 'ขอคุยกับ {in} ผ่านอินเตอร์คอม',
+              text: 'ขอเบอร์ร้านจากยาม แล้วโทรไปคุยกับ {in}',
               setFlags: { out_feel: 'reach' },
               tag: 'D02:reach_out',
               responseLines: [
-                { type: 'DLG', speaker: 'out', text: '{in} ได้ยินไหม อยู่ตรงนี้แล้วนะ' },
+                { type: 'DLG', speaker: 'out', text: '{in} ได้ยินไหม รออยู่ที่ล็อบบี้นะ' },
                 { type: 'DLG', speaker: 'in', text: '(เสียงแผ่ว) …อืม' },
               ],
             },
@@ -351,16 +354,16 @@ export const ch2: ChapterContent = {
                 {
                   type: 'SYS',
                   title: 'ข้อความที่ถูกลบ',
-                  text: 'ทำไมไม่ฟัง… ไม่สิ ขอแค่ออกมาปลอดภัย',
+                  text: 'ทำไมไม่ฟัง… ไม่สิ ขอแค่กลับมาปลอดภัย',
                 },
               ],
             },
             {
               id: 'd',
-              text: 'ถามช่างซ้ำ ๆ ว่าอีกนานไหม',
+              text: 'ถามยามซ้ำ ๆ ว่าฝนจะหยุดเมื่อไหร่',
               setFlags: { out_feel: 'control' },
               tag: 'D06:solve',
-              responseLines: [{ type: 'DLG', speaker: 'ช่าง', text: 'ใกล้แล้วครับ ใกล้แล้ว' }],
+              responseLines: [{ type: 'DLG', speaker: 'ยาม', text: 'เริ่มซาแล้วครับ อีกไม่นานแล้ว' }],
             },
           ],
         },
@@ -369,11 +372,11 @@ export const ch2: ChapterContent = {
     },
     {
       id: 'ch2_b3',
-      background: 'bg_lobby_floor6',
-      ariaLabel: 'โถงชั้นหก ช่างสอดเหล็กงัดเข้าร่องประตูลิฟต์',
+      background: 'bg_building_entrance',
+      ariaLabel: 'ล็อบบี้ชั้นล่าง ฝนเริ่มซา ประตูกระจกเปิดแง้ม',
       controller: 'waiter',
       lines: [
-        { type: 'ENV', set: { bg: 'bg_lobby_floor6', door: 'ajar', sfx: 'door_pry' } },
+        { type: 'ENV', set: { bg: 'bg_building_entrance', door: 'ajar', rain: 'light' } },
         { type: 'MONO', speaker: 'out', text: 'เดี๋ยวก็จะได้เจอหน้าแล้ว' },
         { type: 'MONO', speaker: 'out', expression: 'thinking', text: 'จะพูดว่าอะไรดี' },
         {
@@ -413,13 +416,13 @@ export const ch2: ChapterContent = {
     // ---------- Part C — เส้นเวลาคู่ ----------
     {
       id: 'ch2_timeline',
-      background: 'bg_elevator_emergency',
-      ariaLabel: 'ภาพแบ่งสองฝั่ง ซ้ายคือในลิฟต์ที่มีแต่ไฟฉุกเฉิน ขวาคือโถงหน้าลิฟต์ชั้นหก',
+      background: 'bg_convenience_store',
+      ariaLabel: 'ภาพแบ่งสองฝั่ง ซ้ายคือร้านสะดวกซื้อหน้าตึก ขวาคือล็อบบี้ชั้นล่าง',
       controller: 'narrator',
       lines: [
         {
           type: 'ENV',
-          set: { split: ['bg_elevator_emergency', 'bg_lobby_floor6'], light: 'emergency', haze: 1 },
+          set: { split: ['bg_convenience_store', 'bg_building_entrance'], rain: 'medium', light: 'normal' },
         },
         {
           type: 'TIMELINE',
@@ -455,33 +458,38 @@ export const ch2: ChapterContent = {
     },
     {
       id: 'ch2_cards',
-      background: 'bg_lobby_floor6',
-      ariaLabel: 'โถงหน้าลิฟต์ชั้นหก ประตูลิฟต์เปิดแง้มอยู่',
+      background: 'bg_building_entrance',
+      ariaLabel: 'ล็อบบี้ชั้นล่าง ประตูกระจกเปิดแง้มอยู่',
       controller: 'narrator',
       lines: [
-        { type: 'ENV', set: { split: null, bg: 'bg_lobby_floor6', door: 'ajar', light: 'normal', haze: 0 } },
+        {
+          type: 'ENV',
+          set: { split: null, bg: 'bg_building_entrance', door: 'ajar', light: 'normal', rain: 'light' },
+        },
         { type: 'EMOTION_CARDS' },
       ],
       next: 'ch2_reflect',
     },
     {
       id: 'ch2_reflect',
-      background: 'bg_lobby_floor6',
-      ariaLabel: 'โถงหน้าลิฟต์ชั้นหก ประตูลิฟต์เปิดแง้มอยู่',
+      background: 'bg_building_entrance',
+      ariaLabel: 'ล็อบบี้ชั้นล่าง ประตูกระจกเปิดแง้มอยู่',
       controller: 'narrator',
-      lines: [{ type: 'ENV', set: { bg: 'bg_lobby_floor6', door: 'ajar' } }, { type: 'REFLECTION' }],
+      lines: [{ type: 'ENV', set: { bg: 'bg_building_entrance', door: 'ajar' } }, { type: 'REFLECTION' }],
       next: 'ch2_end',
     },
     {
       id: 'ch2_end',
-      background: 'bg_lobby_floor6',
-      ariaLabel: 'ประตูลิฟต์ชั้นหกเปิดออกจนสุด แสงไฟจากโถงสาดเข้าไปในลิฟต์',
+      background: 'bg_building_entrance',
+      ariaLabel: 'ประตูกระจกหน้าตึกเปิดออก มีคนก้าวเข้ามาตัวเปียก',
       controller: 'narrator',
       lines: [
-        // docs/02: "door_open: full; light: white" → door open, normal light.
-        { type: 'ENV', set: { split: null, bg: 'bg_lobby_floor6', door: 'open', light: 'normal' } },
-        { type: 'NARR', text: 'ประตูเปิดออกจนสุด' },
-        { type: 'NARR', text: 'แสงไฟจากโถงชั้นหก สาดเข้าไปในกล่องเหล็กที่มืดมาครึ่งชั่วโมง' },
+        {
+          type: 'ENV',
+          set: { split: null, bg: 'bg_building_entrance', door: 'open', light: 'normal', rain: 'light' },
+        },
+        { type: 'NARR', text: 'ประตูกระจกเปิดออก' },
+        { type: 'NARR', text: '{in} ก้าวเข้ามา ตัวเปียกปอนหลังครึ่งชั่วโมงที่ยาวที่สุดของคืนนี้' },
       ],
       next: null,
     },
@@ -500,8 +508,8 @@ export const ch2: ChapterContent = {
     out_act_text: {
       flag: 'out_act',
       values: {
-        go: 'วิ่งลงบันไดจากชั้นแปด',
-        call_office: 'โทรหานิติบุคคล',
+        go: 'รีบลงไปดูที่ล็อบบี้',
+        call_office: 'โทรหายามหน้าตึก',
         keep_calling: 'โทรหาซ้ำแล้วซ้ำอีก',
         wait: 'พยายามนั่งรอ แต่ทนได้ไม่ถึงนาที',
       },
@@ -510,9 +518,9 @@ export const ch2: ChapterContent = {
     in_cope_text: {
       flag: 'in_cope',
       values: {
-        hold_self: 'นั่งกอดเข่าอยู่บนพื้นเหล็กเย็น ๆ',
-        talk: 'คุยกับยามผ่านอินเตอร์คอม เพื่อให้รู้ว่ายังไม่ได้อยู่คนเดียว',
-        memories: 'เปิดดูรูปเก่า ๆ ที่มีหน้าของ {out}',
+        hold_self: 'นั่งกอดเข่าอยู่บนม้านั่งหน้ากระจก',
+        talk: 'ชวนพนักงานในร้านคุย เพื่อให้รู้ว่ายังไม่ได้อยู่คนเดียว',
+        memories: 'นึกถึงวันที่เคยติดฝนกับ {out}',
         breathe: 'นับลมหายใจ ทีละสี่จังหวะ',
       },
       fallback: SKIPPED,
@@ -520,10 +528,10 @@ export const ch2: ChapterContent = {
     out_feel_text: {
       flag: 'out_feel',
       values: {
-        reach: 'พยายามส่งเสียงผ่านอินเตอร์คอม',
-        pace: 'เดินวนอยู่หน้าประตูลิฟต์',
+        reach: 'โทรไปคุยผ่านเบอร์ของร้าน',
+        pace: 'เดินวนอยู่หน้าประตูกระจก',
         unsent: 'พิมพ์ข้อความยาว ๆ แล้วลบทิ้ง',
-        control: 'ถามช่างครั้งแล้วครั้งเล่าว่าอีกนานไหม',
+        control: 'ถามยามครั้งแล้วครั้งเล่าว่าฝนจะหยุดเมื่อไหร่',
       },
       fallback: SKIPPED,
     },
@@ -611,12 +619,12 @@ export const ch2: ChapterContent = {
       id: 'r2_1',
       self: 'ช่วงไหนในบทนี้ที่ทำให้คุณเข้าใจอีกฝั่งมากขึ้น',
       options: [
-        { id: 'r2_1_in_t5', text: 'T+5 ในลิฟต์' },
-        { id: 'r2_1_in_t15', text: 'T+15 ในลิฟต์' },
-        { id: 'r2_1_in_t25', text: 'T+25 ในลิฟต์' },
-        { id: 'r2_1_out_t5', text: 'T+5 ข้างนอก' },
-        { id: 'r2_1_out_t15', text: 'T+15 ข้างนอก' },
-        { id: 'r2_1_out_t25', text: 'T+25 ข้างนอก' },
+        { id: 'r2_1_in_t5', text: 'T+5 คนที่ติดฝน' },
+        { id: 'r2_1_in_t15', text: 'T+15 คนที่ติดฝน' },
+        { id: 'r2_1_in_t25', text: 'T+25 คนที่ติดฝน' },
+        { id: 'r2_1_out_t5', text: 'T+5 คนที่รอ' },
+        { id: 'r2_1_out_t15', text: 'T+15 คนที่รอ' },
+        { id: 'r2_1_out_t25', text: 'T+25 คนที่รอ' },
         { id: 'r2_1_not_yet', text: 'ยังไม่รู้สึกแบบนั้น' },
       ],
       maxSelect: 1,
@@ -633,9 +641,9 @@ export const ch2: ChapterContent = {
       id: 'r2_3',
       self: 'ถ้าเป็นคุณจริง ๆ ข้อความแรกที่จะส่งหาคนที่คุณรักตอนติดอยู่คืออะไร',
       options: [
-        { id: 'r2_3_reassure_other', text: '"ลิฟต์ค้าง ไม่เป็นไรนะ ไม่ต้องห่วง"' },
-        { id: 'r2_3_honest_fear', text: '"ติดลิฟต์ กลัวมากเลย"' },
-        { id: 'r2_3_help', text: '"ช่วยด้วย"' },
+        { id: 'r2_3_reassure_other', text: '"ติดฝนอยู่ร้านข้างล่าง ไม่เป็นไรนะ ไม่ต้องห่วง"' },
+        { id: 'r2_3_honest_fear', text: '"ติดฝนอยู่ข้างล่าง แบตจะหมดแล้ว ใจไม่ดีเลย"' },
+        { id: 'r2_3_help', text: '"ลงมารับหน่อยได้ไหม"' },
         { id: 'r2_3_none', text: 'ยังไม่ส่ง เก็บแบตไว้ก่อน' },
       ],
       maxSelect: 1,

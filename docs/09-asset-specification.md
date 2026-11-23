@@ -46,10 +46,12 @@ PNG sprite sheet + JSON atlas (รูปแบบ TexturePacker/Aseprite JSON) �
 | `bg_title` | S1, S5 (พื้นหลังแผนที่) | sky, stars_far, stars_near, ground+path, characters_silhouette | ดาว parallax 2 ชั้น, ทางเรืองแสง pulse 4s, particles | P0 |
 | `bg_apartment_evening` | ch1_s01 | room, window(rain), lamp_glow | ฝนนอกหน้าต่าง (CSS), แสงโคมไฟ flicker เบามาก | P0 |
 | `bg_apartment_kitchen` | ch1_s03, ch2_b1 | room, steam | ไอน้ำจากกระทะ (ปิดเมื่อ `out_first=go_check`) | P0 |
-| `bg_corridor` | ch1_s02 | — | ไฟนีออน flicker ≤ 2Hz | P0 |
-| `bg_elevator_interior` | ch1_s02 | interior, floor_display | ตัวเลขชั้นเปลี่ยน (HTML overlay) | P0 |
-| `bg_elevator_emergency` | ch1_s02–s04, ch2_a1–a3 | interior (palette swap), emergency_light_overlay, haze_overlay | ไฟส้มหายใจช้า 3s, haze ระดับ low/medium, light off 3s | P0 |
-| `bg_lobby_floor6` | ch2_b2–b3, ch2_end, ch3 | lobby, elevator_door (ปิด/แง้ม/เปิด 3 สถานะ), light_strip | ประตูถูกงัด 3 เฟรม, แสงลอด | P0 |
+| `bg_corridor` | os3_s03 (เดิม ch1_s02 ของเรื่องลิฟต์) | — | ไฟนีออน flicker ≤ 2Hz | P0 |
+| `bg_elevator_interior` | **ซ่อนไว้** — เรื่องลิฟต์ ([archive](archive/02-elevator-story.md)) ไม่มีบทไหนใช้ | interior, floor_display | ตัวเลขชั้นเปลี่ยน (HTML overlay) | P0 |
+| `bg_elevator_emergency` | **ซ่อนไว้** — เรื่องลิฟต์ ([archive](archive/02-elevator-story.md)) ไม่มีบทไหนใช้ | interior (palette swap), emergency_light_overlay, haze_overlay | ไฟส้มหายใจช้า 3s, haze ระดับ low/medium, light off 3s | P0 |
+| `bg_lobby_floor6` | **ซ่อนไว้** — เรื่องลิฟต์ ([archive](archive/02-elevator-story.md)) ไม่มีบทไหนใช้ | lobby, elevator_door (ปิด/แง้ม/เปิด 3 สถานะ), light_strip | ประตูถูกงัด 3 เฟรม, แสงลอด | P0 |
+| `bg_convenience_store` | ch1_s02–s04, ch2_a1–a3, ch2_timeline | interior (ชั้นสินค้า, เคาน์เตอร์, ม้านั่ง), glass_front + rain | ฝนนอกกระจก · ฟ้าแลบเมื่อ `light: flicker` (≤ 2Hz) | P0 |
+| `bg_building_entrance` | ch2_b2–b3, ch2_end, ch3 | lobby, mailboxes, glass_doors (ปิด/แง้ม/เปิด 3 สถานะ) + rain outside | ฝนนอกประตู · ประตูกระจกเลื่อน | P0 |
 | `bg_stairwell` | ch3_end | — | — | P1 |
 | `bg_living_room_morning` | ch4_s01 | room, window_light | แสงเช้าเคลื่อนช้า | P0 |
 | `bg_living_room_night` | ch4 ช่วงท้าย, S4 (เบลอ) | palette variant ของ morning | — | P0 |

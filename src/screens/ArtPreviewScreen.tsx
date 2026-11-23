@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { ScreenHeader } from '../components/Misc';
 import { PixelCanvas } from '../scene/PixelCanvas';
 import { PortraitView, SpriteView } from '../scene/CharacterCanvas';
-import { drawElevatorBase, drawElevatorLight } from '../scene/draw/elevator';
+import { drawConvenienceStore } from '../scene/draw/rainyNight';
 import { PRESETS, drawSprite, type Expression } from '../scene/draw/character';
 import { ui } from '../content/th/ui';
 import { SceneCanvas } from '../scene/SceneCanvas';
@@ -15,17 +15,14 @@ const GALLERY: { key: string; env: Partial<SceneEnv> }[] = [
   { key: 'bg_apartment_evening', env: { rain: 'light', lamp: 'warm' } },
   { key: 'bg_apartment_kitchen', env: { rain: 'medium', steam: true } },
   { key: 'bg_corridor', env: { rain: 'light', light: 'flicker' } },
-  { key: 'bg_elevator_interior', env: {} },
-  { key: 'bg_elevator_emergency', env: { haze: 1 } },
   { key: 'bg_building_exterior_rain', env: { rain: 'heavy' } },
-  { key: 'bg_lobby_floor6', env: { door: 'closed' } },
-  { key: 'bg_lobby_floor6', env: { door: 'ajar' } },
-  { key: 'bg_lobby_floor6', env: { door: 'open' } },
-  { key: 'bg_elevator_emergency', env: { light: 'emergency', haze: 1 } },
   { key: 'bg_living_room_morning', env: {} },
   { key: 'bg_living_room_night', env: { lamp: 'warm' } },
   { key: 'bg_rooftop_night', env: {} },
   { key: 'bg_stairwell', env: { lamp: 'warm' } },
+  { key: 'bg_convenience_store', env: { rain: 'heavy' } },
+  { key: 'bg_building_entrance', env: { rain: 'medium', door: 'closed' } },
+  { key: 'bg_building_entrance', env: { rain: 'light', door: 'open' } },
   // M16 — storyline 2
   { key: 'bg_bedroom_night', env: { lamp: 'warm', rain: 'light' } },
   { key: 'bg_balcony_night', env: {} },
@@ -48,9 +45,8 @@ const previewCast = (role: CastRole): CastMember => ({
  */
 export function ArtPreviewScreen() {
   const draw = useCallback((c: CanvasRenderingContext2D, t: number) => {
-    drawElevatorBase(c);
-    drawSprite(c, PRESETS.p3, 144, 92, Math.floor(t * 2) % 2, 'worried');
-    drawElevatorLight(c, t, 1);
+    drawConvenienceStore(c, t, { ...DEFAULT_ENV, bg: 'bg_convenience_store', rain: 'heavy' });
+    drawSprite(c, PRESETS.p3, 144, 118, Math.floor(t * 2) % 2, 'worried');
   }, []);
 
   return (
@@ -59,7 +55,7 @@ export function ArtPreviewScreen() {
       <p className="m-0 text-sm text-lavender">{ui.artPreview.note}</p>
       <section aria-labelledby="scene-h" className="flex flex-col gap-2">
         <h2 id="scene-h" className="m-0 text-lg font-semibold">
-          bg_elevator_emergency
+          bg_convenience_store
         </h2>
         <PixelCanvas draw={draw} label={ui.artPreview.sceneLabel} className="w-full" />
       </section>

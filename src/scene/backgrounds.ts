@@ -13,6 +13,7 @@ import { drawLobbyFloor6 } from './draw/lobby';
 import { drawLivingRoomMorning, drawLivingRoomNight } from './draw/livingRoom';
 import { drawRooftopNight } from './draw/rooftop';
 import { drawBlack, drawStairwell } from './draw/stairwell';
+import { drawBuildingEntrance, drawConvenienceStore } from './draw/rainyNight';
 import { drawBalconyNight, drawBathroomMirror, drawBedroomNight, drawStreetSunrise } from './draw/otherSide';
 
 export interface BackgroundDef {
@@ -28,6 +29,21 @@ export interface BackgroundDef {
 const titleStars = makeStars();
 
 const LIST: BackgroundDef[] = [
+  // "คืนที่ฝนตกหนัก" (Ch1–Ch3, replaces the elevator scenes — docs/09 §2)
+  {
+    key: 'bg_convenience_store',
+    draw: drawConvenienceStore,
+    fallback: '#c9d0db',
+    ariaLabel: 'ร้านสะดวกซื้อหน้าตึกตอนค่ำ ไฟสว่าง ฝนตกหนักนอกกระจก',
+    priority: 'P0',
+  },
+  {
+    key: 'bg_building_entrance',
+    draw: drawBuildingEntrance,
+    fallback: '#4b4468',
+    ariaLabel: 'ล็อบบี้ชั้นล่างของตึก ประตูกระจก ข้างนอกฝนตก',
+    priority: 'P0',
+  },
   // M16 — storyline 2 "อีกด้านของเรื่อง" (docs/09 §2)
   {
     key: 'bg_bedroom_night',
@@ -86,7 +102,7 @@ const LIST: BackgroundDef[] = [
     key: 'bg_corridor',
     draw: drawCorridor,
     fallback: '#292b45',
-    ariaLabel: 'ทางเดินชั้นแปด ไฟนีออน หน้าลิฟต์สองตัว',
+    ariaLabel: 'ทางเดินชั้นแปด ไฟนีออน',
     priority: 'P0',
   },
   {

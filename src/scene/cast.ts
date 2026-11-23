@@ -31,6 +31,8 @@ const STAGING: Record<string, Staging> = {
   bg_living_room_morning: { roles: ['A', 'B'], feet: 156 },
   bg_living_room_night: { roles: ['A', 'B'], feet: 156 },
   bg_rooftop_night: { roles: ['A', 'B'], feet: 160 },
+  bg_convenience_store: { roles: ['in'], feet: 166 },
+  bg_building_entrance: { roles: ['out'], feet: 164 },
   // M16: storyline 2 — the teller (in) alone; the bedroom stays empty (the teller lies in bed).
   bg_balcony_night: { roles: ['in'], feet: 162 },
   bg_bathroom_mirror: { roles: ['in'], feet: 174 },
@@ -42,7 +44,8 @@ export function rolesFor(bg: string, env: SceneEnv): CastRole[] {
   if (env.cast) return env.cast;
   const s = STAGING[bg];
   if (!s) return [];
-  if (bg === 'bg_lobby_floor6' && env.door === 'open') return ['out', 'in'];
+  if ((bg === 'bg_lobby_floor6' || bg === 'bg_building_entrance') && env.door === 'open')
+    return ['out', 'in'];
   return s.roles;
 }
 

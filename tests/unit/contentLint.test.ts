@@ -266,12 +266,17 @@ describe('TC-PLAY-06 content lint (docs/10 §4)', () => {
         }
   });
 
-  it('storyline 2 never borrows the elevator story: no "ลิฟต์", card headings set per chapter', () => {
-    for (const ch of chapters.filter((c) => c.id.startsWith('os'))) {
+  it('no chapter tells the hidden elevator story (docs/02 "คืนที่ฝนตกหนัก"); storyline 2 sets its card headings', () => {
+    for (const ch of chapters) {
       for (const { text } of texts(ch)) expect(text.includes('ลิฟต์'), `${ch.id}: ${text}`).toBe(false);
+      for (const s of ch.scenes) {
+        expect(s.ariaLabel.includes('ลิฟต์'), `${s.id} ariaLabel`).toBe(false);
+        expect(/bg_elevator|bg_lobby_floor6/.test(s.background), `${s.id} background`).toBe(false);
+      }
+    }
+    for (const ch of chapters.filter((c) => c.id.startsWith('os')))
       for (const g of ch.emotionCards?.groups ?? [])
         expect(g.label, `${ch.id} ${g.role} card heading`).toBeTruthy();
-    }
   });
 
   it('every MIRROR line names a known question; STATEMENTS/INTERPRETATION have their content', () => {
