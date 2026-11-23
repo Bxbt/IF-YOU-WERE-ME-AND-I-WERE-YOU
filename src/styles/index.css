@@ -65,3 +65,15 @@ html[data-reduced-motion='true'] *::after {
   animation-iteration-count: 1 !important;
   transition-duration: 0.01ms !important;
 }
+
+/*
+ * AX-8a: iOS zooms into any field whose text is smaller than 16px when it is tapped. Keep every
+ * text field at 16px or more on touch screens (user zoom itself stays allowed — AX-8).
+ */
+@media (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea,
+  select {
+    font-size: max(16px, 1rem) !important;
+  }
+}

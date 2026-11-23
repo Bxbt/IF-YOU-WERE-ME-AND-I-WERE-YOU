@@ -308,6 +308,7 @@ Overlay กลางจอ · เล่นต่อ · ข้ามฉากน�
 | AX-5 | ไม่สื่อความหมายด้วยสีอย่างเดียว — ใช้ไอคอน + ข้อความร่วม |
 | AX-6 | Modal มี focus trap และคืน focus เมื่อปิด |
 | AX-7 | ไม่มีเนื้อหากระพริบเกิน 3 ครั้ง/วินาที (ไฟกระพริบในลิฟต์ ≤ 2 ครั้ง/วินาที และปิดได้ด้วย reduced motion) |
-| AX-8 | Zoom 200% ไม่ตัดข้อความ ไม่เกิด horizontal scroll |
+| AX-8 | Zoom 200% ไม่ตัดข้อความ ไม่เกิด horizontal scroll · ไม่ปิดการซูมของผู้ใช้ (ไม่ใช้ `user-scalable=no`/`maximum-scale`) |
+| AX-8a | ช่องพิมพ์ (input/textarea/select) บนจอสัมผัสใช้ตัวอักษรอย่างน้อย 16px เพื่อไม่ให้ iOS ซูมเข้าเองเมื่อแตะ |
 | AX-9 | ภาษาเอกสาร `lang="th"` · ข้อความอังกฤษครอบ `lang="en"` |
 | AX-10 | ตัวเลือกใน ChoiceList เป็น `<button>` ใน `role="group"` พร้อม `aria-pressed` สำหรับ multi-select |
